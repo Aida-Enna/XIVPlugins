@@ -20,8 +20,8 @@
     "IsTestingExclusive": "False",
     "LastUpdated": 1663788222,
     "DownloadCount": 5,
-    "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip",
-    "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip",
-    "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip"
+    "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip?raw=true",
+    "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip?raw=true",
+    "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip?raw=true"
   }
 ]
