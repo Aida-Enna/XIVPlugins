@@ -5,6 +5,7 @@
     "Description": "Automatically level syncs your character and activates your tank stance whenever you join a FATE.",
     "InternalName": "FATEAutoSync",
     "AssemblyVersion": "1.1.0.1",
+	"Changelog": "- Added tank stance auto toggling\r\n- Bug/chat fixes",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins/tree/main/FATEAutoSync",
     "ApplicableVersion": "any",
     "Tags": [
