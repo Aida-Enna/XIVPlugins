@@ -5,7 +5,7 @@
     "Description": "Automatically level syncs your character whenever you join a FATE.",
     "InternalName": "FATEAutoSync",
     "AssemblyVersion": "1.1.0.0",
-    "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins/tree/main/FATEAutoSync/",
+    "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
       "lvlsync",
