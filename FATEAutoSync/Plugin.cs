@@ -3,7 +3,6 @@ using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
-using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
@@ -38,8 +37,6 @@ namespace FATEAutoSync
 
         private delegate IntPtr GetUIModuleDelegate(IntPtr basePtr);
 
-        public WindowSystem WindowSystem = new("FATEAutoSync");
-
         private ProcessChatBoxDelegate? ProcessChatBox;
         private IntPtr uiModule = IntPtr.Zero;
 
@@ -59,53 +56,15 @@ namespace FATEAutoSync
             this.framework = framework;
             this.sigScanner = sigScanner;
 
-            //Condition.ConditionChange += ConditionChange();
 
             config = this.pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             config.Initialize(this.pluginInterface);
-
-            //WindowSystem.AddWindow(new ConfigWindow(this));
-            this.pluginInterface.UiBuilder.Draw += DrawUI;
-            this.pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
 
             framework.Update += Update;
 
             commandManager = new PluginCommandManager<Plugin>(this, commands);
 
             InitializePointers();
-        }
-
-        //private Condition.ConditionChangeDelegate ConditionChange()
-        //{
-        //    if (inFateAreaPtr == IntPtr.Zero) { return null; }
-
-        //    chat.Print("Test!");
-
-        //    if (Condition[ConditionFlag.Mounted] == false && Condition[ConditionFlag.Mounted2] == false)
-        //    {
-        //        chat.Print("Got off of mount!");
-        //        inFateArea = Marshal.ReadByte(inFateAreaPtr) == 1;
-        //        if (inFateArea && IsMounted)
-        //        {
-        //            chat.Print("Got off of mount in fate!");
-        //            if (ClientState.LocalPlayer.ClassJob.GameData.Abbreviation.ToString() == "PLD")
-        //            {
-        //                ExecuteCommand("/action \"Iron Will\"");
-        //            }
-        //            IsMounted = false;
-        //        }
-        //    }
-        //    return null;
-        //}
-
-        private void DrawUI()
-        {
-            this.WindowSystem.Draw();
-        }
-
-        public void DrawConfigUI()
-        {
-            WindowSystem.GetWindow("FATE Auto Sync Configuration").IsOpen = true;
         }
 
         private bool TankStanceEnabled()
@@ -123,15 +82,6 @@ namespace FATEAutoSync
         private void StanceToggle()
         {
             if (!this.config.AutoStanceEnabled) return;
-            //Check to see if tank stance is on, if so do nothing
-            //var Player = ClientState.LocalPlayer;
-            //foreach (var Status in ClientState.LocalPlayer.StatusList)
-            //{
-            //    if (Status.StatusId == 79)  { return; } //Iron Will
-            //    if (Status.StatusId == 91) { return; } //Defiance
-            //    if (Status.StatusId == 743) { return; } //Grit
-            //    if (Status.StatusId == 1833) { return; } //Royal Guard
-            //}
             //Check for their class and use the appropriate stance
             string ClassNameAbbr = ClientState.LocalPlayer.ClassJob.GameData.Abbreviation.ToString();
             if (ClassNameAbbr == "PLD" || ClassNameAbbr == "GLA") { ExecuteCommand("/action \"Iron Will\""); }
@@ -151,7 +101,6 @@ namespace FATEAutoSync
             {
                 if (Condition[ConditionFlag.Mounted] == false && Condition[ConditionFlag.Mounted2] == false)
                 {
-                    //chat.Print("Got off of mount in fate!");
                     StanceToggle();
                     IsMounted = false;
                 }
@@ -171,34 +120,14 @@ namespace FATEAutoSync
                         firstRun = false;
                     }
                     ExecuteCommand("/levelsync on");
-                    //var Player = ClientState.LocalPlayer;
-                    //string TotalList = "";
-                    //foreach (var stuff in ClientState.LocalPlayer.StatusList)
-                    //{
-                    //    TotalList += stuff.StatusId.ToString() + Environment.NewLine;
-                    //}
-                    //chat.Print("Status List: " + Environment.NewLine + TotalList);
-                    //chat.Print("Statuses: " + Environment.NewLine + Player.StatusFlags);
-                    //chat.Print("Player Class: " + Player.ClassJob.GameData.Abbreviation.ToString());
-                    //if (Condition[ConditionFlag.Mounted] || Condition[ConditionFlag.Mounted2])
-                    //{
-                    //    chat.Print("You're on a mount!");
-                    //}
                     if (Condition[ConditionFlag.Mounted] || Condition[ConditionFlag.Mounted2])
                     {
-                        //chat.Print("Entered fate while on a mount!");
                         IsMounted = true;
-                        //do
-                        //{
-                        //    //inFateArea = Marshal.ReadByte(inFateAreaPtr) == 1;
-                        //    //Thread.Sleep(1000);
-                        //} while (Condition[ConditionFlag.Mounted] || Condition[ConditionFlag.Mounted2]);
                     }
                     else
                     {
                         if (TankStanceEnabled())
                         {
-                            chat.Print("Tank stance is on!");
                             TankStanceShouldBeOnBitch = true;
                         }
                         StanceToggle();
@@ -287,8 +216,6 @@ namespace FATEAutoSync
             this.commandManager.Dispose();
 
             this.pluginInterface.SavePluginConfig(this.config);
-
-            // this.pluginInterface.UiBuilder.OnBuildUi -= this.ui.Draw;
 
             framework.Update -= Update;
         }
