@@ -147,8 +147,6 @@ namespace FATEAutoSync
       // this.pluginInterface.UiBuilder.OnBuildUi -= this.ui.Draw;
 
       framework.Update -= Update;
-
-      this.pluginInterface.Dispose();
     }
 
     public void Dispose()
