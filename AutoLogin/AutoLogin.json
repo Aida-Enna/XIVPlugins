@@ -1,11 +1,11 @@
 {
-  "Author": "Aida Enna",
-  "Name": "FATE Auto Sync",
+  "Name": "Auto Login",
+  "Author": "Aida Enna (Original by Caraxi)",
   "InternalName": "FATEAutoSync",
   "AssemblyVersion": "1.1.0.1",
   "ApplicableVersion": "any",
-  "Description": "Automatically level syncs your character and activates your tank stance whenever you join a FATE.",
-  "Punchline": "Just waiting till I get banned so square can implement this ingame",
+  "Description": "Automatically logs you into a specified character when the game first opens.",
+  "Punchline": "Automatically logs you into a specified character when the game first opens.",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [
     "level",
@@ -15,11 +15,11 @@
   ],
   "CategoryTags": null,
   "DalamudApiLevel": 7,
-  "LoadPriority": 0,
+  "LoadPriority": 1,
   "LastUpdate": 0,
   "DownloadLinkInstall": null,
   "DownloadLinkUpdate": null,
   "DownloadLinkTesting": null,
   "ImageUrls": null,
-  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/FATEAutoSync/Resources/logo.png"
+  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/AutoLogin/Resources/logo.png"
 }

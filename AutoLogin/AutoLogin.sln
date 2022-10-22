@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoLogin", "AutoLogin.csproj", "{35C5E8B3-68F8-4D28-84F6-1AA6B12B157E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{35C5E8B3-68F8-4D28-84F6-1AA6B12B157E}.Debug|x64.ActiveCfg = Debug|x64
+		{35C5E8B3-68F8-4D28-84F6-1AA6B12B157E}.Debug|x64.Build.0 = Debug|x64
+		{35C5E8B3-68F8-4D28-84F6-1AA6B12B157E}.Release|x64.ActiveCfg = Release|x64
+		{35C5E8B3-68F8-4D28-84F6-1AA6B12B157E}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B749B0B3-71F1-4084-A0B8-8164AF904A5E}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+	EndGlobalSection
+EndGlobal

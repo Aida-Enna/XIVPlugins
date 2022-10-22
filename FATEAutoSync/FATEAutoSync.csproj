@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Authors>Tenrys#0001</Authors>
+    <Authors>Aida Enna</Authors>
     <Company></Company>
-    <Version>1.1.0.0</Version>
+    <Version>1.1.0.1</Version>
     <Description></Description>
     <Copyright></Copyright>
-    <PackageProjectUrl>https://github.com/Tenrys/FATEAutoSync</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/Aida-Enna/XIVPlugins</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,6 +26,10 @@
 
   <ItemGroup>
     <Compile Remove="Attributes\DoNotShowInHelpAttribute.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="repo.json" />
   </ItemGroup>
 
   <ItemGroup>
