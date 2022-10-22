@@ -15,7 +15,7 @@
       "aida"
     ],
     "DalamudApiLevel": 7,
-    "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/FATEAutoSync/Resources/FAS.png?raw=true",
+    "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/FATEAutoSync/Resources/FAS.png",
     "IsHide": "False",
     "IsTestingExclusive": "False",
     "LastUpdated": 1663788222,
