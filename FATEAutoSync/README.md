@@ -1,5 +1,7 @@
 # FATEAutoSync
 
+(Originally created by [Tenrys](https://github.com/Tenrys) and updated to work with the new Dalamud API)
+
 Automatically synchronizes the level of your character whenever you join a FATE in Final Fantasy XIV.
 
 `/fateautosync` to toggle without uninstalling the plug-in.
