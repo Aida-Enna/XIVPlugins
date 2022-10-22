@@ -35,6 +35,7 @@
   "LoadPriority": 0,
   "CanUnloadAsync": false,
   "ImageUrls": null,
+  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/FATEAutoSync/Resources/logo.png",
   "AcceptsFeedback": true,
   "FeedbackMessage": null,
   "_isDip17Plugin": false,
