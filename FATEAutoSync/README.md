@@ -1,16 +1,12 @@
 # FATEAutoSync
 
-(Originally created by [Tenrys](https://github.com/Tenrys) and updated to work with the new Dalamud API)
+(Originally created by [Tenrys](https://github.com/Tenrys) and updated to work with the new Dalamud API, along with new features!)
 
-Automatically synchronizes the level of your character whenever you join a FATE in Final Fantasy XIV.
+Automatically synchronizes the level of your character (and optionally auto-enables tank stance!) whenever you join a FATE in Final Fantasy XIV.
 
-`/fateautosync` to toggle without uninstalling the plug-in.
+`/autofate` to toggle without uninstalling the plug-in.
 
-This is very basic, but it works. I don't know if it's bad for performance, really, I'm not used to Dalamud or C# at all for that matter. Even doing something like reading a byte from a memory address is exciting to me...
-
-It will break whenever the game updates, I assume, but finding the one address needed to know whether or not we are currently participating in a FATE is very easy to find.
-
-Maybe this is overkill, since I hear it can be done with Triggernometry most likely. But I wanted to have fun with C# for 5 minutes. (even though a big chunk of this comes from [QoLBar](https://github.com/UnknownX7/QoLBar) for chat command execution, and other plugins for knowing finding out how to read memory)
+`/autostance` to toggle auto tank stancing on/off.
 
 ## Screenshot
 
