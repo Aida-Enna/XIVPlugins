@@ -1,4 +1,4 @@
-# FATEAutoSync
+# FATE Auto Sync
 
 (Originally created by [Tenrys](https://github.com/Tenrys) and updated to work with the new Dalamud API, along with new features!)
 
