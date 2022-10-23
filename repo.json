@@ -6,7 +6,7 @@
     "InternalName": "FATEAutoSync",
     "AssemblyVersion": "1.1.0.2",
 	"Changelog": "- Added tank stance auto toggling\r\n- Bug/chat fixes",
-    "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins/tree/main/FATEAutoSync",
+    "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
       "lvlsync",
@@ -24,5 +24,29 @@
     "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip?raw=true",
     "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip?raw=true",
     "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip?raw=true"
+  },
+  {
+    "Author": "Aida Enna (Original by Caraxi)",
+    "Name": "Auto Login",
+    "Description": "Automatically logs you into a specified character when the game first opens.",
+    "InternalName": "AutoLogin",
+    "AssemblyVersion": "1.1.0.0",
+	"Changelog": "- Updated to current Dalamud API and fixed a small bug",
+    "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+    "ApplicableVersion": "any",
+    "Tags": [
+      "login",
+      "auto",
+      "aida"
+    ],
+    "DalamudApiLevel": 7,
+    "IsHide": "False",
+    "IsTestingExclusive": "False",
+    "LastUpdated": 1666527149,
+    "DownloadCount": 69420,
+    "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/AutoLogin/Resources/logo.png",
+    "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/AutoLogin.zip?raw=true",
+    "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/AutoLogin.zip?raw=true",
+    "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/AutoLogin.zip?raw=true"
   }
 ]
