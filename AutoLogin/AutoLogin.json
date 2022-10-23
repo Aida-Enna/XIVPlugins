@@ -1,7 +1,7 @@
 {
   "Name": "Auto Login",
   "Author": "Aida Enna (Original by Caraxi)",
-  "InternalName": "FATEAutoSync",
+  "InternalName": "AutoLogin",
   "AssemblyVersion": "1.1.0.1",
   "ApplicableVersion": "any",
   "Description": "Automatically logs you into a specified character when the game first opens.",
