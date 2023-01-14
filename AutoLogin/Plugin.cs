@@ -37,7 +37,6 @@ namespace AutoLogin {
         public Plugin(DalamudPluginInterface pluginInterface) {
 
             pluginInterface.Create<Service>();
-            FFXIVClientStructs.Resolver.Initialize(Service.SigScanner.SearchBase);
             this.PluginConfig = (Config)Service.PluginInterface.GetPluginConfig() ?? new Config();
             this.PluginConfig.Init(this);
 
