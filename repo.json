@@ -15,7 +15,7 @@
       "auto",
       "aida"
     ],
-    "DalamudApiLevel": 7,
+    "DalamudApiLevel": 8,
     "IsHide": "False",
     "IsTestingExclusive": "False",
     "LastUpdated": 1673725312,
@@ -39,7 +39,7 @@
       "auto",
       "aida"
     ],
-    "DalamudApiLevel": 7,
+    "DalamudApiLevel": 8,
     "IsHide": "False",
     "IsTestingExclusive": "False",
     "LastUpdated": 1673725312,
