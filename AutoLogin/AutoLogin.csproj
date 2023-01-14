@@ -4,7 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Platforms>x64</Platforms>
-		<OutputPath>$(AppData)\XIVLauncher\devPlugins\AutoLogin\</OutputPath>
+		<OutputPath>..\Build\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Label="Build">
         <OutputType>Library</OutputType>
