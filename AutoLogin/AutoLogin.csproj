@@ -4,7 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Platforms>x64</Platforms>
-		<OutputPath>..\Build\</OutputPath>
+		<OutputPath>..\Build\AutoLogin\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Label="Build">
         <OutputType>Library</OutputType>

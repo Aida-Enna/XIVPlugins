@@ -17,7 +17,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>..\Build\</OutputPath>
+    <OutputPath>..\Build\FATEAutoSync\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
