@@ -2,7 +2,7 @@
 
 If you want to use these plugins, add `https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/repo.json` to your Dalamud repo list. 
 
-These are plugins which were abandoned by their creators/maintainers, that I've fixed up and added new features to.
+These are plugins which were abandoned by their creators/maintainers that I've fixed up and added new features to. For their protection, their names are now omitted.
 
 ## Auto Login
 
