@@ -1,16 +1,14 @@
-﻿{
+{
   "Author": "Aida Enna",
-  "Name": "Food Check",
-  "InternalName": "FoodCheck",
+  "Name": "Loot Master",
+  "InternalName": "LootMaster",
   "AssemblyVersion": "1.0.0.0",
   "ApplicableVersion": "any",
-  "Description": "Exactly what it says on the tin. Original version created by Forte Skyruler.",
-  "Punchline": "See who is missing food buff during pull timer.",
+  "Description": "Various commands to need, greed, or pass on all loot. Originally created by Iaotle and StarryNight.",
+  "Punchline": "Dungeon loot made lazy.",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [
-    "food",
-    "foodcheck",
-    "raid",
+    "loot",
     "aida"
   ],
   "CategoryTags": null,
@@ -21,5 +19,5 @@
   "DownloadLinkUpdate": null,
   "DownloadLinkTesting": null,
   "ImageUrls": null,
-  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/FoodCheck/Resources/icon.png"
+  "IconUrl": ""
 }

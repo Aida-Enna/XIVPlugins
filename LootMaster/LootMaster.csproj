@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Authors>Aida Enna</Authors>
+    <Authors>Aida Enna (originally Iaotle, akira0245)</Authors>
     <Company></Company>
-    <Version>1.0.0.0</Version>
-    <Description></Description>
+    <Version>2.0.0.1</Version>
+    <Description>Recreation of the LootMaster plugin.</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://github.com/Aida-Enna/XIVPlugins</PackageProjectUrl>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
-
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <Platforms>x64</Platforms>
@@ -17,21 +17,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>..\Build\Foodcheck\</OutputPath>
+    <OutputPath>..\Build\LootMaster\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
     <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Attributes\DoNotShowInHelpAttribute.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="repo.json" />
-  </ItemGroup>
-
+	
   <ItemGroup>
     <PackageReference Include="DalamudPackager" Version="2.1.10" />
     <Reference Include="FFXIVClientStructs">
@@ -41,6 +33,7 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(DalamudLibPath)Newtonsoft.Json.dll</HintPath>
       <Private>false</Private>
+      <CopyLocal>True</CopyLocal>
     </Reference>
     <Reference Include="Dalamud">
       <HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>

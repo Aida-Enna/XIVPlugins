@@ -10,6 +10,8 @@ using Dalamud.Game;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Hooking;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
+using Dalamud.Game.ClientState;
+using Dalamud.IoC;
 
 namespace FoodCheck
 {
@@ -28,7 +30,10 @@ namespace FoodCheck
         private Hook<CountdownTimer> _countdownTimerHook;
 
         public static bool FirstRun = true;
-        
+
+        [PluginService]
+        internal static ClientState ClientState { get; private set; }
+
         [UnmanagedFunctionPointer(CallingConvention.ThisCall, CharSet = CharSet.Ansi)]
         private delegate IntPtr CountdownTimer(ulong p1);
 
@@ -72,7 +77,7 @@ namespace FoodCheck
         {
             if (FirstRun == true)
             {
-                foreach (var partyMember in partyList)
+                foreach (var partyMember in )
                 {
                     chat.Print("Found party member " + partyMember.Name);
                     chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));

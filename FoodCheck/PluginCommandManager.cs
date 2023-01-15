@@ -50,12 +50,10 @@ namespace FoodCheck
             var command = handlerDelegate.Method.GetCustomAttribute<CommandAttribute>();
             var aliases = handlerDelegate.Method.GetCustomAttribute<AliasesAttribute>();
             var helpMessage = handlerDelegate.Method.GetCustomAttribute<HelpMessageAttribute>();
-            var doNotShowInHelp = handlerDelegate.Method.GetCustomAttribute<DoNotShowInHelpAttribute>();
 
             var commandInfo = new CommandInfo(handlerDelegate)
             {
                 HelpMessage = helpMessage?.HelpMessage ?? string.Empty,
-                ShowInHelp = doNotShowInHelp == null,
             };
 
             // Create list of tuples that will be filled with one tuple per alias, in addition to the base command tuple.
