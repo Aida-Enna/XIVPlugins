@@ -4,7 +4,7 @@
   "InternalName": "FoodCheck",
   "AssemblyVersion": "1.0.0.0",
   "ApplicableVersion": "any",
-  "Description": "Exactly what it says on the tin. Original version created by Forte Skyruler.",
+  "Description": "Exactly what it says on the tin.",
   "Punchline": "See who is missing food buff during pull timer.",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [

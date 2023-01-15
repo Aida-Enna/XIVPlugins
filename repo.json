@@ -28,7 +28,7 @@
   {
     "Author": "Aida Enna",
     "Name": "Loot Master",
-    "Description": "Adds various commands to need, greed, or pass on all loot. Originally created by Iaotle and StarryNight.",
+    "Description": "Adds various commands to need, greed, or pass on all loot.",
     "InternalName": "LootMaster",
     "AssemblyVersion": "1.0.0.1",
 	"Changelog": "- Updated for 6.3\n- Fixing various EN strings",
@@ -51,7 +51,7 @@
   {
     "Author": "Aida Enna",
     "Name": "Auto Login",
-    "Description": "Automatically logs you into a specified character when the game first opens. Original by Caraxi.",
+    "Description": "Automatically logs you into a specified character when the game first opens.",
     "InternalName": "AutoLogin",
     "AssemblyVersion": "1.2.0.0",
 	"Changelog": "- Fix for patch 6.3",

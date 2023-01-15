@@ -4,7 +4,7 @@
   "InternalName": "LootMaster",
   "AssemblyVersion": "1.0.0.1",
   "ApplicableVersion": "any",
-  "Description": "Various commands to need, greed, or pass on all loot. Originally created by Iaotle and StarryNight.",
+  "Description": "Various commands to need, greed, or pass on all loot.",
   "Punchline": "Dungeon loot made lazy.",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [
