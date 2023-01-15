@@ -28,10 +28,10 @@
   {
     "Author": "Aida Enna",
     "Name": "Loot Master",
-    "Description": "Various commands to need, greed, or pass on all loot. Originally created by Iaotle and StarryNight.",
+    "Description": "Adds various commands to need, greed, or pass on all loot. Originally created by Iaotle and StarryNight.",
     "InternalName": "LootMaster",
-    "AssemblyVersion": "1.0.0.0",
-	"Changelog": "",
+    "AssemblyVersion": "1.0.0.1",
+	"Changelog": "- Updated for 6.3\n- Fixing various EN strings",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
@@ -41,7 +41,7 @@
     "DalamudApiLevel": 8,
     "IsHide": "False",
     "IsTestingExclusive": "False",
-    "LastUpdated": 1673797921,
+    "LastUpdated": 1673798681,
     "DownloadCount": 69420,
     "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/LootMaster/Resources/logo.png",
     "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/LootMaster.zip?raw=true",

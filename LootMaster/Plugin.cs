@@ -95,19 +95,19 @@ namespace DalamudPluginProjectTemplate
             ChatGui chatGui = ChatGui;
             List<Payload> payloadList = new()
             {
-                new TextPayload("Need "),
+                new TextPayload("Needed "),
                 new UIForegroundPayload(575),
                 new TextPayload(num1.ToString()),
                 new UIForegroundPayload(0),
-                new TextPayload(" item" + (num1 > 1 ? "s" : "") + ", greed "),
+                new TextPayload(" item(s)" + ", greeded "),
                 new UIForegroundPayload(575),
                 new TextPayload(num2.ToString()),
                 new UIForegroundPayload(0),
-                new TextPayload(" item" + (num2 > 1 ? "s" : "") + ", pass "),
+                new TextPayload(" item(s)" + ", passed "),
                 new UIForegroundPayload(575),
                 new TextPayload(num3.ToString()),
                 new UIForegroundPayload(0),
-                new TextPayload(" item" + (num3 > 1 ? "s" : "") + ".")
+                new TextPayload(" item(s)" + ".")
             };
             SeString seString = new(payloadList);
             chatGui.Print(seString);
@@ -140,15 +140,15 @@ namespace DalamudPluginProjectTemplate
             ChatGui chatGui = ChatGui;
             List<Payload> payloadList = new()
             {
-                new TextPayload("Need Only"),
+                new TextPayload("Needed only "),
                 new UIForegroundPayload(575),
                 new TextPayload(num1.ToString()),
                 new UIForegroundPayload(0),
-                new TextPayload(" item" + (num1 > 1 ? "s" : "") + ", pass "),
+                new TextPayload(" item(s)" + ", passed "),
                 new UIForegroundPayload(575),
                 new TextPayload(num2.ToString()),
                 new UIForegroundPayload(0),
-                new TextPayload(" item" + (num2 > 1 ? "s" : "") + ".")
+                new TextPayload(" item(s)" + ".")
             };
             SeString seString = new(payloadList);
             chatGui.Print(seString);
@@ -175,18 +175,29 @@ namespace DalamudPluginProjectTemplate
             if (!config.EnableChatLogMessage)
                 return;
             ChatGui chatGui = ChatGui;
-            List<Payload> payloadList = new()
+            List<Payload> payloadList = null;
+            if (num == 0)
             {
-                new TextPayload("Greed "),
-                new UIForegroundPayload(575),
-                new TextPayload(num.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item" + (num > 1 ? "s" : "") + ", pass "),
-                new UIForegroundPayload(575),
-                new TextPayload(num.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item" + (num1 > 1 ? "s" : "") + "."),
+                payloadList = new()
+            {
+                new TextPayload("Greeded on 0 items."),
             };
+            }
+            else
+            {
+                payloadList = new()
+            {
+                new TextPayload("Greeded "),
+                new UIForegroundPayload(575),
+                new TextPayload(num.ToString()),
+                new UIForegroundPayload(0),
+                new TextPayload(" item(s)" + ", passed "),
+                new UIForegroundPayload(575),
+                new TextPayload(num.ToString()),
+                new UIForegroundPayload(0),
+                new TextPayload(" item(s)" + "."),
+            };
+            }
             SeString seString = new(payloadList);
             chatGui.Print(seString);
         }
@@ -207,14 +218,25 @@ namespace DalamudPluginProjectTemplate
             if (!config.EnableChatLogMessage)
                 return;
             ChatGui chatGui = ChatGui;
-            List<Payload> payloadList = new()
+            List<Payload> payloadList = null;
+            if (num == 0)
             {
-                new TextPayload("Pass "),
+                payloadList = new()
+            {
+                new TextPayload("Passed on 0 items."),
+            };
+            }
+            else
+            {
+                payloadList = new()
+            {
+                new TextPayload("Passed "),
                 new UIForegroundPayload(575),
                 new TextPayload(num.ToString()),
                 new UIForegroundPayload(0),
-                new TextPayload(" item" + (num > 1 ? "s" : "") + ".")
+                new TextPayload(" item(s)" + ".")
             };
+            }
             SeString seString = new(payloadList);
             chatGui.Print(seString);
         }
@@ -235,14 +257,25 @@ namespace DalamudPluginProjectTemplate
             if (!config.EnableChatLogMessage)
                 return;
             ChatGui chatGui = ChatGui;
-            List<Payload> payloadList = new()
+            List<Payload> payloadList = null;
+            if (num == 0)
             {
-                new TextPayload("Pass all "),
+                payloadList = new()
+            {
+                new TextPayload("Passed on 0 items."),
+            };
+            }
+            else
+            {
+                 payloadList = new()
+            {
+                new TextPayload("Passed all "),
                 new UIForegroundPayload(575),
                 new TextPayload(num.ToString()),
                 new UIForegroundPayload(0),
-                new TextPayload(" item" + (num > 1 ? "s" : "") + ".")
+                new TextPayload(" item(s)" + ".")
             };
+            }
             SeString seString = new(payloadList);
             chatGui.Print(seString);
         }
