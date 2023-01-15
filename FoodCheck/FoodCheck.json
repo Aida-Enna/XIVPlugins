@@ -1,0 +1,36 @@
+﻿{
+  "Author": "Forte Skyruler",
+  "Name": "Food Check",
+  "Punchline": "See who is missing food buff during pull timer.",
+  "Description": "More to come!",
+  "InternalName": "foodCheck",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "foodcheck"
+  ]
+}
+{
+  "Author": "Aida Enna",
+  "Name": "Food Check",
+  "InternalName": "FoodCheck",
+  "AssemblyVersion": "1.0.0.0",
+  "ApplicableVersion": "any",
+  "Description": "Exactly what it says on the tin. Original version created by Forte Skyruler.",
+  "Punchline": "See who is missing food buff during pull timer.",
+  "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+  "Tags": [
+    "food",
+    "foodcheck",
+    "raid",
+    "aida"
+  ],
+  "CategoryTags": null,
+  "DalamudApiLevel": 8,
+  "LoadPriority": 0,
+  "LastUpdate": 0,
+  "DownloadLinkInstall": null,
+  "DownloadLinkUpdate": null,
+  "DownloadLinkTesting": null,
+  "ImageUrls": null,
+  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/FATEAutoSync/Resources/logo.png"
+}
