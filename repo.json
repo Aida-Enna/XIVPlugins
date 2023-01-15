@@ -26,9 +26,32 @@
     "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/FATEAutoSync.zip?raw=true"
   },
   {
-    "Author": "Aida Enna (Original by Caraxi)",
+    "Author": "Aida Enna",
+    "Name": "Loot Master",
+    "Description": "Various commands to need, greed, or pass on all loot. Originally created by Iaotle and StarryNight.",
+    "InternalName": "LootMaster",
+    "AssemblyVersion": "1.0.0.0",
+	"Changelog": "",
+    "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+    "ApplicableVersion": "any",
+    "Tags": [
+    "loot",
+    "aida"
+    ],
+    "DalamudApiLevel": 8,
+    "IsHide": "False",
+    "IsTestingExclusive": "False",
+    "LastUpdated": 1673797921,
+    "DownloadCount": 69420,
+    "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/LootMaster/Resources/logo.png",
+    "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/LootMaster.zip?raw=true",
+    "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/LootMaster.zip?raw=true",
+    "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Release/LootMaster.zip?raw=true"
+  },
+  {
+    "Author": "Aida Enna",
     "Name": "Auto Login",
-    "Description": "Automatically logs you into a specified character when the game first opens.",
+    "Description": "Automatically logs you into a specified character when the game first opens. Original by Caraxi.",
     "InternalName": "AutoLogin",
     "AssemblyVersion": "1.2.0.0",
 	"Changelog": "- Fix for patch 6.3",
