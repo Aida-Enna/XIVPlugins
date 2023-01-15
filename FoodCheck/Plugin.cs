@@ -77,7 +77,7 @@ namespace FoodCheck
         {
             if (FirstRun == true)
             {
-                foreach (var partyMember in )
+                foreach (var partyMember in partyList)
                 {
                     chat.Print("Found party member " + partyMember.Name);
                     chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
