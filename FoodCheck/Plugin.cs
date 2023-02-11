@@ -74,17 +74,7 @@ namespace FoodCheck
             // Get or create a configuration object
             config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             config.Initialize(PluginInterface);
-
-            //// Initialize the UI
-            //this.windowSystem = new WindowSystem(typeof(Plugin).AssemblyQualifiedName);
-
-            //var window = this.pluginInterface.Create<PluginWindow>();
-            //if (window is not null)
-            //{
-            //    this.windowSystem.AddWindow(window);
-            //}
-
-            //this.pluginInterface.UiBuilder.Draw += this.windowSystem.Draw;
+           
             ui = new PluginUI();
             PluginInterface.UiBuilder.Draw += new System.Action(ui.Draw);
             PluginInterface.UiBuilder.OpenConfigUi += () =>
@@ -140,29 +130,6 @@ namespace FoodCheck
             return _countdownTimerHook.Original(value);
         }
 
-        // [Command("/example1")]
-        // [HelpMessage("Example help message.")]
-        // public void ExampleCommand1(string command, string args)
-        // {
-        //     // You may want to assign these references to private variables for convenience.
-        //     // Keep in mind that the local player does not exist until after logging in.
-        //     // var world = this.clientState.LocalPlayer?.CurrentWorld.GameData;
-        //     // this.chat.Print($"Hello, {world?.Name}!");
-        //     // PluginLog.Log("Message sent successfully.");
-        //     bool first = true;
-        //     foreach (var partyMember in partyList)
-        //     {
-        //         if (partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed") == null)
-        //         {
-        //             if (first)
-        //             {
-        //                 this.chat.Print($"FOOD CHECK!");
-        //                 first = false;
-        //             }
-        //             this.chat.Print($"{partyMember.Name}");
-        //         }
-        //     }
-        // }
 
         public void ExecuteCommand(string command)
         {
