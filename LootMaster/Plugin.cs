@@ -166,38 +166,45 @@ namespace DalamudPluginProjectTemplate
                     RollItem(RollOption.Greed, index);
                     ++num;
                 }
-                else
-                {
-                    RollItem(RollOption.Pass, index);
-                    ++num1;
-                }
+                //else if (LootItems[index].RolledState != RollOption.Greed)
+                //{
+                //    RollItem(RollOption.Pass, index);
+                //    ++num1;
+                //}
             }
             if (!config.EnableChatLogMessage)
                 return;
             ChatGui chatGui = ChatGui;
             List<Payload> payloadList = null;
-            if (num == 0)
-            {
-                payloadList = new()
-            {
-                new TextPayload("Greeded on 0 items."),
-            };
-            }
-            else
-            {
-                payloadList = new()
+            //if (num == 0)
+            //{
+            //    payloadList = new()
+            //{
+            //    new TextPayload("Greeded on 0 items."),
+            //};
+            //}
+            //else
+            //{
+            //    payloadList = new()
+            //{
+            //    new TextPayload("Greeded "),
+            //    new UIForegroundPayload(575),
+            //    new TextPayload(num.ToString()),
+            //    new UIForegroundPayload(0),
+            //    new TextPayload(" item(s)" + ", passed "),
+            //    new UIForegroundPayload(575),
+            //    new TextPayload(num.ToString()),
+            //    new UIForegroundPayload(0),
+            //    new TextPayload(" item(s)" + "."),
+            //};
+            payloadList = new()
             {
                 new TextPayload("Greeded "),
                 new UIForegroundPayload(575),
                 new TextPayload(num.ToString()),
                 new UIForegroundPayload(0),
-                new TextPayload(" item(s)" + ", passed "),
-                new UIForegroundPayload(575),
-                new TextPayload(num.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item(s)" + "."),
+                new TextPayload(" item(s)."),
             };
-            }
             SeString seString = new(payloadList);
             chatGui.Print(seString);
         }
@@ -279,6 +286,7 @@ namespace DalamudPluginProjectTemplate
             SeString seString = new(payloadList);
             chatGui.Print(seString);
         }
+
 
         public static T[] ReadArray<T>(IntPtr unmanagedArray, int length) where T : struct
         {

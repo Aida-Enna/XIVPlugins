@@ -2,7 +2,7 @@
   "Author": "Aida Enna",
   "Name": "Loot Master",
   "InternalName": "LootMaster",
-  "AssemblyVersion": "1.0.0.1",
+  "AssemblyVersion": "1.0.0.2",
   "ApplicableVersion": "any",
   "Description": "Various commands to need, greed, or pass on all loot.",
   "Punchline": "Dungeon loot made lazy.",

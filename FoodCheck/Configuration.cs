@@ -1,26 +1,20 @@
 ﻿using Dalamud.Configuration;
 using Dalamud.Plugin;
+using Newtonsoft.Json;
 
-namespace FoodCheck
+namespace DalamudPluginProjectTemplate
 {
     public class Configuration : IPluginConfiguration
     {
-        int IPluginConfiguration.Version { get; set; }
+        public bool PostToEcho = true;
+        public bool PostToParty = false;
+        [JsonIgnore]
+        private DalamudPluginInterface pluginInterface;
 
-        #region Saved configuration values
-        public string CoolText { get; set; }
-        #endregion
+        public int Version { get; set; }
 
-        private readonly DalamudPluginInterface pluginInterface;
+        public void Initialize(DalamudPluginInterface pluginInterface) => this.pluginInterface = pluginInterface;
 
-        public Configuration(DalamudPluginInterface pi)
-        {
-            this.pluginInterface = pi;
-        }
-
-        public void Save()
-        {
-            this.pluginInterface.SavePluginConfig(this);
-        }
+        public void Save() => pluginInterface.SavePluginConfig(this);
     }
 }
