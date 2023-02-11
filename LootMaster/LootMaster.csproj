@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Authors>Aida Enna (originally Iaotle, akira0245)</Authors>
+    <Authors>Aida Enna</Authors>
     <Company></Company>
-    <Version>2.0.0.1</Version>
+    <Version></Version>
     <Description>Recreation of the LootMaster plugin.</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://github.com/Aida-Enna/XIVPlugins</PackageProjectUrl>
