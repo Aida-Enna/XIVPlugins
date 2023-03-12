@@ -33,6 +33,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\Shared\Classes.cs" Link="Classes.cs" />
+    <Compile Include="..\Shared\Functions.cs" Link="Functions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DalamudPackager" Version="2.1.10" />
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>

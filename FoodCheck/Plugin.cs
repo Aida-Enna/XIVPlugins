@@ -188,9 +188,12 @@ namespace FoodCheck
 
             PluginInterface.SavePluginConfig(config);
 
-            this.pluginInterface.UiBuilder.Draw -= this.windowSystem.Draw;
-            this.windowSystem.RemoveAllWindows();
-            chat.Print("Closing settings...");
+            PluginInterface.UiBuilder.Draw -= ui.Draw;
+            PluginInterface.UiBuilder.OpenConfigUi -= () =>
+            {
+                PluginUI ui = this.ui;
+                ui.IsVisible = !ui.IsVisible;
+            };
         }
 
         public void Dispose()
