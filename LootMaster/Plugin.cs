@@ -6,14 +6,14 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
-using DalamudPluginProjectTemplate.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Veda;
 
-namespace DalamudPluginProjectTemplate
+namespace LootMaster
 {
     public class Plugin : IDalamudPlugin, IDisposable
     {
@@ -23,23 +23,19 @@ namespace DalamudPluginProjectTemplate
         private readonly PluginCommandManager<Plugin> commandManager;
         private readonly PluginUI ui;
 
-        [PluginService]
-        public static CommandManager CommandManager { get; set; }
+        [PluginService] public static CommandManager CommandManager { get; set; }
 
-        [PluginService]
-        public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
 
-        [PluginService]
-        public static SigScanner SigScanner { get; set; }
+        [PluginService]public static SigScanner SigScanner { get; set; }
 
-        [PluginService]
-        public static ChatGui ChatGui { get; set; }
+        [PluginService] public static ChatGui ChatGui { get; set; }
 
         public static List<LootItem> LootItems => ReadArray<LootItem>(lootsAddr + 16, 16).Where(i => i.Valid).ToList();
 
         public string Name => "LootMaster";
 
-        public Plugin()
+        public Plugin(CommandManager commands)
         {
             lootsAddr = SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 89 44 24 60", 0);
             rollItemRaw = Marshal.GetDelegateForFunctionPointer<RollItemRaw>(SigScanner.ScanText("41 83 F8 ?? 0F 83 ?? ?? ?? ?? 48 89 5C 24 08"));
@@ -52,7 +48,7 @@ namespace DalamudPluginProjectTemplate
                PluginUI ui = this.ui;
                ui.IsVisible = !ui.IsVisible;
            };
-            commandManager = new PluginCommandManager<Plugin>(this, PluginInterface);
+            this.commandManager = new PluginCommandManager<Plugin>(this, commands);
 
         }
 

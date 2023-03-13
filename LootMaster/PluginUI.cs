@@ -1,6 +1,6 @@
 using ImGuiNET;
 
-namespace DalamudPluginProjectTemplate
+namespace LootMaster
 {
     public class PluginUI
     {

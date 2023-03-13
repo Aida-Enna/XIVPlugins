@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace DalamudPluginProjectTemplate
+namespace LootMaster
 {
     [StructLayout(LayoutKind.Explicit, Size = 64)]
     public struct LootItem

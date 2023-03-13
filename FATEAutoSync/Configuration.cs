@@ -10,10 +10,10 @@ namespace FATEAutoSync
 
         public bool AutoStanceEnabled { get; set; } = true;
 
+        public bool FateAutoSyncEnabled = true;
+
         // Add any other properties or methods here.
         [JsonIgnore] private DalamudPluginInterface? pluginInterface;
-
-        public bool FateAutoSyncEnabled = true;
 
         public void Initialize(DalamudPluginInterface pluginInterface)
         {

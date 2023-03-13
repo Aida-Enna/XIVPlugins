@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FoodCheck", "FoodCheck\Food
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LootMaster", "LootMaster\LootMaster.csproj", "{A3542514-DE9C-4AA3-B824-584F27C84AA9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PotatoFamine2", "PotatoFamine\PotatoFamine2.csproj", "{4A540051-5AB7-4893-A555-572B9FD80C5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PotatoFamine2", "PotatoFamine2\PotatoFamine2.csproj", "{4A540051-5AB7-4893-A555-572B9FD80C5B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

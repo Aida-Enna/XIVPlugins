@@ -4,7 +4,7 @@
         <TargetFramework>net7.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Platforms>x64</Platforms>
-		<OutputPath>..\Build\AutoLogin\</OutputPath>
+		<OutputPath>..\Build\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Label="Build">
         <OutputType>Library</OutputType>
@@ -26,8 +26,14 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     <ItemGroup>
-      <Compile Include="..\Shared\Classes.cs" Link="Classes.cs" />
-      <Compile Include="..\Shared\Functions.cs" Link="Functions.cs" />
+      <None Remove="README.md" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Include="..\Shared\Attributes.cs" Link="Shared\Attributes.cs" />
+      <Compile Include="..\Shared\Classes.cs" Link="Shared\Classes.cs" />
+      <Compile Include="..\Shared\CommandAttribute.cs" Link="Shared\CommandAttribute.cs" />
+      <Compile Include="..\Shared\DoNotShowInHelpAttribute.cs" Link="Shared\DoNotShowInHelpAttribute.cs" />
+      <Compile Include="..\Shared\Functions.cs" Link="Shared\Functions.cs" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="DalamudPackager" Version="2.1.10" />
@@ -53,5 +59,8 @@
             <Private>false</Private>
             <HintPath>$(APPDATA)\XIVLauncher\addon\Hooks\dev\Lumina.Excel.dll</HintPath>
         </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Shared\" />
     </ItemGroup>
 </Project>

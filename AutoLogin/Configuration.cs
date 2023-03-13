@@ -5,7 +5,7 @@ using System.Linq;
 using Lumina.Excel.GeneratedSheets;
 
 namespace AutoLogin {
-    public class Config : IPluginConfiguration {
+    public class Configuration : IPluginConfiguration {
         [NonSerialized]
         private Plugin plugin;
 
@@ -16,7 +16,7 @@ namespace AutoLogin {
         }
 
         public void Save() {
-            Service.PluginInterface.SavePluginConfig(this);
+            Plugin.PluginInterface.SavePluginConfig(this);
         }
 
         public uint DataCenter;
@@ -27,9 +27,9 @@ namespace AutoLogin {
             var drawConfig = true;
             const ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
 
-            var dcSheet = Service.Data.Excel.GetSheet<WorldDCGroupType>();
+            var dcSheet = Plugin.Data.Excel.GetSheet<WorldDCGroupType>();
             if (dcSheet == null) return false;
-            var worldSheet = Service.Data.Excel.GetSheet<World>();
+            var worldSheet = Plugin.Data.Excel.GetSheet<World>();
             if (worldSheet == null) return false;
 
             var currentDc = dcSheet.GetRow(DataCenter);

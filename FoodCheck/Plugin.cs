@@ -9,10 +9,11 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
-using DalamudPluginProjectTemplate;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Veda;
+using Veda.Attributes;
 
 namespace FoodCheck
 {
@@ -24,26 +25,23 @@ namespace FoodCheck
         private readonly SigScanner _sig;
 
         private readonly PluginCommandManager<Plugin> commandManager;
-        public static Configuration config;
         private readonly WindowSystem windowSystem;
         private IntPtr _countdownPtr;
         private readonly CountdownTimer _countdownTimer;
         private Hook<CountdownTimer> _countdownTimerHook;
-        private readonly PluginUI ui;
+        private PluginUI ui;
 
         public static bool FirstRun = true;
 
-        [PluginService]
-        public static ClientState ClientState { get; private set; }
+        [PluginService] public static ClientState ClientState { get; private set; }
 
-        [PluginService]
-        public static PartyList PartyList { get; private set; }
+        [PluginService] public static PartyList PartyList { get; private set; }
 
-        [PluginService]
-        public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
 
-        [PluginService]
-        public static Dalamud.Game.ClientState.Conditions.Condition Condition { get; private set; }
+        public Configuration config { get; private set; }
+
+        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Condition { get; private set; }
 
         private delegate void ProcessChatBoxDelegate(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4);
 
@@ -57,12 +55,7 @@ namespace FoodCheck
 
         public string Name => "Food Check";
 
-        public Plugin(
-            DalamudPluginInterface pi,
-            CommandManager commands,
-            PartyList partyList,
-            ChatGui chat,
-            SigScanner sig)
+        public Plugin(DalamudPluginInterface pi, CommandManager commands, PartyList partyList, ChatGui chat, SigScanner sig)
         {
             this.pluginInterface = pi;
             this.partyList = partyList;
@@ -75,7 +68,7 @@ namespace FoodCheck
             config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             config.Initialize(PluginInterface);
            
-            ui = new PluginUI();
+            ui = new PluginUI(this);
             PluginInterface.UiBuilder.Draw += new System.Action(ui.Draw);
             PluginInterface.UiBuilder.OpenConfigUi += () =>
             {
@@ -85,6 +78,15 @@ namespace FoodCheck
 
             // Load all of our commands
             this.commandManager = new PluginCommandManager<Plugin>(this, commands);
+
+        }
+
+        [Command("/foodcheck")]
+        [HelpMessage("Toggles auto fate syncing on/off.")]
+        public void ToggleAutoFate(string command, string args)
+        {
+            //this.config.FateAutoSyncEnabled = !this.config.FateAutoSyncEnabled;
+            //chat.Print($"Toggled auto fate syncing {(this.config.FateAutoSyncEnabled ? "on" : "off")}.");
         }
 
         private float _start;
@@ -114,14 +116,21 @@ namespace FoodCheck
                         //this.chat.Print($"FOOD CHECK!");
                         //    first = false;
                         //}
-                        PlayersWhoNeedToEat += partyMember.Name.TextValue + "/";
+                        PlayersWhoNeedToEat += partyMember.Name.TextValue + " ";
                         //this.chat.Print($"{partyMember.Name}");
                     }
                 }
                 if (PlayersWhoNeedToEat != "")
                 {
-                    if (config.PostToParty) { ExecuteCommand("/p " + PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 1, 1) + " should EAT FOOD! <se.7>"); }
-                    if (config.PostToEcho) { ExecuteCommand("/e [FoodCheck] " + PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 1, 1) + " should EAT FOOD!"); }
+                    string FinalMessage = this.config.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 1, 1));
+                    if (config.PostToParty)
+                    {
+                        ExecuteCommand("/p " + FinalMessage);
+                    }
+                    if (config.PostToEcho) 
+                    {
+                        chat.Print(Functions.BuildSeString("[FoodCheck]", FinalMessage, LogType.Normal));
+                    }
                 }
                 ///FirstRun = false;
                 //}

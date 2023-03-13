@@ -6,10 +6,11 @@ using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
-using FATEAutoSync.Attributes;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using System;
 using System.Runtime.InteropServices;
+using Veda;
+using Veda.Attributes;
 
 namespace FATEAutoSync
 {
@@ -23,12 +24,11 @@ namespace FATEAutoSync
         private PluginCommandManager<Plugin> commandManager;
         private Configuration config;
 
-        [PluginService]
-        internal static ClientState ClientState { get; private set; }
+        [PluginService] internal static ClientState ClientState { get; private set; }
+        
+        [PluginService] public static Condition Condition { get; private set; }
 
         public Configuration Configuration { get; init; }
-
-        [PluginService] public static Condition Condition { get; private set; }
 
         // private PluginUI ui;
 

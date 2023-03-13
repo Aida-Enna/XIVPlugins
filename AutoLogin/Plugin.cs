@@ -5,60 +5,72 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Keys;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
-#if DEBUG
+using Dalamud.Data;
+using Dalamud.Game.Gui;
+using Dalamud.IoC;
+using Dalamud.Interface;
 using ImGuiNET;
 using System.Linq;
-#endif
 
 namespace AutoLogin {
     public unsafe class Plugin : IDalamudPlugin {
         public string Name => "AutoLogin";
-        public Config PluginConfig { get; }
+        public Configuration PluginConfig { get; }
 
         private bool drawConfigWindow;
 
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; }
+        [PluginService] public static CommandManager Commands { get; private set; }
+        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Condition { get; private set; }
+        [PluginService] public static DataManager Data { get; private set; }
+        [PluginService] public static Framework Framework { get; private set; }
+        [PluginService] public static GameGui GameGui { get; private set; }
+        [PluginService] public static SigScanner SigScanner { get; private set; }
+        [PluginService] public static KeyState KeyState { get; private set; }
+        [PluginService] public static ChatGui Chat { get; private set; }
+        public static UiBuilder UiBuilder => PluginInterface?.UiBuilder;
+
         public void Dispose() {
-            Service.UiBuilder.Draw -= DrawUI;
-            Service.UiBuilder.OpenConfigUi -= this.OpenConfigUI;
-            Service.Commands.RemoveHandler("/autologinconfig");
-            Service.Commands.RemoveHandler("/swapcharacter");
+            UiBuilder.Draw -= DrawUI;
+            UiBuilder.OpenConfigUi -= this.OpenConfigUI;
+            Commands.RemoveHandler("/autologinconfig");
+            Commands.RemoveHandler("/swapcharacter");
         }
 
         public Plugin(DalamudPluginInterface pluginInterface) {
 
-            pluginInterface.Create<Service>();
-            this.PluginConfig = (Config)Service.PluginInterface.GetPluginConfig() ?? new Config();
+            this.PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             this.PluginConfig.Init(this);
 
-            Service.UiBuilder.Draw += DrawUI;
-            Service.UiBuilder.OpenConfigUi += this.OpenConfigUI;
+            UiBuilder.Draw += DrawUI;
+            UiBuilder.OpenConfigUi += this.OpenConfigUI;
 
-            Service.Commands.AddHandler("/autologinconfig", new Dalamud.Game.Command.CommandInfo(OnConfigCommandHandler) {
+            Commands.AddHandler("/autologinconfig", new Dalamud.Game.Command.CommandInfo(OnConfigCommandHandler) {
                 HelpMessage = $"Open config window for {Name}",
                 ShowInHelp = true
             });
 
-            if (Service.Commands.Commands.ContainsKey("/swapcharacter")) {
-                Service.Commands.RemoveHandler("/swapcharacter");
+            if (Commands.Commands.ContainsKey("/swapcharacter")) {
+                Commands.RemoveHandler("/swapcharacter");
             }
-            Service.Commands.AddHandler("/swapcharacter", new CommandInfo(OnSwapCharacterCommandHandler) {
+            Commands.AddHandler("/swapcharacter", new CommandInfo(OnSwapCharacterCommandHandler) {
                 HelpMessage = $"Swap character /swapcharacter <World.Name> <Character.Index>",
                 ShowInHelp = true
             });
 
-            Service.Framework.Update += OnFrameworkUpdate;
+            Framework.Update += OnFrameworkUpdate;
             if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0) {
-                Service.PluginInterface.UiBuilder.AddNotification("Starting AutoLogin Process.\nPress and hold shift to cancel.", "Auto Login", NotificationType.Info);
+                PluginInterface.UiBuilder.AddNotification("Starting AutoLogin Process.\nPress and hold shift to cancel.", "Auto Login", NotificationType.Info);
                 actionQueue.Enqueue(OpenDataCenterMenu);
                 actionQueue.Enqueue(SelectDataCentre);
                 actionQueue.Enqueue(SelectWorld);
@@ -72,23 +84,23 @@ namespace AutoLogin {
 
             var args = arguments.Split(' ');
 
-            void ShowHelp() => Service.Chat.PrintError("/swapcharacter <World.Name> <Character.Index>");
+            void ShowHelp() => Chat.PrintError("/swapcharacter <World.Name> <Character.Index>");
 
             if (args.Length != 2) {
                 ShowHelp();
                 return;
             }
 
-            var world = Service.Data.Excel.GetSheet<World>()?.FirstOrDefault(w => w.Name.ToDalamudString().TextValue.Equals(args[0], StringComparison.InvariantCultureIgnoreCase));
+            var world = Data.Excel.GetSheet<World>()?.FirstOrDefault(w => w.Name.ToDalamudString().TextValue.Equals(args[0], StringComparison.InvariantCultureIgnoreCase));
 
             if (world == null) {
-                Service.Chat.PrintError($"'{args[0]}' is not a valid world name.");
+                Chat.PrintError($"'{args[0]}' is not a valid world name.");
                 ShowHelp();
                 return;
             }
 
             if (!uint.TryParse(args[1], out var characterIndex) || characterIndex >= 8) {
-                Service.Chat.PrintError("Invalid Character Index. Must be between 0 and 7.");
+                Chat.PrintError("Invalid Character Index. Must be between 0 and 7.");
                 ShowHelp();
                 return;
             }
@@ -129,8 +141,8 @@ namespace AutoLogin {
             }
             if (!sw.IsRunning) sw.Restart();
 
-            if (Service.KeyState[VirtualKey.SHIFT]) {
-                Service.PluginInterface.UiBuilder.AddNotification("AutoLogin Cancelled.", "AutoLogin", NotificationType.Warning);
+            if (KeyState[VirtualKey.SHIFT]) {
+                PluginInterface.UiBuilder.AddNotification("AutoLogin Cancelled.", "AutoLogin", NotificationType.Warning);
                 actionQueue.Clear();
             }
 
@@ -176,16 +188,16 @@ namespace AutoLogin {
         }
 
         public bool OpenDataCenterMenu() {
-            var addon = (AtkUnitBase*) Service.GameGui.GetAddonByName("_TitleMenu", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_TitleMenu", 1);
             if (addon == null || addon->IsVisible == false) return false;
             GenerateCallback(addon, 12);
-            var nextAddon = (AtkUnitBase*) Service.GameGui.GetAddonByName("TitleDCWorldMap", 1);
+            var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1);
             if (nextAddon == null) return false;
             return true;
         }
 
         public bool SelectDataCentre() {
-            var addon = (AtkUnitBase*) Service.GameGui.GetAddonByName("TitleDCWorldMap", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1);
             if (addon == null) return false;
             GenerateCallback(addon, 2, (int) (tempDc ?? PluginConfig.DataCenter));
             return true;
@@ -193,15 +205,15 @@ namespace AutoLogin {
 
         public bool SelectWorld() {
             // Select World
-            var dcMenu = (AtkUnitBase*) Service.GameGui.GetAddonByName("TitleDCWorldMap", 1);
+            var dcMenu = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1);
             if (dcMenu != null) dcMenu->Hide(true);
-            var addon = (AtkUnitBase*) Service.GameGui.GetAddonByName("_CharaSelectWorldServer", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectWorldServer", 1);
             if (addon == null) return false;
 
             var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder.StringArrays[1];
             if (stringArray == null) return false;
 
-            var world = Service.Data.Excel.GetSheet<World>()?.GetRow(tempWorld ?? PluginConfig.World);
+            var world = Data.Excel.GetSheet<World>()?.GetRow(tempWorld ?? PluginConfig.World);
             if (world is not { IsPublic: true }) return false;
 
             var checkedWorldCount = 0;
@@ -223,15 +235,15 @@ namespace AutoLogin {
 
         public bool SelectCharacter() {
             // Select Character
-            var addon = (AtkUnitBase*) Service.GameGui.GetAddonByName("_CharaSelectListMenu", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectListMenu", 1);
             if (addon == null) return false;
             GenerateCallback(addon, 17, 0, tempCharacter ?? PluginConfig.CharacterSlot);
-            var nextAddon = (AtkUnitBase*) Service.GameGui.GetAddonByName("SelectYesno", 1);
+            var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
             return nextAddon != null;
         }
 
         public bool SelectYes() {
-            var addon = (AtkUnitBase*) Service.GameGui.GetAddonByName("SelectYesno", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
             if (addon == null) return false;
             GenerateCallback(addon, 0);
             addon->Hide(true);
@@ -251,7 +263,7 @@ namespace AutoLogin {
         }
         
         public bool Logout() {
-            var isLoggedIn = Service.Condition.Any();
+            var isLoggedIn = Condition.Any();
             if (!isLoggedIn) return true;
 
             FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->GetUiModule()->ExecuteMainCommand(23);

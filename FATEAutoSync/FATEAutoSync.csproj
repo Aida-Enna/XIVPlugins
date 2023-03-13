@@ -17,7 +17,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>..\Build\FATEAutoSync\</OutputPath>
+    <OutputPath>..\Build\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -25,16 +25,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Attributes\DoNotShowInHelpAttribute.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <None Remove="README.md" />
     <None Remove="repo.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Shared\Classes.cs" Link="Classes.cs" />
-    <Compile Include="..\Shared\Functions.cs" Link="Functions.cs" />
+    <Compile Include="..\Shared\Attributes.cs" Link="Shared\Attributes.cs" />
+    <Compile Include="..\Shared\Classes.cs" Link="Shared\Classes.cs" />
+    <Compile Include="..\Shared\CommandAttribute.cs" Link="Shared\CommandAttribute.cs" />
+    <Compile Include="..\Shared\DoNotShowInHelpAttribute.cs" Link="Shared\DoNotShowInHelpAttribute.cs" />
+    <Compile Include="..\Shared\Functions.cs" Link="Shared\Functions.cs" />
+    <Compile Include="..\Shared\PluginCommandManager.cs" Link="Shared\PluginCommandManager.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -67,6 +68,10 @@
       <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
       <Private>false</Private>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Shared\" />
   </ItemGroup>
 
 </Project>

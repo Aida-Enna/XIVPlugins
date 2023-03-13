@@ -1,4 +1,4 @@
-﻿namespace DalamudPluginProjectTemplate
+﻿namespace LootMaster
 {
     public enum RollOption : uint
     {
