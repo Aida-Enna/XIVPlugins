@@ -6,7 +6,7 @@ These are plugins which were abandoned by their creators/maintainers that I've f
 
 ## Auto Login
 
-Automatically logs you into the specified character when the game first starts.
+Automatically logs into the specified character (selected via the configuration menu) when FFXIV first starts.
 
 ## Fate Auto Sync
 
