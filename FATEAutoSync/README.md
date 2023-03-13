@@ -1,7 +1,5 @@
 # FATE Auto Sync
 
-(Originally created by [Tenrys](https://github.com/Tenrys) and updated to work with the new Dalamud API, along with new features!)
-
 Automatically synchronizes the level of your character (and optionally auto-enables tank stance!) whenever you join a FATE in Final Fantasy XIV.
 
 `/autofate` to toggle without uninstalling the plug-in.
