@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FoodCheck": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

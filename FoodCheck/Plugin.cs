@@ -11,7 +11,9 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
+using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -25,14 +27,14 @@ namespace FoodCheck
 
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
         [PluginService] public static CommandManager Commands { get; set; }
-        [PluginService] public static Condition Conditions { get; set; }
+        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Conditions { get; set; }
         [PluginService] public static DataManager Data { get; set; }
         [PluginService] public static Dalamud.Game.Framework Framework { get; set; }
         [PluginService] public static GameGui GameGui { get; set; }
         [PluginService] public static SigScanner SigScanner { get; set; }
         [PluginService] public static KeyState KeyState { get; set; }
         [PluginService] public static ChatGui Chat { get; set; }
-        [PluginService] internal static ClientState ClientState { get; set; }
+        [PluginService] public static ClientState ClientState { get; set; }
         [PluginService] public static PartyList PartyList { get; set; }
 
         public static Configuration PluginConfig { get; set; }
@@ -85,58 +87,74 @@ namespace FoodCheck
         [HelpMessage("Toggles auto fate syncing on/off.")]
         public void ToggleAutoFate(string command, string args)
         {
-            //this.config.FateAutoSyncEnabled = !this.config.FateAutoSyncEnabled;
-            //chat.Print($"Toggled auto fate syncing {(this.config.FateAutoSyncEnabled ? "on" : "off")}.");
+            ui.IsVisible = !ui.IsVisible;
         }
 
         private float _start;
 
         private IntPtr CountdownTimerFunc(ulong value)
         {
-            float countDownPointerValue = Marshal.PtrToStructure<float>((IntPtr)value + 0x2c);
-            if (Math.Floor(countDownPointerValue) - 2 <= _start)
+            try
             {
+                float countDownPointerValue = Marshal.PtrToStructure<float>((IntPtr)value + 0x2c);
+                if (Math.Floor(countDownPointerValue) - 2 <= _start)
+                {
+                    _start = countDownPointerValue;
+                    return _countdownTimerHook.Original(value);
+                }
+                //if (FirstRun == true)
+                //{
+                bool Debug = true;
+                if (Conditions[ConditionFlag.BoundByDuty] || Conditions[ConditionFlag.BoundByDuty56] || Conditions[ConditionFlag.BoundByDuty95] || Debug)
+                {
+                    var currentZone = ClientState.TerritoryType;
+                    var territoryTypeInfo = Data.GetExcelSheet<TerritoryType>()!.GetRow(currentZone);
+                    if (!territoryTypeInfo.ContentFinderCondition.Value.HighEndDuty && PluginConfig.OnlyDoHighEndDuties)
+                    {
+                        _start = countDownPointerValue;
+                        return _countdownTimerHook.Original(value);
+                    }
+                    string PlayersWhoNeedToEat = "";
+                    if (PartyList.Count() == 0) Chat.Print("(There are no other party members)");
+                    foreach (var partyMember in PartyList)
+                    {
+                        //Chat.Print("Found party member " + partyMember.Name);
+                        //chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
+                        //Check for food
+                        if (partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed") == null)
+                        {
+                            //if (first)
+                            //{
+                            //this.chat.Print($"FOOD CHECK!");
+                            //    first = false;
+                            //}
+                            PlayersWhoNeedToEat += partyMember.Name.TextValue + " ";
+                            //this.chat.Print($"{partyMember.Name}");
+                        }
+                    }
+                    if (PlayersWhoNeedToEat != "")
+                    {
+                        string FinalMessage = PluginConfig.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 1, 1));
+                        if (PluginConfig.PostToParty)
+                        {
+                            ExecuteCommand("/p " + FinalMessage);
+                        }
+                        if (PluginConfig.PostToEcho)
+                        {
+                            Chat.Print(Functions.BuildSeString("FoodCheck", FinalMessage, LogType.Normal));
+                        }
+                    }
+                    ///FirstRun = false;
+                    //}
+                }
                 _start = countDownPointerValue;
                 return _countdownTimerHook.Original(value);
             }
-            //if (FirstRun == true)
-            //{
-            if (Conditions[ConditionFlag.BoundByDuty] || Conditions[ConditionFlag.BoundByDuty56] || Conditions[ConditionFlag.BoundByDuty95])
+            catch(Exception f)
             {
-                string PlayersWhoNeedToEat = "";
-                foreach (var partyMember in PartyList)
-                {
-                    //chat.Print("Found party member " + partyMember.Name);
-                    //chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
-                    //Check for food
-                    if (partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed") == null)
-                    {
-                        //if (first)
-                        //{
-                        //this.chat.Print($"FOOD CHECK!");
-                        //    first = false;
-                        //}
-                        PlayersWhoNeedToEat += partyMember.Name.TextValue + " ";
-                        //this.chat.Print($"{partyMember.Name}");
-                    }
-                }
-                if (PlayersWhoNeedToEat != "")
-                {
-                    string FinalMessage = PluginConfig.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 1, 1));
-                    if (PluginConfig.PostToParty)
-                    {
-                        ExecuteCommand("/p " + FinalMessage);
-                    }
-                    if (PluginConfig.PostToEcho) 
-                    {
-                        Chat.Print(Functions.BuildSeString("[FoodCheck]", FinalMessage, LogType.Normal));
-                    }
-                }
-                ///FirstRun = false;
-                //}
+                Chat.PrintError("Something went wrong - " + f.ToString());
+                return _countdownTimerHook.Original(value);
             }
-            _start = countDownPointerValue;
-            return _countdownTimerHook.Original(value);
         }
 
 

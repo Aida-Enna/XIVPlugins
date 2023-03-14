@@ -10,6 +10,7 @@ namespace FoodCheck
         public int Version { get; set; }
         public bool PostToEcho = true;
         public bool PostToParty = false;
+        public bool OnlyDoHighEndDuties = true;
         public string CustomizableMessage = "<names> should EAT FOOD! <se.7>";
 
         private DalamudPluginInterface pluginInterface;
