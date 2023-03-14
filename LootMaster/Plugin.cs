@@ -17,30 +17,27 @@ namespace LootMaster
 {
     public class Plugin : IDalamudPlugin, IDisposable
     {
-        internal static Configuration config;
+        public string Name => "LootMaster";
+
+        [PluginService] public static CommandManager Commands { get; set; }
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static SigScanner SigScanner { get; set; }
+        [PluginService] public static ChatGui Chat { get; set; }
+        public static Configuration PluginConfig { get; set; }
+        private PluginCommandManager<Plugin> commandManager;
         private static IntPtr lootsAddr;
         internal static RollItemRaw rollItemRaw;
-        private readonly PluginCommandManager<Plugin> commandManager;
         private readonly PluginUI ui;
-
-        [PluginService] public static CommandManager CommandManager { get; set; }
-
-        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-
-        [PluginService]public static SigScanner SigScanner { get; set; }
-
-        [PluginService] public static ChatGui ChatGui { get; set; }
+        internal delegate void RollItemRaw(IntPtr lootIntPtr, RollOption option, uint lootItemIndex);
 
         public static List<LootItem> LootItems => ReadArray<LootItem>(lootsAddr + 16, 16).Where(i => i.Valid).ToList();
-
-        public string Name => "LootMaster";
 
         public Plugin(CommandManager commands)
         {
             lootsAddr = SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 89 44 24 60", 0);
             rollItemRaw = Marshal.GetDelegateForFunctionPointer<RollItemRaw>(SigScanner.ScanText("41 83 F8 ?? 0F 83 ?? ?? ?? ?? 48 89 5C 24 08"));
-            config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
-            config.Initialize(PluginInterface);
+            PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            PluginConfig.Initialize(PluginInterface);
             ui = new PluginUI();
             PluginInterface.UiBuilder.Draw += new Action(ui.Draw);
             PluginInterface.UiBuilder.OpenConfigUi += () =>
@@ -48,7 +45,7 @@ namespace LootMaster
                PluginUI ui = this.ui;
                ui.IsVisible = !ui.IsVisible;
            };
-            this.commandManager = new PluginCommandManager<Plugin>(this, commands);
+            commandManager = new PluginCommandManager<Plugin>(this, commands);
 
         }
 
@@ -64,7 +61,7 @@ namespace LootMaster
         public async void NeedCommand(string command, string args)
         {
             Random random = new Random();
-            int randomDelay = random.Next(Plugin.config.LowNum, (Plugin.config.HighNum + 1));
+            int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
             int num1 = 0;
             int num2 = 0;
@@ -77,7 +74,7 @@ namespace LootMaster
                     {
                         RollItem(RollOption.Need, index);
                         ++num1;
-                        if (Plugin.config.EnableDelay == true)
+                        if (PluginConfig.EnableDelay == true)
                         {
                             await Task.Delay(randomDelay);
                         }
@@ -86,7 +83,7 @@ namespace LootMaster
                     {
                         RollItem(RollOption.Greed, index);
                         ++num2;
-                        if (Plugin.config.EnableDelay == true)
+                        if (PluginConfig.EnableDelay == true)
                         {
                             await Task.Delay(randomDelay);
                         }
@@ -95,7 +92,7 @@ namespace LootMaster
                     {
                         RollItem(RollOption.Pass, index);
                         ++num3;
-                        if (Plugin.config.EnableDelay == true)
+                        if (PluginConfig.EnableDelay == true)
                         {
                             await Task.Delay(randomDelay);
                         }
@@ -103,9 +100,9 @@ namespace LootMaster
                 }
                 
             }
-            if (!config.EnableChatLogMessage)
+            if (!PluginConfig.EnableChatLogMessage)
                 return;
-            ChatGui chatGui = ChatGui;
+            
             List<Payload> payloadList = new()
             {
                 new TextPayload("Needed "),
@@ -123,7 +120,7 @@ namespace LootMaster
                 new TextPayload(" item(s)" + ".")
             };
             SeString seString = new(payloadList);
-            chatGui.Print(seString);
+            Chat.Print(seString);
         }
 
         [Command("/needonly")]
@@ -131,7 +128,7 @@ namespace LootMaster
         public async void NeedOnlyCommand(string command, string args)
         {
             Random random = new Random();
-            int randomDelay = random.Next(Plugin.config.LowNum, (Plugin.config.HighNum + 1));
+            int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
             int num1 = 0;
             int num2 = 0;
@@ -143,7 +140,7 @@ namespace LootMaster
                     {
                         RollItem(RollOption.Need, index);
                         ++num1;
-                        if(Plugin.config.EnableDelay == true)
+                        if(PluginConfig.EnableDelay == true)
                         {
                             await Task.Delay(randomDelay);
                         }
@@ -152,16 +149,16 @@ namespace LootMaster
                     {
                         RollItem(RollOption.Pass, index);
                         ++num2;
-                        if(Plugin.config.EnableDelay == true)
+                        if(PluginConfig.EnableDelay == true)
                         {
                             await Task.Delay(randomDelay);
                         }
                     }
                 }
             }
-            if (!config.EnableChatLogMessage)
+            if (!PluginConfig.EnableChatLogMessage)
                 return;
-            ChatGui chatGui = ChatGui;
+            
             List<Payload> payloadList = new()
             {
                 new TextPayload("Needed only "),
@@ -175,14 +172,14 @@ namespace LootMaster
                 new TextPayload(" item(s)" + ".")
             };
             SeString seString = new(payloadList);
-            chatGui.Print(seString);
+            Chat.Print(seString);
         }
         [Command("/greed")]
         [HelpMessage("Greed on all items.")]
         public async void GreedCommand(string command, string args)
         {
             Random random = new Random();
-            int randomDelay = random.Next(Plugin.config.LowNum, (Plugin.config.HighNum + 1));
+            int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
             int num = 0;
             int num1 = 0;
@@ -192,7 +189,7 @@ namespace LootMaster
                 {
                     RollItem(RollOption.Greed, index);
                     ++num;
-                    if(Plugin.config.EnableDelay == true)
+                    if(PluginConfig.EnableDelay == true)
                     {
                         await Task.Delay(randomDelay);
                     }
@@ -203,31 +200,10 @@ namespace LootMaster
                 //    ++num1;
                 //}
             }
-            if (!config.EnableChatLogMessage)
+            if (!PluginConfig.EnableChatLogMessage)
                 return;
-            ChatGui chatGui = ChatGui;
+            
             List<Payload> payloadList = null;
-            //if (num == 0)
-            //{
-            //    payloadList = new()
-            //{
-            //    new TextPayload("Greeded on 0 items."),
-            //};
-            //}
-            //else
-            //{
-            //    payloadList = new()
-            //{
-            //    new TextPayload("Greeded "),
-            //    new UIForegroundPayload(575),
-            //    new TextPayload(num.ToString()),
-            //    new UIForegroundPayload(0),
-            //    new TextPayload(" item(s)" + ", passed "),
-            //    new UIForegroundPayload(575),
-            //    new TextPayload(num.ToString()),
-            //    new UIForegroundPayload(0),
-            //    new TextPayload(" item(s)" + "."),
-            //};
             payloadList = new()
             {
                 new TextPayload("Greeded "),
@@ -237,7 +213,7 @@ namespace LootMaster
                 new TextPayload(" item(s)."),
             };
             SeString seString = new(payloadList);
-            chatGui.Print(seString);
+            Chat.Print(seString);
         }
 
         [Command("/pass")]
@@ -245,7 +221,7 @@ namespace LootMaster
         public async void PassCommand(string command, string args)
         {
             Random random = new Random();
-            int randomDelay = random.Next(Plugin.config.LowNum, (Plugin.config.HighNum + 1));
+            int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
             int num = 0;
             for (int index = 0; index < LootItems.Count; ++index)
@@ -254,7 +230,7 @@ namespace LootMaster
                 {
                     RollItem(RollOption.Pass, index);
                     ++num;
-                    if(Plugin.config.EnableDelay == true)
+                    if(PluginConfig.EnableDelay == true)
                     {
                         await Task.Delay(randomDelay);
                     }
@@ -262,9 +238,9 @@ namespace LootMaster
                 
                 
             }
-            if (!config.EnableChatLogMessage)
+            if (!PluginConfig.EnableChatLogMessage)
                 return;
-            ChatGui chatGui = ChatGui;
+            
             List<Payload> payloadList = null;
             if (num == 0)
             {
@@ -285,7 +261,7 @@ namespace LootMaster
                 };
             }
             SeString seString = new(payloadList);
-            chatGui.Print(seString);
+            Chat.Print(seString);
         }
 
         [Command("/passall")]
@@ -293,7 +269,7 @@ namespace LootMaster
         public async void PassAllCommand(string command, string args)
         {
             Random random = new Random();
-            int randomDelay = random.Next(Plugin.config.LowNum, (Plugin.config.HighNum + 1));
+            int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
             int num = 0;
             for (int index = 0; index < LootItems.Count; ++index)
@@ -302,15 +278,15 @@ namespace LootMaster
                 {
                     RollItem(RollOption.Pass, index);
                     ++num;
-                    if(Plugin.config.EnableDelay == true)
+                    if(PluginConfig.EnableDelay == true)
                     {
                         await Task.Delay(randomDelay);
                     }
                 }
             }
-            if (!config.EnableChatLogMessage)
+            if (!PluginConfig.EnableChatLogMessage)
                 return;
-            ChatGui chatGui = ChatGui;
+            
             List<Payload> payloadList = null;
             if (num == 0)
             {
@@ -331,7 +307,7 @@ namespace LootMaster
                 };
             }
             SeString seString = new(payloadList);
-            chatGui.Print(seString);
+            Chat.Print(seString);
         }
 
 
@@ -352,7 +328,7 @@ namespace LootMaster
             if (!disposing)
                 return;
             commandManager.Dispose();
-            PluginInterface.SavePluginConfig(config);
+            PluginInterface.SavePluginConfig(PluginConfig);
             PluginInterface.UiBuilder.Draw -= new Action(ui.Draw);
         }
 
@@ -361,7 +337,5 @@ namespace LootMaster
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
-        internal delegate void RollItemRaw(IntPtr lootIntPtr, RollOption option, uint lootItemIndex);
     }
 }

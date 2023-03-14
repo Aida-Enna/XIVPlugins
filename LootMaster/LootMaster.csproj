@@ -17,7 +17,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>..\Build\</OutputPath>
+    <OutputPath>..\Build\LootMaster\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -27,8 +27,6 @@
   <ItemGroup>
     <Compile Include="..\Shared\Attributes.cs" Link="Shared\Attributes.cs" />
     <Compile Include="..\Shared\Classes.cs" Link="Shared\Classes.cs" />
-    <Compile Include="..\Shared\CommandAttribute.cs" Link="Shared\CommandAttribute.cs" />
-    <Compile Include="..\Shared\DoNotShowInHelpAttribute.cs" Link="Shared\DoNotShowInHelpAttribute.cs" />
     <Compile Include="..\Shared\Functions.cs" Link="Shared\Functions.cs" />
     <Compile Include="..\Shared\PluginCommandManager.cs" Link="Shared\PluginCommandManager.cs" />
   </ItemGroup>

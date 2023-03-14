@@ -9,7 +9,6 @@ namespace FATEAutoSync
         public int Version { get; set; }
 
         public bool AutoStanceEnabled { get; set; } = true;
-
         public bool FateAutoSyncEnabled = true;
 
         // Add any other properties or methods here.

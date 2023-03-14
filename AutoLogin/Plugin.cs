@@ -21,36 +21,31 @@ using Dalamud.IoC;
 using Dalamud.Interface;
 using ImGuiNET;
 using System.Linq;
+using Veda;
+using Dalamud.Game.ClientState.Party;
+using Dalamud.Game.ClientState;
 
 namespace AutoLogin {
     public unsafe class Plugin : IDalamudPlugin {
         public string Name => "AutoLogin";
-        public Configuration PluginConfig { get; }
+        
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static CommandManager Commands { get; set; }
+        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Conditions { get; set; }
+        [PluginService] public static DataManager Data { get; set; }
+        [PluginService] public static Framework Framework { get; set; }
+        [PluginService] public static GameGui GameGui { get; set; }
+        [PluginService] public static KeyState KeyState { get; set; }
+        [PluginService] public static ChatGui Chat { get; set; }
 
+        public static Configuration PluginConfig { get; set; }
         private bool drawConfigWindow;
-
-        [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; }
-        [PluginService] public static CommandManager Commands { get; private set; }
-        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Condition { get; private set; }
-        [PluginService] public static DataManager Data { get; private set; }
-        [PluginService] public static Framework Framework { get; private set; }
-        [PluginService] public static GameGui GameGui { get; private set; }
-        [PluginService] public static SigScanner SigScanner { get; private set; }
-        [PluginService] public static KeyState KeyState { get; private set; }
-        [PluginService] public static ChatGui Chat { get; private set; }
         public static UiBuilder UiBuilder => PluginInterface?.UiBuilder;
-
-        public void Dispose() {
-            UiBuilder.Draw -= DrawUI;
-            UiBuilder.OpenConfigUi -= this.OpenConfigUI;
-            Commands.RemoveHandler("/autologinconfig");
-            Commands.RemoveHandler("/swapcharacter");
-        }
 
         public Plugin(DalamudPluginInterface pluginInterface) {
 
-            this.PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
-            this.PluginConfig.Init(this);
+            PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            PluginConfig.Initialize(PluginInterface);
 
             UiBuilder.Draw += DrawUI;
             UiBuilder.OpenConfigUi += this.OpenConfigUI;
@@ -70,7 +65,7 @@ namespace AutoLogin {
 
             Framework.Update += OnFrameworkUpdate;
             if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0) {
-                PluginInterface.UiBuilder.AddNotification("Starting AutoLogin Process.\nPress and hold shift to cancel.", "Auto Login", NotificationType.Info);
+                //PluginInterface.UiBuilder.AddNotification("Starting AutoLogin Process.\nPress and hold shift to cancel.", "Auto Login", NotificationType.Info);
                 actionQueue.Enqueue(OpenDataCenterMenu);
                 actionQueue.Enqueue(SelectDataCentre);
                 actionQueue.Enqueue(SelectWorld);
@@ -263,7 +258,7 @@ namespace AutoLogin {
         }
         
         public bool Logout() {
-            var isLoggedIn = Condition.Any();
+            var isLoggedIn = Conditions.Any();
             if (!isLoggedIn) return true;
 
             FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->GetUiModule()->ExecuteMainCommand(23);
@@ -404,6 +399,12 @@ namespace AutoLogin {
                 Marshal.FreeHGlobal(new IntPtr(atkValues));
             }
         }
-
+        public void Dispose()
+        {
+            UiBuilder.Draw -= DrawUI;
+            UiBuilder.OpenConfigUi -= this.OpenConfigUI;
+            Commands.RemoveHandler("/autologinconfig");
+            Commands.RemoveHandler("/swapcharacter");
+        }
     }
 }

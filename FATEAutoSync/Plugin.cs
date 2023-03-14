@@ -1,6 +1,9 @@
-﻿using Dalamud.Game;
+﻿using Dalamud.Data;
+using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Keys;
+using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.IoC;
@@ -10,7 +13,6 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using System;
 using System.Runtime.InteropServices;
 using Veda;
-using Veda.Attributes;
 
 namespace FATEAutoSync
 {
@@ -18,17 +20,20 @@ namespace FATEAutoSync
     {
         public string Name => "FATE AutoSync";
 
-        private DalamudPluginInterface pluginInterface;
-        private Framework framework;
-        private SigScanner sigScanner;
-        private PluginCommandManager<Plugin> commandManager;
-        private Configuration config;
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static CommandManager Commands { get; set; }
+        [PluginService] public static Condition Conditions { get; set; }
+        [PluginService] public static DataManager Data { get; set; }
+        [PluginService] public static Framework Framework { get; set; }
+        [PluginService] public static GameGui GameGui { get; set; }
+        [PluginService] public static SigScanner SigScanner { get; set; }
+        [PluginService] public static KeyState KeyState { get; set; }
+        [PluginService] public static ChatGui Chat { get; set; }
+        [PluginService] internal static ClientState ClientState { get; set; }
+        [PluginService] public static PartyList PartyList { get; set; }
 
-        [PluginService] internal static ClientState ClientState { get; private set; }
-        
-        [PluginService] public static Condition Condition { get; private set; }
-
-        public Configuration Configuration { get; init; }
+        public static Configuration PluginConfig { get; set; }
+        private PluginCommandManager<Plugin> CommandManager;
 
         // private PluginUI ui;
 
@@ -45,24 +50,24 @@ namespace FATEAutoSync
 
         private bool inFateArea = false;
         private bool firstRun = true;
-        private ChatGui chat;
+        public ChatGui chat;
         private bool IsMounted = false;
         private bool TankStanceShouldBeOnBitch = false;
 
         public Plugin(DalamudPluginInterface pluginInterface, ChatGui chat, Framework framework, CommandManager commands, SigScanner sigScanner)
         {
-            this.pluginInterface = pluginInterface;
-            this.chat = chat;
-            this.framework = framework;
-            this.sigScanner = sigScanner;
+            PluginInterface = pluginInterface;
+            Chat = chat;
+            Framework = framework;
+            SigScanner = sigScanner;
+            Commands = commands;
 
-
-            config = this.pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            config.Initialize(this.pluginInterface);
+            PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            PluginConfig.Initialize(PluginInterface);
 
             framework.Update += Update;
 
-            commandManager = new PluginCommandManager<Plugin>(this, commands);
+            CommandManager = new PluginCommandManager<Plugin>(this, commands);
 
             InitializePointers();
         }
@@ -81,7 +86,7 @@ namespace FATEAutoSync
 
         private void StanceToggle()
         {
-            if (!this.config.AutoStanceEnabled) return;
+            if (!PluginConfig.AutoStanceEnabled) return;
             //Check for their class and use the appropriate stance
             string ClassNameAbbr = ClientState.LocalPlayer.ClassJob.GameData.Abbreviation.ToString();
             if (ClassNameAbbr == "PLD" || ClassNameAbbr == "GLA") { ExecuteCommand("/action \"Iron Will\""); }
@@ -92,14 +97,14 @@ namespace FATEAutoSync
 
         private void Update(Dalamud.Game.Framework framework)
         {
-            if (!this.config.FateAutoSyncEnabled) return;
+            if (!PluginConfig.FateAutoSyncEnabled) return;
 
             var wasInFateArea = inFateArea;
             inFateArea = Marshal.ReadByte(inFateAreaPtr) == 1;
 
             if (inFateArea && IsMounted)
             {
-                if (Condition[ConditionFlag.Mounted] == false && Condition[ConditionFlag.Mounted2] == false)
+                if (Conditions[ConditionFlag.Mounted] == false && Conditions[ConditionFlag.Mounted2] == false)
                 {
                     StanceToggle();
                     IsMounted = false;
@@ -120,7 +125,7 @@ namespace FATEAutoSync
                         firstRun = false;
                     }
                     ExecuteCommand("/levelsync on");
-                    if (Condition[ConditionFlag.Mounted] || Condition[ConditionFlag.Mounted2])
+                    if (Conditions[ConditionFlag.Mounted] || Conditions[ConditionFlag.Mounted2])
                     {
                         IsMounted = true;
                     }
@@ -140,16 +145,16 @@ namespace FATEAutoSync
         [HelpMessage("Toggles auto fate syncing on/off.")]
         public void ToggleAutoFate(string command, string args)
         {
-            this.config.FateAutoSyncEnabled = !this.config.FateAutoSyncEnabled;
-            chat.Print($"Toggled auto fate syncing {(this.config.FateAutoSyncEnabled ? "on" : "off")}.");
+            PluginConfig.FateAutoSyncEnabled = !PluginConfig.FateAutoSyncEnabled;
+            chat.Print($"Toggled auto fate syncing {(PluginConfig.FateAutoSyncEnabled ? "on" : "off")}.");
         }
 
         [Command("/autostance")]
         [HelpMessage("Toggles auto stancing on/off.")]
         public void ToggleAutoStance(string command, string args)
         {
-            this.config.AutoStanceEnabled = !this.config.AutoStanceEnabled;
-            chat.Print($"Toggled auto stance syncing {(this.config.AutoStanceEnabled ? "on" : "off")}.");
+            PluginConfig.AutoStanceEnabled = !PluginConfig.AutoStanceEnabled;
+            chat.Print($"Toggled auto stance syncing {(PluginConfig.AutoStanceEnabled ? "on" : "off")}.");
         }
 
         // Courtesy of https://github.com/UnknownX7/QoLBar
@@ -158,7 +163,7 @@ namespace FATEAutoSync
             // FATE pointer (thanks to Pohky#8008)
             try
             {
-                var sig = sigScanner.ScanText("80 3D ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 48 8B 42 20");
+                var sig = SigScanner.ScanText("80 3D ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 48 8B 42 20");
                 inFateAreaPtr = sig + Marshal.ReadInt32(sig, 2) + 7;
                 //chat.Print("Retrieved 'inFateAreaPtr' successfully");
                 //chat.Print(inFateAreaPtr.ToString("X8"));
@@ -171,9 +176,9 @@ namespace FATEAutoSync
             // for ExecuteCommand
             try
             {
-                var getUIModulePtr = sigScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
-                var easierProcessChatBoxPtr = sigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
-                var uiModulePtr = sigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
+                var getUIModulePtr = SigScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
+                var easierProcessChatBoxPtr = SigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
+                var uiModulePtr = SigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
 
                 var GetUIModule = Marshal.GetDelegateForFunctionPointer<GetUIModuleDelegate>(getUIModulePtr);
 
@@ -213,11 +218,11 @@ namespace FATEAutoSync
         {
             if (!disposing) return;
 
-            this.commandManager.Dispose();
+            CommandManager.Dispose();
 
-            this.pluginInterface.SavePluginConfig(this.config);
+            PluginInterface.SavePluginConfig(PluginConfig);
 
-            framework.Update -= Update;
+            Framework.Update -= Update;
         }
 
         public void Dispose()

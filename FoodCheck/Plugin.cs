@@ -1,6 +1,8 @@
-﻿using Dalamud.Game;
+﻿using Dalamud.Data;
+using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
@@ -9,22 +11,32 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Veda;
-using Veda.Attributes;
 
 namespace FoodCheck
 {
     public class Plugin : IDalamudPlugin
     {
-        private readonly DalamudPluginInterface pluginInterface;
-        private readonly PartyList partyList;
-        private readonly ChatGui chat;
-        private readonly SigScanner _sig;
+        public string Name => "Food Check";
 
-        private readonly PluginCommandManager<Plugin> commandManager;
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static CommandManager Commands { get; set; }
+        [PluginService] public static Condition Conditions { get; set; }
+        [PluginService] public static DataManager Data { get; set; }
+        [PluginService] public static Dalamud.Game.Framework Framework { get; set; }
+        [PluginService] public static GameGui GameGui { get; set; }
+        [PluginService] public static SigScanner SigScanner { get; set; }
+        [PluginService] public static KeyState KeyState { get; set; }
+        [PluginService] public static ChatGui Chat { get; set; }
+        [PluginService] internal static ClientState ClientState { get; set; }
+        [PluginService] public static PartyList PartyList { get; set; }
+
+        public static Configuration PluginConfig { get; set; }
+        private PluginCommandManager<Plugin> commandManager;
         private readonly WindowSystem windowSystem;
         private IntPtr _countdownPtr;
         private readonly CountdownTimer _countdownTimer;
@@ -32,16 +44,6 @@ namespace FoodCheck
         private PluginUI ui;
 
         public static bool FirstRun = true;
-
-        [PluginService] public static ClientState ClientState { get; private set; }
-
-        [PluginService] public static PartyList PartyList { get; private set; }
-
-        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-
-        public Configuration config { get; private set; }
-
-        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Condition { get; private set; }
 
         private delegate void ProcessChatBoxDelegate(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4);
 
@@ -53,22 +55,20 @@ namespace FoodCheck
         [UnmanagedFunctionPointer(CallingConvention.ThisCall, CharSet = CharSet.Ansi)]
         private delegate IntPtr CountdownTimer(ulong p1);
 
-        public string Name => "Food Check";
-
-        public Plugin(DalamudPluginInterface pi, CommandManager commands, PartyList partyList, ChatGui chat, SigScanner sig)
+        public Plugin(DalamudPluginInterface pluginInterface, ChatGui chat, PartyList partyList, CommandManager commands, SigScanner sigScanner)
         {
-            this.pluginInterface = pi;
-            this.partyList = partyList;
-            this.chat = chat;
-            this._sig = sig;
+            PluginInterface = pluginInterface;
+            PartyList = partyList;
+            Chat = chat;
+            SigScanner = sigScanner;
             this._countdownTimer = CountdownTimerFunc;
             HookCountdownPointer();
 
             // Get or create a configuration object
-            config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
-            config.Initialize(PluginInterface);
+            PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
+            PluginConfig.Initialize(PluginInterface);
            
-            ui = new PluginUI(this);
+            ui = new PluginUI();
             PluginInterface.UiBuilder.Draw += new System.Action(ui.Draw);
             PluginInterface.UiBuilder.OpenConfigUi += () =>
             {
@@ -101,7 +101,7 @@ namespace FoodCheck
             }
             //if (FirstRun == true)
             //{
-            if (Condition[ConditionFlag.BoundByDuty] || Condition[ConditionFlag.BoundByDuty56] || Condition[ConditionFlag.BoundByDuty95])
+            if (Conditions[ConditionFlag.BoundByDuty] || Conditions[ConditionFlag.BoundByDuty56] || Conditions[ConditionFlag.BoundByDuty95])
             {
                 string PlayersWhoNeedToEat = "";
                 foreach (var partyMember in PartyList)
@@ -122,14 +122,14 @@ namespace FoodCheck
                 }
                 if (PlayersWhoNeedToEat != "")
                 {
-                    string FinalMessage = this.config.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 1, 1));
-                    if (config.PostToParty)
+                    string FinalMessage = PluginConfig.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 1, 1));
+                    if (PluginConfig.PostToParty)
                     {
                         ExecuteCommand("/p " + FinalMessage);
                     }
-                    if (config.PostToEcho) 
+                    if (PluginConfig.PostToEcho) 
                     {
-                        chat.Print(Functions.BuildSeString("[FoodCheck]", FinalMessage, LogType.Normal));
+                        Chat.Print(Functions.BuildSeString("[FoodCheck]", FinalMessage, LogType.Normal));
                     }
                 }
                 ///FirstRun = false;
@@ -161,12 +161,12 @@ namespace FoodCheck
                 Marshal.FreeHGlobal(mem1);
                 Marshal.FreeHGlobal(mem2);
             }
-            catch (Exception err) { chat.PrintError(err.Message); }
+            catch (Exception err) { Chat.PrintError(err.Message); }
         }
 
         private unsafe void HookCountdownPointer()
         {
-            _countdownPtr = _sig.ScanText("48 89 5C 24 ?? 57 48 83 EC 40 8B 41");
+            _countdownPtr = SigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 40 8B 41");
             try
             {
                 _countdownTimerHook = new Hook<CountdownTimer>(_countdownPtr, _countdownTimer);
@@ -177,9 +177,9 @@ namespace FoodCheck
                 PluginLog.Error("Could not hook to timer\n" + e);
             }
 
-            var getUIModulePtr = _sig.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
-            var easierProcessChatBoxPtr = _sig.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
-            var uiModulePtr = _sig.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
+            var getUIModulePtr = SigScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
+            var easierProcessChatBoxPtr = SigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
+            var uiModulePtr = SigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
 
             var GetUIModule = Marshal.GetDelegateForFunctionPointer<GetUIModuleDelegate>(getUIModulePtr);
 
@@ -195,7 +195,7 @@ namespace FoodCheck
 
             this.commandManager.Dispose();
 
-            PluginInterface.SavePluginConfig(config);
+            PluginInterface.SavePluginConfig(PluginConfig);
 
             PluginInterface.UiBuilder.Draw -= ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= () =>

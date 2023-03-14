@@ -14,8 +14,14 @@ namespace FoodCheck
 
         private DalamudPluginInterface pluginInterface;
 
-        public void Initialize(DalamudPluginInterface pluginInterface) => this.pluginInterface = pluginInterface;
+        public void Initialize(DalamudPluginInterface pluginInterface)
+        {
+            this.pluginInterface = pluginInterface;
+        }
 
-        public void Save() => pluginInterface.SavePluginConfig(this);
+        public void Save()
+        {
+            this.pluginInterface.SavePluginConfig(this);
+        }
     }
 }

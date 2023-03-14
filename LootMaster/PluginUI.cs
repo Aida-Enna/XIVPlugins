@@ -37,16 +37,16 @@ namespace LootMaster
             }
             ImGui.Spacing();
             ImGui.Separator();
-            ImGui.Checkbox("Display roll information in chat.", ref Plugin.config.EnableChatLogMessage);
+            ImGui.Checkbox("Display roll information in chat.", ref Plugin.PluginConfig.EnableChatLogMessage);
             ImGui.Spacing();
             ImGui.Separator();
-            ImGui.Checkbox("Enable Delay", ref Plugin.config.EnableDelay);
+            ImGui.Checkbox("Enable Delay", ref Plugin.PluginConfig.EnableDelay);
             ImGui.Spacing();
             ImGui.Text("Sets the delay between rolls (In milliseconds)");
             ImGui.Spacing();
-            ImGui.SliderInt("Min Delay", ref Plugin.config.LowNum, 250, 750);
+            ImGui.SliderInt("Min Delay", ref Plugin.PluginConfig.LowNum, 250, 750);
             ImGui.Spacing();
-            ImGui.SliderInt("Max Delay", ref Plugin.config.HighNum, 500, 1000);
+            ImGui.SliderInt("Max Delay", ref Plugin.PluginConfig.HighNum, 500, 1000);
             ImGui.End();
         }
     }

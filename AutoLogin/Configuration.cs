@@ -3,16 +3,17 @@ using ImGuiNET;
 using System;
 using System.Linq;
 using Lumina.Excel.GeneratedSheets;
+using Veda;
+using Dalamud.Plugin;
 
 namespace AutoLogin {
     public class Configuration : IPluginConfiguration {
-        [NonSerialized]
-        private Plugin plugin;
 
         public int Version { get; set; }
 
-        public void Init(Plugin plugin) {
-            this.plugin = plugin;
+        public void Initialize(DalamudPluginInterface pluginInterface)
+        {
+            Plugin.PluginInterface = pluginInterface;
         }
 
         public void Save() {
@@ -38,7 +39,7 @@ namespace AutoLogin {
                 return true;
             }
 
-            if (ImGui.Begin($"{plugin.Name} Config", ref drawConfig, windowFlags)) {
+            if (ImGui.Begin("AutoLogin Config", ref drawConfig, windowFlags)) {
 
                 if (ImGui.BeginCombo("Data Center", DataCenter == 0 ? "Not Selected" : currentDc.Name.RawString)) {
                     foreach (var dc  in dcSheet.Where(w => w.Region > 0 && w.Name.RawString.Trim().Length > 0)) {
