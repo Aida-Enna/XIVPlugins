@@ -80,7 +80,7 @@
     "Description": "Adds various commands to need, greed, or pass on all loot.",
     "InternalName": "LootMaster",
     "AssemblyVersion": "1.0.0.4",
-	"Changelog": "- Added optional delay between rolling on items",
+	"Changelog": "- Internal rewrite, no new changes yet",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
