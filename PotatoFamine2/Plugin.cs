@@ -166,8 +166,8 @@ namespace PotatoFamine2
 
         private void OpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args)
         {
-            Chat.Print(args.Text.TextValue);
-            Chat.Print(args.ParentAddonName);
+            //Chat.Print(args.Text.TextValue);
+            //Chat.Print(args.ParentAddonName);
             if (args.ObjectWorld == 0 || args.ObjectWorld == 65535 || args.Text.TextValue.Contains(" ") == false)
             {
                 //Not a player
