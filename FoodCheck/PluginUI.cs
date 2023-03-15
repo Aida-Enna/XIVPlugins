@@ -16,7 +16,7 @@ namespace FoodCheck
             ImGui.Checkbox("Post in party chat", ref Plugin.PluginConfig.PostToParty);
             ImGui.Checkbox("Only post in high-end duties", ref Plugin.PluginConfig.OnlyDoHighEndDuties);
             ImGui.Text("Please format the message as you would like it to show:");
-            ImGui.InputText("", ref Plugin.PluginConfig.CustomizableMessage, 40);
+            ImGui.InputText("", ref Plugin.PluginConfig.CustomizableMessage, 100);
             ImGui.Text("<names> will be replaced with the names of the people\nwho need to eat food.");
             ImGui.End();
         }

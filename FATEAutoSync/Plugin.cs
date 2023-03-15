@@ -160,7 +160,7 @@ namespace FATEAutoSync
         // Courtesy of https://github.com/UnknownX7/QoLBar
         private unsafe void InitializePointers()
         {
-            // FATE pointer (thanks to Pohky#8008)
+            // FATE pointer
             try
             {
                 var sig = SigScanner.ScanText("80 3D ?? ?? ?? ?? ?? 0F 84 ?? ?? ?? ?? 48 8B 42 20");
