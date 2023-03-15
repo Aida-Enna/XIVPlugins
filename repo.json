@@ -27,7 +27,7 @@
     "Author": "Aida Enna",
     "Name": "FATE Auto Sync",
     "Description": "Automatically level syncs your character and activates your tank stance whenever you join a FATE.",
-    "Punchline": "Just waiting till I get banned so square can implement this ingame",
+    "Punchline": "Just waiting till I get banned so square can implement this ingame.",
     "InternalName": "FATEAutoSync",
     "AssemblyVersion": "1.2.0.1",
     "Changelog": "- Internal rewrite, no new changes yet",
