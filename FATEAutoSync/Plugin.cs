@@ -50,7 +50,6 @@ namespace FATEAutoSync
 
         private bool inFateArea = false;
         private bool firstRun = true;
-        public ChatGui chat;
         private bool IsMounted = false;
         private bool TankStanceShouldBeOnBitch = false;
 
@@ -146,7 +145,7 @@ namespace FATEAutoSync
         public void ToggleAutoFate(string command, string args)
         {
             PluginConfig.FateAutoSyncEnabled = !PluginConfig.FateAutoSyncEnabled;
-            chat.Print($"Toggled auto fate syncing {(PluginConfig.FateAutoSyncEnabled ? "on" : "off")}.");
+            Chat.Print($"Toggled auto fate syncing {(PluginConfig.FateAutoSyncEnabled ? "on" : "off")}.");
         }
 
         [Command("/autostance")]
@@ -154,7 +153,7 @@ namespace FATEAutoSync
         public void ToggleAutoStance(string command, string args)
         {
             PluginConfig.AutoStanceEnabled = !PluginConfig.AutoStanceEnabled;
-            chat.Print($"Toggled auto stance syncing {(PluginConfig.AutoStanceEnabled ? "on" : "off")}.");
+            Chat.Print($"Toggled auto stance syncing {(PluginConfig.AutoStanceEnabled ? "on" : "off")}.");
         }
 
         // Courtesy of https://github.com/UnknownX7/QoLBar
@@ -209,7 +208,7 @@ namespace FATEAutoSync
                 Marshal.FreeHGlobal(mem1);
                 Marshal.FreeHGlobal(mem2);
             }
-            catch (Exception err) { chat.PrintError(err.Message); }
+            catch (Exception err) { Chat.PrintError(err.Message); }
         }
 
         #region IDisposable Support
