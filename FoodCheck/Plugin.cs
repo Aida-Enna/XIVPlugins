@@ -141,7 +141,7 @@ namespace FoodCheck
                         }
                         if (PluginConfig.PostToEcho)
                         {
-                            Chat.Print(Functions.BuildSeString("FoodCheck", FinalMessage, LogType.Normal));
+                            Chat.Print(Functions.BuildSeString("FoodCheck", FinalMessage));
                         }
                     }
                     ///FirstRun = false;

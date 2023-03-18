@@ -1,4 +1,8 @@
+using Dalamud.Game.Gui;
+using Dalamud.Utility;
 using ImGuiNET;
+using System;
+using System.Linq;
 
 namespace LootMaster
 {
@@ -16,7 +20,7 @@ namespace LootMaster
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted("/need");
                 ImGui.TableNextColumn();
-                ImGui.TextUnformatted("Roll need for everything. If impossible, roll greed. Else, roll pass");
+                ImGui.TextUnformatted("Roll need for everything. If impossible, roll greed. Else, roll pass.");
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted("/needonly");
                 ImGui.TableNextColumn();
@@ -24,7 +28,7 @@ namespace LootMaster
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted("/greed");
                 ImGui.TableNextColumn();
-                ImGui.TextUnformatted("Greed on all items. Else, roll pass");
+                ImGui.TextUnformatted("Greed on all items. Else, roll pass.");
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted("/pass");
                 ImGui.TableNextColumn();
@@ -35,6 +39,55 @@ namespace LootMaster
                 ImGui.TextUnformatted("Passes on all, even if you rolled on them previously.");
                 ImGui.EndTable();
             }
+            ImGui.Checkbox("Automatically roll on loot", ref Plugin.PluginConfig.AutoRoll);
+            if (Plugin.PluginConfig.AutoRoll)
+            {
+                if (ImGui.BeginCombo("on all loot", Plugin.PluginConfig.AutoRollOption.ToString()))
+                {
+                    foreach (AutoRollOption RollSelection in Enum.GetValues(typeof(AutoRollOption)))
+                    {
+                        ImGui.PushID((byte)RollSelection);
+                        if (ImGui.Selectable(RollSelection.GetAttribute<Display>().Value))
+                        {
+                            //Plugin.Chat.Print("AutoRollOption is " + RollSelection);
+                            Plugin.PluginConfig.AutoRollOption = RollSelection;
+                            Plugin.PluginConfig.Save();
+                            //Plugin.Chat.Print("AutoRollOption is " + Plugin.PluginConfig.AutoRollOption);
+                        }
+
+                        if (RollSelection == Plugin.PluginConfig.AutoRollOption)
+                        {
+                            ImGui.SetItemDefaultFocus();
+                        }
+
+                        ImGui.PopID();
+                    }
+                    if (ImGui.IsItemHovered()) { ImGui.SetTooltip("The race to change all players to"); }
+                    ImGui.EndCombo();
+                }
+            }
+            /*
+             * if (ImGui.BeginCombo("Race", othersTargetRace.GetAttribute<Display>().Value))
+                    {
+                        foreach (Race race in Enum.GetValues(typeof(Race)))
+                        {
+                            ImGui.PushID((byte) race);
+                            if (ImGui.Selectable(race.GetAttribute<Display>().Value, race == othersTargetRace))
+                            {
+                                othersTargetRace = race;
+                            }
+
+                            if (race == othersTargetRace)
+                            {
+                                ImGui.SetItemDefaultFocus();
+                            }
+
+                            ImGui.PopID();
+                        }
+                        if (ImGui.IsItemHovered()) { ImGui.SetTooltip("The race to change all players to"); }
+                        ImGui.EndCombo();
+                    }
+            */
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Checkbox("Display roll information in chat.", ref Plugin.PluginConfig.EnableChatLogMessage);

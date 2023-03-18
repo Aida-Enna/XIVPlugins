@@ -227,19 +227,19 @@ namespace PotatoFamine2
                     };
                     PluginConfig.TrustedList.Add(TempPlayerData);
                     PluginConfig.Save();
-                    Chat.Print(Functions.BuildSeString("PF2", PlayerName + " was added to the trusted list.", LogType.Normal));
+                    Chat.Print(Functions.BuildSeString("PF2", PlayerName + " was added to the trusted list."));
                 }
                 else
                 {
                     PluginConfig.TrustedList.RemoveAt(PluginConfig.TrustedList.FindIndex(x => x.Name == PlayerName));
                     PluginConfig.Save();
-                    Chat.Print(Functions.BuildSeString("PF2", PlayerName + " was removed from the trusted list.", LogType.Normal));
+                    Chat.Print(Functions.BuildSeString("PF2", PlayerName + " was removed from the trusted list."));
                 }
                 RerenderActor(ObjectTable.SearchById(args.ObjectId));
             }
             catch (Exception f)
             {
-                Chat.Print(Functions.BuildSeString("PF2", "Something went wrong - " + f.ToString(), LogType.Error));
+                Chat.Print(Functions.BuildSeString("PF2", "Something went wrong - " + f.ToString(), ColorType.Error));
             }
         }
 
@@ -264,20 +264,20 @@ namespace PotatoFamine2
                     PluginConfig.ForciblyChangeList.Add(TempPlayerData);
                     unsavedConfigChanges = true;
                     SaveConfig();
-                    Chat.Print(Functions.BuildSeString("PF2", PlayerName + " was added to the \"Forcibly Change\" list.", LogType.Normal));
+                    Chat.Print(Functions.BuildSeString("PF2", PlayerName + " was added to the \"Forcibly Change\" list."));
                 }
                 else
                 {
                     PluginConfig.ForciblyChangeList.RemoveAt(PluginConfig.ForciblyChangeList.FindIndex(x => x.Name == PlayerName));
                     unsavedConfigChanges = true;
                     SaveConfig();
-                    Chat.Print(Functions.BuildSeString("PF2", PlayerName + " was removed from the \"Forcibly Change\" list.", LogType.Normal));
+                    Chat.Print(Functions.BuildSeString("PF2", PlayerName + " was removed from the \"Forcibly Change\" list."));
                 }
                 RerenderActor(ObjectTable.SearchById(args.ObjectId));
             }
             catch (Exception f)
             {
-                Chat.Print(Functions.BuildSeString("PF2", "Something went wrong - " + f.ToString(), LogType.Error));
+                Chat.Print(Functions.BuildSeString("PF2", "Something went wrong - " + f.ToString(), ColorType.Error));
             }
         }
 

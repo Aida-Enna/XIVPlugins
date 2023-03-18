@@ -13,6 +13,9 @@ namespace LootMaster
 
         public int LowNum = 500;
         public int HighNum = 750;
+
+        public bool AutoRoll = false;
+        public AutoRollOption AutoRollOption = AutoRollOption.NeedThenGreed;
         
         [JsonIgnore] private DalamudPluginInterface pluginInterface;
 
