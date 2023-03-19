@@ -16,7 +16,9 @@ namespace LootMaster
 
         public bool AutoRoll = false;
         public AutoRollOption AutoRollOption = AutoRollOption.NeedThenGreed;
-        
+        public bool NotifyOnCFPop = true;
+        public bool PassOnFail = false;
+
         [JsonIgnore] private DalamudPluginInterface pluginInterface;
 
         public void Initialize(DalamudPluginInterface pluginInterface)

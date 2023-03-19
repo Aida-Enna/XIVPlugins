@@ -62,9 +62,12 @@ namespace LootMaster
 
                         ImGui.PopID();
                     }
-                    if (ImGui.IsItemHovered()) { ImGui.SetTooltip("The race to change all players to"); }
                     ImGui.EndCombo();
                 }
+                ImGui.Checkbox("Display auto-loot status on Duty Finder pop", ref Plugin.PluginConfig.NotifyOnCFPop);
+                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("HIGHLY RECOMMENDED so that you don't forget you have it set to something and lose loot you care about!"); }
+                ImGui.Checkbox("Automatically pass on items that fail need/greed", ref Plugin.PluginConfig.PassOnFail);
+                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("For things like minions/green items you can't get more than one of/already have in your inventory"); }
             }
             /*
              * if (ImGui.BeginCombo("Race", othersTargetRace.GetAttribute<Display>().Value))
@@ -90,12 +93,12 @@ namespace LootMaster
             */
             ImGui.Spacing();
             ImGui.Separator();
-            ImGui.Checkbox("Display roll information in chat.", ref Plugin.PluginConfig.EnableChatLogMessage);
+            ImGui.Checkbox("Display roll information in system chat", ref Plugin.PluginConfig.EnableChatLogMessage);
             ImGui.Spacing();
             ImGui.Separator();
             ImGui.Checkbox("Enable Delay", ref Plugin.PluginConfig.EnableDelay);
             ImGui.Spacing();
-            ImGui.Text("Sets the delay between rolls (In milliseconds)");
+            ImGui.Text("Sets the delay between rolls (in milliseconds)");
             ImGui.Spacing();
             ImGui.SliderInt("Min Delay", ref Plugin.PluginConfig.LowNum, 250, 750);
             ImGui.Spacing();

@@ -8,8 +8,8 @@
         Greed = 2,
         [Display("Pass")]
         Pass = 5,
-        //[Display("Not Available")]
-        //NotAvailable = 7,
+        [Display("Not Available")]
+        NotAvailable = 7,
     }
     public enum AutoRollOption : uint
     {
