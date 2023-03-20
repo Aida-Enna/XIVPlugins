@@ -8,14 +8,21 @@ using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Timers;
 using Veda;
+using static Dalamud.Game.Text.SeStringHandling.Payloads.ItemPayload;
+using static FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentList;
 
 namespace LootMaster
 {
@@ -36,7 +43,7 @@ namespace LootMaster
 
         internal delegate void RollItemRaw(IntPtr lootIntPtr, RollOption option, uint lootItemIndex);
 
-        public static List<LootItem> LootItems => ReadArray<LootItem>(lootsAddr + 16, 16).Where(i => i.Valid).ToList();
+        public static List<LootItem> LootItems => ReadArray<LootItem>(lootsAddr + 16, 16).Where(i => i.ItemId != 3758096384U && i.ItemId > 0U).ToList();
         public Timer LootTimer = new System.Timers.Timer();
         public static List<LootItem> FailedItems = new List<LootItem>();
 
@@ -56,7 +63,7 @@ namespace LootMaster
             commandManager = new PluginCommandManager<Plugin>(this, commands);
 
             Client = client;
-
+            
             Client.CfPop += CFPop;
 
             LootTimer.Interval = 10000; //600000
@@ -64,7 +71,7 @@ namespace LootMaster
             LootTimer.Start();
         }
 
-        private void CFPop(object? sender, ContentFinderCondition queuedDuty)
+        private unsafe void CFPop(object? sender, ContentFinderCondition queuedDuty)
         {
             if (PluginConfig.NotifyOnCFPop && PluginConfig.AutoRoll) { Chat.Print(Functions.BuildSeString("LootMaster", "Your current <c17>auto-roll setting is <c573>" + PluginConfig.AutoRollOption + "</c>.")); }
         }
@@ -73,27 +80,18 @@ namespace LootMaster
         {
             try
             {
+                if (LootItems.Any(x => (LootMaster.RollState)x.RollState == RollState.LootMasterNotDecided)) { return; }
                 if (LootItems.Count() > 0 && PluginConfig.AutoRoll)
                 {
                     //save the number and don't repeat if the lootcount and failed count are the same
                     List<LootItem> ItemsToRollOn = LootItems;
-                    ItemsToRollOn.RemoveAll(y => FailedItems.Any(z => y.Rolled == false && z.ItemId == y.ItemId));
-                    //if (!LootItems.Any(y => FailedItems.Any(z => y.Rolled == false && z.ItemId != y.ItemId)))
-                    //{
-                    //    Chat.Print(FailedItems.Count() + " item(s) have failed to roll, there's been no new items since."
-                    //    return;
-                    //}
-
-                    //Just add a new type called Autoroll option in the Roll Option thing
-                    //Add Need/Greed to it as the second thing
-                    //Then add it as an or to the Need and greed parts below
-                    //ez
+                    ItemsToRollOn.RemoveAll(y => FailedItems.Any(z => y.RollResult == 0 && z.ItemId == y.ItemId));
                     if (ItemsToRollOn.Count == 0)
                     {
                         return; // PluginLog.Information("No non-failed items left, aborting...");
                     }
                     int OriginaLootcount = ItemsToRollOn.Count();
-                    if (ItemsToRollOn.All(x => x.Rolled)) { return; }
+                    if (ItemsToRollOn.All(x => x.RollState == FFXIVClientStructs.FFXIV.Client.Game.UI.RollState.Rolled)) { return; }
                     LootTimer.Enabled = false;
                     Chat.Print("There's some loot waiting, " + ItemsToRollOn.Count() + " pieces. We're gonna roll " + PluginConfig.AutoRollOption);
                     Random random = new Random();
@@ -102,34 +100,34 @@ namespace LootMaster
                     int num1 = 0;
                     for (int index = 0; index < ItemsToRollOn.Count; ++index)
                     {
-                        if (!ItemsToRollOn[index].Rolled)
+                        if (ItemsToRollOn[index].RollResult == 0)
                         {
-                            if (ItemsToRollOn[index].RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
+                            if ((LootMaster.RollState)ItemsToRollOn[index].RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
                             {
                                 RollItem(RollOption.Need, index);
+                                num1++;
                                 if (PluginConfig.EnableDelay == true)
                                 {
                                     await Task.Delay(randomDelay);
                                 }
-                                if (LootItems[index].RollState == RollState.Rolled) { num1++; }
                             }
-                            if (ItemsToRollOn[index].RollState == RollState.UpToGreed && (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
+                            if (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed)
                             {
                                 RollItem(RollOption.Greed, index);
+                                num1++;
                                 if (PluginConfig.EnableDelay == true)
                                 {
                                     await Task.Delay(randomDelay);
                                 }
-                                if (LootItems[index].Rolled) { num1++; }
                             }
-                            if (PluginConfig.AutoRollOption == AutoRollOption.Pass || (LootItems[index].Rolled == false && PluginConfig.PassOnFail))
+                            if (PluginConfig.AutoRollOption == AutoRollOption.Pass || (LootItems[index].RollResult == 0 && PluginConfig.PassOnFail))
                             {
                                 RollItem(RollOption.Pass, index);
+                                num1++;
                                 if (PluginConfig.EnableDelay == true)
                                 {
                                     await Task.Delay(randomDelay);
                                 }
-                                if (LootItems[index].Rolled) { num1++; }
                             }
                         }
                     }
@@ -137,24 +135,11 @@ namespace LootMaster
                     if (!PluginConfig.EnableChatLogMessage)
                         return;
 
-                    if (LootItems.Where(x => x.Rolled == false).Count() > 0)
+                    if (LootItems.Where(x => x.RollResult == 0).Count() > 0)
                     {
-                        //List<Payload> payloadList = new()
-                        //{
-                        //new TextPayload("[LootMaster] Auto "  + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed "),
-                        //new UIForegroundPayload(575),
-                        //new TextPayload(num1.ToString()),
-                        //new UIForegroundPayload(0),
-                        //new TextPayload(" item(s), but couldn't roll on "),
-                        //new UIForegroundPayload(575),
-                        //new TextPayload(LootItems.Where(x => x.Rolled == false).Count().ToString()),
-                        //new UIForegroundPayload(0),
-                        //new TextPayload(" item(s)."),
-                        //};
-                        //SeString seString = new(payloadList);
                         if (num1 != 0)
                         {
-                            Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s), but couldn't roll on the rest."));
+                            Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s), but couldn't roll some items."));
                         }
                         else
                         {
@@ -164,15 +149,6 @@ namespace LootMaster
                     }
                     else
                     {
-                        //List<Payload> payloadList = new()
-                        //{
-                        //new TextPayload("[LootMaster] Auto "  + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed "),
-                        //new UIForegroundPayload(575),
-                        //new TextPayload(num1.ToString()),
-                        //new UIForegroundPayload(0),
-                        //new TextPayload(" item(s).")
-                        //};
-                        //SeString seString = new(payloadList);
                         Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s)."));
                     }
                 }
@@ -188,7 +164,8 @@ namespace LootMaster
             try
             {
                 LootItem lootItem = LootItems[index];
-                PluginLog.Information(string.Format("{0} [{1}] {2} Id: {3:X} rollState: {4} rollOption: {5}", option, index, lootItem.ItemId, lootItem.ObjectId, lootItem.RollState, lootItem.RolledState), Array.Empty<object>());
+                //PluginLog.Information(string.Format("{0} [{1}] {2} Id: {3:X} rollState: {4} rollOption: {5}", option, index, lootItem.ItemId, lootItem.ObjectId, lootItem.RollState, lootItem.RolledState), Array.Empty<object>());
+                PluginLog.Information(string.Format("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} ", lootItem.ChestItemIndex, lootItem.ChestObjectId, lootItem.ItemCount, lootItem.ItemId, lootItem.LootMode, lootItem.MaxTime, lootItem.RollResult, lootItem.RollState, lootItem.RollValue, lootItem.Time), Array.Empty<object>());
                 rollItemRaw(lootsAddr, option, (uint)index);
             }
             catch (Exception f)
@@ -197,6 +174,37 @@ namespace LootMaster
             }
         }
 
+        [Command("/lootdebug")]
+        [Aliases("/ld")]
+        [HelpMessage("Display debug loot info")]
+        public async void ShowDebugLootInfo(string command, string args)
+        {
+            string FinalMessage = "";
+
+            foreach (LootItem Item in LootItems)
+            {
+                FinalMessage += "Item ID: " + Item.ItemId + Environment.NewLine;
+                FinalMessage += "Loot index: " + Item.ChestItemIndex + Environment.NewLine;
+                FinalMessage += "Number of item: " + Item.ItemCount + Environment.NewLine;
+                FinalMessage += "Loot Mode: " + Item.LootMode + Environment.NewLine;
+                FinalMessage += "Roll Result: " + Item.RollResult + Environment.NewLine;
+                FinalMessage += "Roll State: " + Item.RollState + Environment.NewLine;
+                FinalMessage += "Roll Value: " + Item.RollValue + Environment.NewLine;
+
+                //(string.Format("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} ",
+                //lootItem.ChestItemIndex,
+                //lootItem.ChestObjectId,
+                //lootItem.ItemCount,
+                //lootItem.ItemId,
+                //lootItem.LootMode,
+                //lootItem.MaxTime,
+                //lootItem.RollResult,
+                //lootItem.RollState,
+                //lootItem.RollValue,
+                //lootItem.Time), Array.Empty<object>());
+            }
+            Chat.Print(FinalMessage);
+        }
         [Command("/lootmaster")]
         [Aliases("/lm")]
         [HelpMessage("Opens the lootmaster configuration menu.")]
@@ -205,22 +213,20 @@ namespace LootMaster
             PluginUI ui = this.ui;
             ui.IsVisible = !ui.IsVisible;
         }
-
         [Command("/need")]
         [HelpMessage("Roll need for everything. If impossible, roll greed. Else, roll pass.")]
         public async void NeedCommand(string command, string args)
         {
             Random random = new Random();
             int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
-
             int num1 = 0;
             int num2 = 0;
             int num3 = 0;
             for (int index = 0; index < LootItems.Count; ++index)
             {
-                if (!LootItems[index].Rolled)
+                if (LootItems[index].RollResult == 0)
                 {
-                    if (LootItems[index].RollState == RollState.UpToNeed)
+                    if ((LootMaster.RollState)LootItems[index].RollState == RollState.UpToNeed)
                     {
                         RollItem(RollOption.Need, index);
                         ++num1;
@@ -229,7 +235,7 @@ namespace LootMaster
                             await Task.Delay(randomDelay);
                         }
                     }
-                    else if (!LootItems[index].Rolled)
+                    else if (LootItems[index].RollResult == 0 && (LootMaster.RollState)LootItems[index].RollState == RollState.UpToGreed)
                     {
                         RollItem(RollOption.Greed, index);
                         ++num2;
@@ -252,24 +258,25 @@ namespace LootMaster
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            List<Payload> payloadList = new()
-            {
-                new TextPayload("Needed "),
-                new UIForegroundPayload(575),
-                new TextPayload(num1.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item(s)" + ", greeded "),
-                new UIForegroundPayload(575),
-                new TextPayload(num2.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item(s)" + ", passed "),
-                new UIForegroundPayload(575),
-                new TextPayload(num3.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item(s)" + ".")
-            };
-            SeString seString = new(payloadList);
-            Chat.Print(seString);
+            //List<Payload> payloadList = new()
+            //{
+            //    new TextPayload("Needed "),
+            //    new UIForegroundPayload(575),
+            //    new TextPayload(num1.ToString()),
+            //    new UIForegroundPayload(0),
+            //    new TextPayload(" item(s)" + ", greeded "),
+            //    new UIForegroundPayload(575),
+            //    new TextPayload(num2.ToString()),
+            //    new UIForegroundPayload(0),
+            //    new TextPayload(" item(s)" + ", passed "),
+            //    new UIForegroundPayload(575),
+            //    new TextPayload(num3.ToString()),
+            //    new UIForegroundPayload(0),
+            //    new TextPayload(" item(s)" + ".")
+            //};
+            //SeString seString = new(payloadList);
+            //Chat.Print(seString);
+            Chat.Print(Functions.BuildSeString(this.Name, "Needed <c575>" + num1.ToString() + " item(s), greeded <c575>" + num2.ToString() + " item(s), passed <c575>" + num3.ToString() + " item(s)."));
         }
 
         [Command("/needonly")]
@@ -283,9 +290,9 @@ namespace LootMaster
             int num2 = 0;
             for (int index = 0; index < LootItems.Count; ++index)
             {
-                if (!LootItems[index].Rolled)
+                if (LootItems[index].RollResult == 0)
                 {
-                    if (LootItems[index].RollState == RollState.UpToNeed)
+                    if ((LootMaster.RollState)LootItems[index].RollState == RollState.UpToNeed)
                     {
                         RollItem(RollOption.Need, index);
                         ++num1;
@@ -308,20 +315,21 @@ namespace LootMaster
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            List<Payload> payloadList = new()
-            {
-                new TextPayload("Needed only "),
-                new UIForegroundPayload(575),
-                new TextPayload(num1.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item(s)" + ", passed "),
-                new UIForegroundPayload(575),
-                new TextPayload(num2.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item(s)" + ".")
-            };
-            SeString seString = new(payloadList);
-            Chat.Print(seString);
+            //List<Payload> payloadList = new()
+            //{
+            //    new TextPayload("Needed only "),
+            //    new UIForegroundPayload(575),
+            //    new TextPayload(num1.ToString()),
+            //    new UIForegroundPayload(0),
+            //    new TextPayload(" item(s)" + ", passed "),
+            //    new UIForegroundPayload(575),
+            //    new TextPayload(num2.ToString()),
+            //    new UIForegroundPayload(0),
+            //    new TextPayload(" item(s)" + ".")
+            //};
+            //SeString seString = new(payloadList);
+            //Chat.Print(seString);
+            Chat.Print(Functions.BuildSeString(this.Name, "Needed only <c575>" + num1.ToString() + " item(s), passed <c575>" + num2.ToString() + " item(s)."));
         }
 
         [Command("/greed")]
@@ -335,7 +343,7 @@ namespace LootMaster
             int num1 = 0;
             for (int index = 0; index < LootItems.Count; ++index)
             {
-                if (!LootItems[index].Rolled)
+                if (LootItems[index].RollResult == 0)
                 {
                     RollItem(RollOption.Greed, index);
                     ++num;
@@ -344,26 +352,22 @@ namespace LootMaster
                         await Task.Delay(randomDelay);
                     }
                 }
-                //else if (LootItems[index].RolledState != RollOption.Greed)
-                //{
-                //    RollItem(RollOption.Pass, index);
-                //    ++num1;
-                //}
             }
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            List<Payload> payloadList = null;
-            payloadList = new()
-            {
-                new TextPayload("Greeded "),
-                new UIForegroundPayload(575),
-                new TextPayload(num.ToString()),
-                new UIForegroundPayload(0),
-                new TextPayload(" item(s)."),
-            };
-            SeString seString = new(payloadList);
-            Chat.Print(seString);
+            //List<Payload> payloadList = null;
+            //payloadList = new()
+            //{
+            //    new TextPayload("Greeded "),
+            //    new UIForegroundPayload(575),
+            //    new TextPayload(num.ToString()),
+            //    new UIForegroundPayload(0),
+            //    new TextPayload(" item(s)."),
+            //};
+            //SeString seString = new(payloadList);
+            Chat.Print(Functions.BuildSeString(this.Name,"Greeded <c575>" + num.ToString() + " item(s)."));
+            //Chat.Print(seString);
         }
 
         [Command("/pass")]
@@ -376,7 +380,7 @@ namespace LootMaster
             int num = 0;
             for (int index = 0; index < LootItems.Count; ++index)
             {
-                if (!LootItems[index].Rolled)
+                if (LootItems[index].RollResult == 0)
                 {
                     RollItem(RollOption.Pass, index);
                     ++num;
@@ -389,27 +393,29 @@ namespace LootMaster
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            List<Payload> payloadList = null;
+            //List<Payload> payloadList = null;
             if (num == 0)
             {
-                payloadList = new()
-                {
-                    new TextPayload("Passed on 0 items."),
-                };
+                Chat.Print(Functions.BuildSeString(this.Name, "Passed on <c575>0 item(s)."));
+                //payloadList = new()
+                //{
+                //    new TextPayload("Passed on 0 items."),
+                //};
             }
             else
             {
-                payloadList = new()
-                {
-                    new TextPayload("Passed "),
-                    new UIForegroundPayload(575),
-                    new TextPayload(num.ToString()),
-                    new UIForegroundPayload(0),
-                    new TextPayload(" item(s)" + ".")
-                };
+                //payloadList = new()
+                //{
+                //    new TextPayload("Passed "),
+                //    new UIForegroundPayload(575),
+                //    new TextPayload(num.ToString()),
+                //    new UIForegroundPayload(0),
+                //    new TextPayload(" item(s)" + ".")
+                //};
+                Chat.Print(Functions.BuildSeString(this.Name, "Passed <c575>" + num.ToString() + " item(s)."));
             }
-            SeString seString = new(payloadList);
-            Chat.Print(seString);
+            //SeString seString = new(payloadList);
+            //Chat.Print(seString);
         }
 
         [Command("/passall")]
@@ -422,7 +428,7 @@ namespace LootMaster
             int num = 0;
             for (int index = 0; index < LootItems.Count; ++index)
             {
-                if (LootItems[index].RolledState != RollOption.Pass)
+                if (LootItems[index].RollResult != RollResult.Passed)
                 {
                     RollItem(RollOption.Pass, index);
                     ++num;
@@ -438,24 +444,26 @@ namespace LootMaster
             List<Payload> payloadList = null;
             if (num == 0)
             {
-                payloadList = new()
-                {
-                    new TextPayload("Passed on 0 items."),
-                };
+                //payloadList = new()
+                //{
+                //    new TextPayload("Passed on 0 items."),
+                //};
+                Chat.Print(Functions.BuildSeString(this.Name, "Passed on <c575>0 item(s)."));
             }
             else
             {
-                payloadList = new()
-                {
-                    new TextPayload("Passed all "),
-                    new UIForegroundPayload(575),
-                    new TextPayload(num.ToString()),
-                    new UIForegroundPayload(0),
-                    new TextPayload(" item(s)" + ".")
-                };
+                //payloadList = new()
+                //{
+                //    new TextPayload("Passed all "),
+                //    new UIForegroundPayload(575),
+                //    new TextPayload(num.ToString()),
+                //    new UIForegroundPayload(0),
+                //    new TextPayload(" item(s)" + ".")
+                //};
+                Chat.Print(Functions.BuildSeString(this.Name, "Passed on <c575>" + num.ToString() + " item(s)."));
             }
-            SeString seString = new(payloadList);
-            Chat.Print(seString);
+            //SeString seString = new(payloadList);
+            //Chat.Print(seString);
         }
 
         public static T[] ReadArray<T>(IntPtr unmanagedArray, int length) where T : struct

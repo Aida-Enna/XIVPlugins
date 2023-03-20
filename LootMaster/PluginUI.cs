@@ -103,6 +103,10 @@ namespace LootMaster
             ImGui.SliderInt("Min Delay", ref Plugin.PluginConfig.LowNum, 250, 750);
             ImGui.Spacing();
             ImGui.SliderInt("Max Delay", ref Plugin.PluginConfig.HighNum, 500, 1000);
+            if (Plugin.PluginConfig.LowNum > Plugin.PluginConfig.HighNum)
+            {
+                Plugin.PluginConfig.LowNum = Plugin.PluginConfig.HighNum; 
+            }
             ImGui.End();
         }
     }
