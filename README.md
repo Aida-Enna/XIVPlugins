@@ -20,3 +20,6 @@ See who is missing food buff at countdown start and optionally post to party/ech
 
 Adds various commands to need, greed, or pass on all loot.
 
+## Potato Famine 2
+
+Changes lalafells (or everyone or specific people) into another race of your choosing.
