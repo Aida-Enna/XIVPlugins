@@ -10,10 +10,12 @@ using Dalamud.Plugin;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Lumina.Data.Parsing.Uld;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ConstrainedExecution;
@@ -45,7 +47,6 @@ namespace LootMaster
 
         public static List<LootItem> LootItems => ReadArray<LootItem>(lootsAddr + 16, 16).Where(i => i.ItemId != 3758096384U && i.ItemId > 0U).ToList();
         public Timer LootTimer = new System.Timers.Timer();
-        public static List<LootItem> FailedItems = new List<LootItem>();
 
         public Plugin(CommandManager commands, ClientState client)
         {
@@ -81,61 +82,49 @@ namespace LootMaster
             try
             {
                 if (LootItems.Any(x => (LootMaster.RollState)x.RollState == RollState.LootMasterNotDecided)) { return; }
-                if (LootItems.Count() > 0 && PluginConfig.AutoRoll)
+                if (LootItems.Where(x => x.RollResult == 0).Count() > 0 && PluginConfig.AutoRoll)
                 {
-                    //save the number and don't repeat if the lootcount and failed count are the same
-                    List<LootItem> ItemsToRollOn = LootItems;
-                    ItemsToRollOn.RemoveAll(y => FailedItems.Any(z => y.RollResult == 0 && z.ItemId == y.ItemId));
-                    if (ItemsToRollOn.Count == 0)
-                    {
-                        return; // PluginLog.Information("No non-failed items left, aborting...");
-                    }
-                    int OriginaLootcount = ItemsToRollOn.Count();
-                    if (ItemsToRollOn.All(x => x.RollState == FFXIVClientStructs.FFXIV.Client.Game.UI.RollState.Rolled)) { return; }
+                    List<LootItem> CurrentLoot = LootItems;
                     LootTimer.Enabled = false;
-                    Chat.Print("There's some loot waiting, " + ItemsToRollOn.Count() + " pieces. We're gonna roll " + PluginConfig.AutoRollOption);
+                    Chat.Print("There's some loot waiting, " + CurrentLoot.Where(x => x.RollResult == 0).Count() + " pieces. We're gonna roll " + PluginConfig.AutoRollOption);
                     Random random = new Random();
                     int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
                     int num1 = 0;
-                    for (int index = 0; index < ItemsToRollOn.Count; ++index)
+                    foreach(LootItem Item in CurrentLoot.Where(x => x.RollResult == 0))
                     {
-                        if (ItemsToRollOn[index].RollResult == 0)
+                        if ((LootMaster.RollState)Item.RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
                         {
-                            if ((LootMaster.RollState)ItemsToRollOn[index].RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
+                            RollItem(RollOption.Need, LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0 && x.ChestObjectId == Item.ChestObjectId));
+                            num1++;
+                            if (PluginConfig.EnableDelay == true)
                             {
-                                RollItem(RollOption.Need, index);
-                                num1++;
-                                if (PluginConfig.EnableDelay == true)
-                                {
-                                    await Task.Delay(randomDelay);
-                                }
+                                await Task.Delay(randomDelay);
                             }
-                            if (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed)
+                        }
+                        if (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed)
+                        {
+                            RollItem(RollOption.Greed, LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0 && x.ChestObjectId == Item.ChestObjectId));
+                            num1++;
+                            if (PluginConfig.EnableDelay == true)
                             {
-                                RollItem(RollOption.Greed, index);
-                                num1++;
-                                if (PluginConfig.EnableDelay == true)
-                                {
-                                    await Task.Delay(randomDelay);
-                                }
+                                await Task.Delay(randomDelay);
                             }
-                            if (PluginConfig.AutoRollOption == AutoRollOption.Pass || (LootItems[index].RollResult == 0 && PluginConfig.PassOnFail))
+                        }
+                        if (PluginConfig.AutoRollOption == AutoRollOption.Pass || (Item.RollResult == 0 && PluginConfig.PassOnFail))
+                        {
+                            RollItem(RollOption.Pass, LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0 && x.ChestObjectId == Item.ChestObjectId));
+                            num1++;
+                            if (PluginConfig.EnableDelay == true)
                             {
-                                RollItem(RollOption.Pass, index);
-                                num1++;
-                                if (PluginConfig.EnableDelay == true)
-                                {
-                                    await Task.Delay(randomDelay);
-                                }
+                                await Task.Delay(randomDelay);
                             }
                         }
                     }
                     LootTimer.Enabled = true;
-                    if (!PluginConfig.EnableChatLogMessage)
-                        return;
+                    if (!PluginConfig.EnableChatLogMessage) { return; }
 
-                    if (LootItems.Where(x => x.RollResult == 0).Count() > 0)
+                    if (CurrentLoot.Where(x => x.RollResult == 0).Count() > 0)
                     {
                         if (num1 != 0)
                         {
@@ -145,13 +134,91 @@ namespace LootMaster
                         {
                             Chat.Print(Functions.BuildSeString("LootMaster", "Couldn't auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "on any items."));
                         }
-                        FailedItems = LootItems;
                     }
                     else
                     {
                         Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s)."));
                     }
                 }
+                //    }
+                //    
+                //    
+
+
+                //}
+
+
+                //if (LootItems.Count() > 0 && PluginConfig.AutoRoll)
+                //{
+                //    //save the number and don't repeat if the lootcount and failed count are the same
+                //    List<LootItem> ItemsToRollOn = LootItems;
+                //    ItemsToRollOn.RemoveAll(y => FailedItems.Any(z => y.RollResult == 0 && z.ItemId == y.ItemId));
+                //    if (ItemsToRollOn.Count == 0)
+                //    {
+                //        return; // PluginLog.Information("No non-failed items left, aborting...");
+                //    }
+                //    int OriginaLootcount = ItemsToRollOn.Count();
+                //    if (ItemsToRollOn.All(x => x.RollState == FFXIVClientStructs.FFXIV.Client.Game.UI.RollState.Rolled)) { return; }
+                //    LootTimer.Enabled = false;
+                //    Chat.Print("There's some loot waiting, " + ItemsToRollOn.Count() + " pieces. We're gonna roll " + PluginConfig.AutoRollOption);
+                //    Random random = new Random();
+                //    int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
+
+                //    int num1 = 0;
+                //    for (int index = 0; index < ItemsToRollOn.Count; ++index)
+                //    {
+                //        if (ItemsToRollOn[index].RollResult == 0)
+                //        {
+                //            if ((LootMaster.RollState)ItemsToRollOn[index].RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
+                //            {
+                //                RollItem(RollOption.Need, index);
+                //                num1++;
+                //                if (PluginConfig.EnableDelay == true)
+                //                {
+                //                    await Task.Delay(randomDelay);
+                //                }
+                //            }
+                //            if (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed)
+                //            {
+                //                RollItem(RollOption.Greed, index);
+                //                num1++;
+                //                if (PluginConfig.EnableDelay == true)
+                //                {
+                //                    await Task.Delay(randomDelay);
+                //                }
+                //            }
+                //            if (PluginConfig.AutoRollOption == AutoRollOption.Pass || (LootItems[index].RollResult == 0 && PluginConfig.PassOnFail))
+                //            {
+                //                RollItem(RollOption.Pass, index);
+                //                num1++;
+                //                if (PluginConfig.EnableDelay == true)
+                //                {
+                //                    await Task.Delay(randomDelay);
+                //                }
+                //            }
+                //        }
+                //    }
+                //    LootTimer.Enabled = true;
+                //    if (!PluginConfig.EnableChatLogMessage)
+                //        return;
+
+                //    if (LootItems.Where(x => x.RollResult == 0).Count() > 0)
+                //    {
+                //        if (num1 != 0)
+                //        {
+                //            Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s), but couldn't roll some items."));
+                //        }
+                //        else
+                //        {
+                //            Chat.Print(Functions.BuildSeString("LootMaster", "Couldn't auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "on any items."));
+                //        }
+                //        FailedItems = LootItems;
+                //    }
+                //    else
+                //    {
+                //        Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s)."));
+                //    }
+                //}
             }
             catch (Exception f)
             {

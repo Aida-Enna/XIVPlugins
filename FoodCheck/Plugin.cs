@@ -23,7 +23,7 @@ namespace FoodCheck
 {
     public class Plugin : IDalamudPlugin
     {
-        public string Name => "Food Check";
+        public string Name => "FoodCheck";
 
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
         [PluginService] public static CommandManager Commands { get; set; }
