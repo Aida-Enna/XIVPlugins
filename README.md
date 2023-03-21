@@ -12,7 +12,14 @@ Automatically logs into the specified character (selected via the configuration 
 
 Automatically synchronizes the level of your character (and optionally auto-enables tank stance!) whenever you join a FATE in Final Fantasy XIV.
 
+## Food Check
+
+See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.
+
 ## Loot Master
 
 Adds various commands to need, greed, or pass on all loot.
 
+## Potato Famine 2
+
+Changes lalafells (or everyone or specific people) into another race of your choosing.
