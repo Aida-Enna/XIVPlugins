@@ -13,7 +13,7 @@
     }
     public enum AutoRollOption : uint
     {
-        [Display("Need->Greed")]
+        [Display("Need Then Greed")]
         NeedThenGreed = 0,
         [Display("Need")]
         Need = 1,

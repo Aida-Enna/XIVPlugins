@@ -1,3 +1,4 @@
+using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
@@ -25,6 +26,7 @@ using System.Timers;
 using Veda;
 using static Dalamud.Game.Text.SeStringHandling.Payloads.ItemPayload;
 using static FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentList;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LootMaster
 {
@@ -37,6 +39,7 @@ namespace LootMaster
         [PluginService] public static SigScanner SigScanner { get; set; }
         [PluginService] public static ChatGui Chat { get; set; }
         [PluginService] public static ClientState Client { get; set; }
+        [PluginService] public static DataManager Data { get; set; }
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
         private static IntPtr lootsAddr;
@@ -47,6 +50,7 @@ namespace LootMaster
 
         public static List<LootItem> LootItems => ReadArray<LootItem>(lootsAddr + 16, 16).Where(i => i.ItemId != 3758096384U && i.ItemId > 0U).ToList();
         public Timer LootTimer = new System.Timers.Timer();
+        public static List<LootItem> BlacklistedItems = new List<LootItem>();
 
         public Plugin(CommandManager commands, ClientState client)
         {
@@ -74,47 +78,125 @@ namespace LootMaster
 
         private unsafe void CFPop(object? sender, ContentFinderCondition queuedDuty)
         {
-            if (PluginConfig.NotifyOnCFPop && PluginConfig.AutoRoll) { Chat.Print(Functions.BuildSeString("LootMaster", "Your current <c17>auto-roll setting is <c573>" + PluginConfig.AutoRollOption + "</c>.")); }
+            if (PluginConfig.NotifyOnCFPop && PluginConfig.AutoRoll && queuedDuty.PvP == false) { Chat.Print(Functions.BuildSeString("LootMaster", "Your current <c17>auto-roll setting is <c573>" + PluginConfig.AutoRollOption.GetAttribute<Display>().Value.Replace(" ", " <c573>") + "</c>.")); }
         }
 
         private async void CheckLoot(object source, ElapsedEventArgs e)
         {
             try
             {
+                if (LootItems.Count == 0 && BlacklistedItems.Count() > 0) { BlacklistedItems.Clear(); }
                 if (LootItems.Any(x => (LootMaster.RollState)x.RollState == RollState.LootMasterNotDecided)) { return; }
                 if (LootItems.Where(x => x.RollResult == 0).Count() > 0 && PluginConfig.AutoRoll)
                 {
-                    List<LootItem> CurrentLoot = LootItems;
+                    //List<LootItem> CurrentLoot = LootItems;
                     LootTimer.Enabled = false;
-                    Chat.Print("There's some loot waiting, " + CurrentLoot.Where(x => x.RollResult == 0).Count() + " pieces. We're gonna roll " + PluginConfig.AutoRollOption);
+                    //Chat.Print("There's some loot waiting, " + LootItems.Where(x => x.RollResult == 0).Count() + " pieces. We're gonna roll " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value);
                     Random random = new Random();
                     int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
-                    int num1 = 0;
-                    foreach(LootItem Item in CurrentLoot.Where(x => x.RollResult == 0))
+                    int RolledCount = 0;
+                    int PassedCount = 0;
+                    int BlacklistedCount = 0;
+                    LootItem StupidShitCheck = new LootItem();
+                    foreach(LootItem Item in LootItems.Where(x => x.RollResult == 0))
                     {
-                        if ((LootMaster.RollState)Item.RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
+                        //Chat.Print("Item ID: " + Item.ItemId + "\nChest ID: " + Item.ChestObjectId);
+                        //if (BlacklistedItems.Count > 0)
+                        //{
+                        //    Chat.Print("Blacklisted item ID: " + BlacklistedItems.First().ItemId + "\nBlacklisted chest ID: " + BlacklistedItems.First().ChestObjectId);
+                        //    Chat.Print("Is item in blacklist? " + BlacklistedItems.FindIndex(x => x.ItemId == Item.ItemId && x.ChestObjectId == Item.ChestObjectId));
+                        //}
+                        if (BlacklistedItems.FindIndex(x => x.ItemId == Item.ItemId && x.ChestObjectId == Item.ChestObjectId) != -1)
                         {
-                            RollItem(RollOption.Need, LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0 && x.ChestObjectId == Item.ChestObjectId));
-                            num1++;
+                            BlacklistedCount++;
+                            continue; 
+                        }
+                        int ItemIndex = LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0);
+                        try
+                        {
+                            StupidShitCheck = LootItems[ItemIndex];
+                        }
+                        catch (Exception f)
+                        {
+                            PluginLog.Information("Error getting item, already rolled?");
+                            continue;
+                        }
+                        if (LootItems[ItemIndex].RollResult == 0 && (LootMaster.RollState)Item.RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
+                        {
+                            RollItem(RollOption.Need, ItemIndex);
+                            if(LootItems[ItemIndex].RollResult > 0)
+                            {
+                                RolledCount++;
+                            }
+                            else
+                            {
+                                if (!PluginConfig.PassOnFail) 
+                                {
+                                    //Item failed to be rolled on and we're not gonna pass on it
+                                    //Add it to the blacklist
+                                    BlacklistedItems.Add(Item);
+                                    Chat.Print(Functions.BuildSeString("LootMaster", "Couldn't autoroll " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + " on the <c575>" + Data.GameData.GetExcelSheet<Item>().GetRow(Item.ItemId)?.Name.RawString.Replace(" ", " <c575>") + " " + Data.GameData.GetExcelSheet<Item>().GetRow(Item.ItemId)?.ItemUICategory.Value.Name + "."));
+                                }
+                            }
                             if (PluginConfig.EnableDelay == true)
                             {
                                 await Task.Delay(randomDelay);
                             }
                         }
-                        if (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed)
+                        //This item is no longer in the Loot list?
+                        try
                         {
-                            RollItem(RollOption.Greed, LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0 && x.ChestObjectId == Item.ChestObjectId));
-                            num1++;
+                            StupidShitCheck = LootItems[ItemIndex];
+                        }
+                        catch(Exception f)
+                        {
+                            PluginLog.Information("Error getting item, already rolled?");
+                            continue;
+                        }
+                        if (LootItems[ItemIndex].RollResult == 0 && (LootMaster.RollState)Item.RollState == RollState.UpToGreed && (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
+                        {
+                            RollItem(RollOption.Greed, ItemIndex);
+                            if (LootItems[ItemIndex].RollResult > 0)
+                            {
+                                RolledCount++;
+                            }
+                            else
+                            {
+                                if (!PluginConfig.PassOnFail)
+                                {
+                                    //Item failed to be rolled on and we're not gonna pass on it
+                                    //Add it to the blacklist
+                                    BlacklistedItems.Add(Item);
+                                    Chat.Print(Functions.BuildSeString("LootMaster", "Couldn't autoroll " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + " on the <c575>" + Data.GameData.GetExcelSheet<Item>().GetRow(Item.ItemId)?.Name.RawString.Replace(" ", " <c575>") + " " + Data.GameData.GetExcelSheet<Item>().GetRow(Item.ItemId)?.ItemUICategory.Value.Name + "."));
+                                }
+                            }
                             if (PluginConfig.EnableDelay == true)
                             {
                                 await Task.Delay(randomDelay);
                             }
                         }
-                        if (PluginConfig.AutoRollOption == AutoRollOption.Pass || (Item.RollResult == 0 && PluginConfig.PassOnFail))
+                        //This item is no longer in the Loot list?
+                        try
                         {
-                            RollItem(RollOption.Pass, LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0 && x.ChestObjectId == Item.ChestObjectId));
-                            num1++;
+                            StupidShitCheck = LootItems[ItemIndex];
+                        }
+                        catch (Exception f)
+                        {
+                            PluginLog.Information("Error getting item, already rolled?");
+                            continue;
+                        }
+                        if (LootItems[ItemIndex].RollResult == 0 && (PluginConfig.AutoRollOption == AutoRollOption.Pass || PluginConfig.PassOnFail))
+                        {
+                            RollItem(RollOption.Pass, ItemIndex);
+                            if (PluginConfig.PassOnFail)
+                            {
+                                PassedCount++;
+                            }
+                            else
+                            {
+                                RolledCount++;
+                            }
                             if (PluginConfig.EnableDelay == true)
                             {
                                 await Task.Delay(randomDelay);
@@ -123,102 +205,23 @@ namespace LootMaster
                     }
                     LootTimer.Enabled = true;
                     if (!PluginConfig.EnableChatLogMessage) { return; }
-
-                    if (CurrentLoot.Where(x => x.RollResult == 0).Count() > 0)
+                    if (RolledCount == 0 && PassedCount > 0)
                     {
-                        if (num1 != 0)
-                        {
-                            Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s), but couldn't roll some items."));
-                        }
-                        else
-                        {
-                            Chat.Print(Functions.BuildSeString("LootMaster", "Couldn't auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "on any items."));
-                        }
+                        Chat.Print(Functions.BuildSeString("LootMaster", "Couldn't auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + " on any items, passed on <c575>" + PassedCount + " item(s)."));
                     }
-                    else
+                    if (RolledCount == 0 && PassedCount == 0 && LootItems.Count() != BlacklistedItems.Count())
                     {
-                        Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s)."));
+                        Chat.Print(Functions.BuildSeString("LootMaster", "Couldn't auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + " on any items."));
+                    }
+                    if (RolledCount > 0 && PassedCount == 0)
+                    {
+                        Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + RolledCount.ToString() + " items(s)."));
+                    }
+                    if (RolledCount > 0 && PassedCount > 0)
+                    {
+                        Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + RolledCount.ToString() + " items(s), passed on <c575>" + PassedCount + " item(s)."));
                     }
                 }
-                //    }
-                //    
-                //    
-
-
-                //}
-
-
-                //if (LootItems.Count() > 0 && PluginConfig.AutoRoll)
-                //{
-                //    //save the number and don't repeat if the lootcount and failed count are the same
-                //    List<LootItem> ItemsToRollOn = LootItems;
-                //    ItemsToRollOn.RemoveAll(y => FailedItems.Any(z => y.RollResult == 0 && z.ItemId == y.ItemId));
-                //    if (ItemsToRollOn.Count == 0)
-                //    {
-                //        return; // PluginLog.Information("No non-failed items left, aborting...");
-                //    }
-                //    int OriginaLootcount = ItemsToRollOn.Count();
-                //    if (ItemsToRollOn.All(x => x.RollState == FFXIVClientStructs.FFXIV.Client.Game.UI.RollState.Rolled)) { return; }
-                //    LootTimer.Enabled = false;
-                //    Chat.Print("There's some loot waiting, " + ItemsToRollOn.Count() + " pieces. We're gonna roll " + PluginConfig.AutoRollOption);
-                //    Random random = new Random();
-                //    int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
-
-                //    int num1 = 0;
-                //    for (int index = 0; index < ItemsToRollOn.Count; ++index)
-                //    {
-                //        if (ItemsToRollOn[index].RollResult == 0)
-                //        {
-                //            if ((LootMaster.RollState)ItemsToRollOn[index].RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
-                //            {
-                //                RollItem(RollOption.Need, index);
-                //                num1++;
-                //                if (PluginConfig.EnableDelay == true)
-                //                {
-                //                    await Task.Delay(randomDelay);
-                //                }
-                //            }
-                //            if (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed)
-                //            {
-                //                RollItem(RollOption.Greed, index);
-                //                num1++;
-                //                if (PluginConfig.EnableDelay == true)
-                //                {
-                //                    await Task.Delay(randomDelay);
-                //                }
-                //            }
-                //            if (PluginConfig.AutoRollOption == AutoRollOption.Pass || (LootItems[index].RollResult == 0 && PluginConfig.PassOnFail))
-                //            {
-                //                RollItem(RollOption.Pass, index);
-                //                num1++;
-                //                if (PluginConfig.EnableDelay == true)
-                //                {
-                //                    await Task.Delay(randomDelay);
-                //                }
-                //            }
-                //        }
-                //    }
-                //    LootTimer.Enabled = true;
-                //    if (!PluginConfig.EnableChatLogMessage)
-                //        return;
-
-                //    if (LootItems.Where(x => x.RollResult == 0).Count() > 0)
-                //    {
-                //        if (num1 != 0)
-                //        {
-                //            Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s), but couldn't roll some items."));
-                //        }
-                //        else
-                //        {
-                //            Chat.Print(Functions.BuildSeString("LootMaster", "Couldn't auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "on any items."));
-                //        }
-                //        FailedItems = LootItems;
-                //    }
-                //    else
-                //    {
-                //        Chat.Print(Functions.BuildSeString("LootMaster", "Auto " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value + "ed <c575>" + num1.ToString() + " items(s)."));
-                //    }
-                //}
             }
             catch (Exception f)
             {
@@ -230,9 +233,10 @@ namespace LootMaster
         {
             try
             {
+                //Chat.Print("Rolling " + option + " on item " + index);
                 LootItem lootItem = LootItems[index];
                 //PluginLog.Information(string.Format("{0} [{1}] {2} Id: {3:X} rollState: {4} rollOption: {5}", option, index, lootItem.ItemId, lootItem.ObjectId, lootItem.RollState, lootItem.RolledState), Array.Empty<object>());
-                PluginLog.Information(string.Format("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} ", lootItem.ChestItemIndex, lootItem.ChestObjectId, lootItem.ItemCount, lootItem.ItemId, lootItem.LootMode, lootItem.MaxTime, lootItem.RollResult, lootItem.RollState, lootItem.RollValue, lootItem.Time), Array.Empty<object>());
+                //Chat.Print(string.Format("{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n{8}\n{9} ", lootItem.ChestItemIndex, lootItem.ChestObjectId, lootItem.ItemCount, lootItem.ItemId, lootItem.LootMode, lootItem.MaxTime, lootItem.RollResult, lootItem.RollState, lootItem.RollValue, lootItem.Time));
                 rollItemRaw(lootsAddr, option, (uint)index);
             }
             catch (Exception f)
