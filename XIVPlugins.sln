@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PotatoFamine2", "PotatoFami
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwitchXIV", "TwitchXIV\TwitchXIV.csproj", "{20B29378-F1D7-4A8A-9480-37DE50718666}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RightClickExtender", "RightClickExtender\RightClickExtender.csproj", "{BFBEEE7E-3113-4252-B5D0-B2D016F82961}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,14 @@ Global
 		{20B29378-F1D7-4A8A-9480-37DE50718666}.Release|Any CPU.Build.0 = Release|x64
 		{20B29378-F1D7-4A8A-9480-37DE50718666}.Release|x64.ActiveCfg = Release|x64
 		{20B29378-F1D7-4A8A-9480-37DE50718666}.Release|x64.Build.0 = Release|x64
+		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Debug|Any CPU.Build.0 = Debug|x64
+		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Debug|x64.ActiveCfg = Debug|x64
+		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Debug|x64.Build.0 = Debug|x64
+		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Release|Any CPU.ActiveCfg = Release|x64
+		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Release|Any CPU.Build.0 = Release|x64
+		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Release|x64.ActiveCfg = Release|x64
+		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

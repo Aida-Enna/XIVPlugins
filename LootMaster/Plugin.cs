@@ -78,6 +78,10 @@ namespace LootMaster
 
         private unsafe void CFPop(object? sender, ContentFinderCondition queuedDuty)
         {
+            if (PluginConfig.InventoryCheck && GetInventoryRemainingSpace() < 5)
+            {
+                Chat.Print(Functions.BuildSeString(this.Name, "<c518> : <c518>Your <c518>inventory <c518>only <c518>has <g518>" + GetInventoryRemainingSpace() + " <c518>space(s) <c518>left."));
+            }
             if (PluginConfig.NotifyOnCFPop && PluginConfig.AutoRoll && queuedDuty.PvP == false) { Chat.Print(Functions.BuildSeString("LootMaster", "Your current <c17>auto-roll setting is <c573>" + PluginConfig.AutoRollOption.GetAttribute<Display>().Value.Replace(" ", " <c573>") + "</c>.")); }
         }
 
@@ -125,7 +129,8 @@ namespace LootMaster
                         if (LootItems[ItemIndex].RollResult == 0 && (LootMaster.RollState)Item.RollState == RollState.UpToNeed && (PluginConfig.AutoRollOption == AutoRollOption.Need || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
                         {
                             RollItem(RollOption.Need, ItemIndex);
-                            if(LootItems[ItemIndex].RollResult > 0)
+                            await Task.Delay(500);
+                            if (LootItems[ItemIndex].RollResult > 0)
                             {
                                 RolledCount++;
                             }
@@ -157,6 +162,7 @@ namespace LootMaster
                         if (LootItems[ItemIndex].RollResult == 0 && (LootMaster.RollState)Item.RollState == RollState.UpToGreed && (PluginConfig.AutoRollOption == AutoRollOption.Greed || PluginConfig.AutoRollOption == AutoRollOption.NeedThenGreed))
                         {
                             RollItem(RollOption.Greed, ItemIndex);
+                            await Task.Delay(500);
                             if (LootItems[ItemIndex].RollResult > 0)
                             {
                                 RolledCount++;
@@ -245,37 +251,43 @@ namespace LootMaster
             }
         }
 
-        [Command("/lootdebug")]
-        [Aliases("/ld")]
-        [HelpMessage("Display debug loot info")]
-        public async void ShowDebugLootInfo(string command, string args)
+        private unsafe int GetInventoryRemainingSpace()
         {
-            string FinalMessage = "";
-
-            foreach (LootItem Item in LootItems)
+            var empty = 0;
+            foreach (var i in new[] { InventoryType.Inventory1, InventoryType.Inventory2, InventoryType.Inventory3, InventoryType.Inventory4 })
             {
-                FinalMessage += "Item ID: " + Item.ItemId + Environment.NewLine;
-                FinalMessage += "Loot index: " + Item.ChestItemIndex + Environment.NewLine;
-                FinalMessage += "Number of item: " + Item.ItemCount + Environment.NewLine;
-                FinalMessage += "Loot Mode: " + Item.LootMode + Environment.NewLine;
-                FinalMessage += "Roll Result: " + Item.RollResult + Environment.NewLine;
-                FinalMessage += "Roll State: " + Item.RollState + Environment.NewLine;
-                FinalMessage += "Roll Value: " + Item.RollValue + Environment.NewLine;
-
-                //(string.Format("{0} {1} {2} {3} {4} {5} {6} {7} {8} {9} ",
-                //lootItem.ChestItemIndex,
-                //lootItem.ChestObjectId,
-                //lootItem.ItemCount,
-                //lootItem.ItemId,
-                //lootItem.LootMode,
-                //lootItem.MaxTime,
-                //lootItem.RollResult,
-                //lootItem.RollState,
-                //lootItem.RollValue,
-                //lootItem.Time), Array.Empty<object>());
+                var c = InventoryManager.Instance()->GetInventoryContainer(i);
+                if (c == null) continue;
+                if (c->Loaded == 0) continue;
+                for (var s = 0; s < c->Size; s++)
+                {
+                    var slot = c->GetInventorySlot(s);
+                    if (slot->ItemID == 0) empty++;
+                }
             }
-            Chat.Print(FinalMessage);
+            return empty;
         }
+
+        //[Command("/lootdebug")]
+        //[Aliases("/ld")]
+        //[HelpMessage("Display debug loot info")]
+        //public async void ShowDebugLootInfo(string command, string args)
+        //{
+        //    string FinalMessage = "";
+
+        //    foreach (LootItem Item in LootItems)
+        //    {
+        //        FinalMessage += "Item ID: " + Item.ItemId + Environment.NewLine;
+        //        FinalMessage += "Loot index: " + Item.ChestItemIndex + Environment.NewLine;
+        //        FinalMessage += "Number of item: " + Item.ItemCount + Environment.NewLine;
+        //        FinalMessage += "Loot Mode: " + Item.LootMode + Environment.NewLine;
+        //        FinalMessage += "Roll Result: " + Item.RollResult + Environment.NewLine;
+        //        FinalMessage += "Roll State: " + Item.RollState + Environment.NewLine;
+        //        FinalMessage += "Roll Value: " + Item.RollValue + Environment.NewLine;
+        //    }
+        //    Chat.Print(FinalMessage);
+        //}
+
         [Command("/lootmaster")]
         [Aliases("/lm")]
         [HelpMessage("Opens the lootmaster configuration menu.")]
@@ -329,24 +341,6 @@ namespace LootMaster
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            //List<Payload> payloadList = new()
-            //{
-            //    new TextPayload("Needed "),
-            //    new UIForegroundPayload(575),
-            //    new TextPayload(num1.ToString()),
-            //    new UIForegroundPayload(0),
-            //    new TextPayload(" item(s)" + ", greeded "),
-            //    new UIForegroundPayload(575),
-            //    new TextPayload(num2.ToString()),
-            //    new UIForegroundPayload(0),
-            //    new TextPayload(" item(s)" + ", passed "),
-            //    new UIForegroundPayload(575),
-            //    new TextPayload(num3.ToString()),
-            //    new UIForegroundPayload(0),
-            //    new TextPayload(" item(s)" + ".")
-            //};
-            //SeString seString = new(payloadList);
-            //Chat.Print(seString);
             Chat.Print(Functions.BuildSeString(this.Name, "Needed <c575>" + num1.ToString() + " item(s), greeded <c575>" + num2.ToString() + " item(s), passed <c575>" + num3.ToString() + " item(s)."));
         }
 
@@ -386,20 +380,6 @@ namespace LootMaster
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            //List<Payload> payloadList = new()
-            //{
-            //    new TextPayload("Needed only "),
-            //    new UIForegroundPayload(575),
-            //    new TextPayload(num1.ToString()),
-            //    new UIForegroundPayload(0),
-            //    new TextPayload(" item(s)" + ", passed "),
-            //    new UIForegroundPayload(575),
-            //    new TextPayload(num2.ToString()),
-            //    new UIForegroundPayload(0),
-            //    new TextPayload(" item(s)" + ".")
-            //};
-            //SeString seString = new(payloadList);
-            //Chat.Print(seString);
             Chat.Print(Functions.BuildSeString(this.Name, "Needed only <c575>" + num1.ToString() + " item(s), passed <c575>" + num2.ToString() + " item(s)."));
         }
 
@@ -427,18 +407,7 @@ namespace LootMaster
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            //List<Payload> payloadList = null;
-            //payloadList = new()
-            //{
-            //    new TextPayload("Greeded "),
-            //    new UIForegroundPayload(575),
-            //    new TextPayload(num.ToString()),
-            //    new UIForegroundPayload(0),
-            //    new TextPayload(" item(s)."),
-            //};
-            //SeString seString = new(payloadList);
             Chat.Print(Functions.BuildSeString(this.Name,"Greeded <c575>" + num.ToString() + " item(s)."));
-            //Chat.Print(seString);
         }
 
         [Command("/pass")]
@@ -464,29 +433,14 @@ namespace LootMaster
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            //List<Payload> payloadList = null;
             if (num == 0)
             {
                 Chat.Print(Functions.BuildSeString(this.Name, "Passed on <c575>0 item(s)."));
-                //payloadList = new()
-                //{
-                //    new TextPayload("Passed on 0 items."),
-                //};
             }
             else
             {
-                //payloadList = new()
-                //{
-                //    new TextPayload("Passed "),
-                //    new UIForegroundPayload(575),
-                //    new TextPayload(num.ToString()),
-                //    new UIForegroundPayload(0),
-                //    new TextPayload(" item(s)" + ".")
-                //};
                 Chat.Print(Functions.BuildSeString(this.Name, "Passed <c575>" + num.ToString() + " item(s)."));
             }
-            //SeString seString = new(payloadList);
-            //Chat.Print(seString);
         }
 
         [Command("/passall")]
@@ -515,26 +469,12 @@ namespace LootMaster
             List<Payload> payloadList = null;
             if (num == 0)
             {
-                //payloadList = new()
-                //{
-                //    new TextPayload("Passed on 0 items."),
-                //};
                 Chat.Print(Functions.BuildSeString(this.Name, "Passed on <c575>0 item(s)."));
             }
             else
             {
-                //payloadList = new()
-                //{
-                //    new TextPayload("Passed all "),
-                //    new UIForegroundPayload(575),
-                //    new TextPayload(num.ToString()),
-                //    new UIForegroundPayload(0),
-                //    new TextPayload(" item(s)" + ".")
-                //};
                 Chat.Print(Functions.BuildSeString(this.Name, "Passed on <c575>" + num.ToString() + " item(s)."));
             }
-            //SeString seString = new(payloadList);
-            //Chat.Print(seString);
         }
 
         public static T[] ReadArray<T>(IntPtr unmanagedArray, int length) where T : struct

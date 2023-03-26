@@ -1,0 +1,22 @@
+{
+  "Author": "Aida Enna",
+  "Name": "RightClickExtender",
+  "InternalName": "RightClickExtender",
+  "AssemblyVersion": "1.0.0.0",
+  "ApplicableVersion": "any",
+  "Description": "Description placeholder",
+  "Punchline": "Punchline placeholder",
+  "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+  "Tags": [
+    "aida"
+  ],
+  "CategoryTags": null,
+  "DalamudApiLevel": 8,
+  "LoadPriority": 0,
+  "LastUpdate": 0,
+  "DownloadLinkInstall": null,
+  "DownloadLinkUpdate": null,
+  "DownloadLinkTesting": null,
+  "ImageUrls": null,
+  "IconUrl": "IconUrl"
+}

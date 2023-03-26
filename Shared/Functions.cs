@@ -1,15 +1,19 @@
 ﻿using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace Veda
 {
     public class Functions
     {
+
+
         public static bool ListContainsPlayer(List<PlayerData> PlayerList, string PlayerName, uint WorldId = 0)
         {
             int Result = 0;
@@ -101,6 +105,37 @@ namespace Veda
                                 FinalPayload.Add(new TextPayload(Word.Replace(Regex.Match(Word, "<c.*?>").Value, "")));
                             }
                             FinalPayload.Add(new UIForegroundPayload(0));
+                        }
+                    }
+                    else if (Regex.Match(Word, "<g.*?>").Success) //starting a color tag?
+                    {
+                        ushort code = Convert.ToUInt16(Regex.Match(Regex.Match(Word, "<g.*?>").Value, @"\d+").Value);
+                        FinalPayload.Add(new UIGlowPayload(code));
+                        if (Regex.Match(Word, "</g>").Success) //ending a color tag
+                        {
+                            List<string> WordBrokenUp = Regex.Split(Word, "</g>").ToList();
+                            FinalPayload.Add(new TextPayload(WordBrokenUp[0].Replace(Regex.Match(WordBrokenUp[0], "<g.*?>").Value, "")));
+                            FinalPayload.Add(new UIGlowPayload(0));
+                            if (counter < MessageBrokenUp.Count())
+                            {
+                                FinalPayload.Add(new TextPayload(WordBrokenUp[1] + " "));
+                            }
+                            else
+                            {
+                                FinalPayload.Add(new TextPayload(WordBrokenUp[1]));
+                            }
+                        }
+                        else
+                        {
+                            if (counter < MessageBrokenUp.Count())
+                            {
+                                FinalPayload.Add(new TextPayload(Word.Replace(Regex.Match(Word, "<g.*?>").Value, "") + " "));
+                            }
+                            else
+                            {
+                                FinalPayload.Add(new TextPayload(Word.Replace(Regex.Match(Word, "<g.*?>").Value, "")));
+                            }
+                            FinalPayload.Add(new UIGlowPayload(0));
                         }
                     }
                     else
