@@ -80,7 +80,7 @@ namespace LootMaster
         {
             if (PluginConfig.InventoryCheck && GetInventoryRemainingSpace() < 5)
             {
-                Chat.Print(Functions.BuildSeString(this.Name, "<c518> : <c518>Your <c518>inventory <c518>only <c518>has <g518>" + GetInventoryRemainingSpace() + " <c518>space(s) <c518>left."));
+                Chat.Print(Functions.BuildSeString(this.Name, "<c518>Warning: <c518>You <c518>have <g518>" + GetInventoryRemainingSpace() + " <c518>slot(s) <c518>remaining <c518>in <c518>your <c518>inventory."));
             }
             if (PluginConfig.NotifyOnCFPop && PluginConfig.AutoRoll && queuedDuty.PvP == false) { Chat.Print(Functions.BuildSeString("LootMaster", "Your current <c17>auto-roll setting is <c573>" + PluginConfig.AutoRollOption.GetAttribute<Display>().Value.Replace(" ", " <c573>") + "</c>.")); }
         }
@@ -117,6 +117,16 @@ namespace LootMaster
                             continue; 
                         }
                         int ItemIndex = LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0);
+                        try
+                        {
+                            StupidShitCheck = LootItems[ItemIndex];
+                        }
+                        catch (Exception f)
+                        {
+                            PluginLog.Information("Error getting item, already rolled?");
+                            continue;
+                        }
+                        //This item is no longer in the Loot list?
                         try
                         {
                             StupidShitCheck = LootItems[ItemIndex];
@@ -231,6 +241,8 @@ namespace LootMaster
             }
             catch (Exception f)
             {
+                LootTimer.Enabled = true;
+
                 Chat.PrintError("Error with checking for loot: " + Environment.NewLine + f.ToString());
             }
         }

@@ -20,16 +20,8 @@ namespace PotatoFamine2
         private readonly Plugin plugin;
         //private bool enableExperimental;
         private bool ShowWhy;
-        //private bool ShowFeedback;
-        //public string DisplayName = Plugin.ClientState.LocalPlayer.Name.TextValue + " (" + Plugin.ClientState.LocalPlayer.HomeWorld.GameData.Name + ")";
-        //public string FeedbackText = "Please type your feedback here.";
-        //public string FeedbackStatus = "Send Feedback? (Opens browser)";
+        private bool ShowSupport;
 
-        // had to do it, /No you did not
-        //private bool changeSelf;
-        //private bool changeSelfLaunched;
-        //private bool changeSelfShowText;
-        
         private TargetManager _targetManager;
 
         public PluginUI(Plugin plugin)
@@ -175,20 +167,36 @@ namespace PotatoFamine2
                 //}
 
                 ImGui.Separator();
-
-                //ImGui.Checkbox("Enable Experimental Features", ref this.enableExperimental);
-                //if (enableExperimental)
-                //{
-                //    ImGui.Text("Experimental feature configuration will (intentionally) not persist,\n" +
-                //               "so you will need to open this settings menu to re-activate\n" +
-                //               "them if you disable the plugin or restart your game.");
-
-                //    ImGui.TextColored(WHAT_THE_HELL_ARE_YOU_DOING,
-                //        "Experimental features may crash your game, uncat your boy,\nor cause the Eighth Umbral Calamity. YOU HAVE BEEN WARNED!");
-
-                //    ImGui.Text(
-                //        "But seriously, if you do encounter any crashes, please report\nthem on the repo with an issue.");
-                //}
+                ImGui.Spacing();
+                if (ImGui.Button("Want to help support my work?"))
+                {
+                    ShowSupport = !ShowSupport;
+                }
+                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Click me!"); }
+                if (ShowSupport)
+                {
+                    ImGui.Text("Here are the current ways you can support the work I do.\nEvery bit helps, thank you! Have a great day!");
+                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.19f, 0.52f, 0.27f, 1));
+                    if (ImGui.Button("Donate via Paypal"))
+                    {
+                        Functions.OpenWebsite("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QXF8EL4737HWJ");
+                    }
+                    ImGui.PopStyleColor();
+                    ImGui.SameLine();
+                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.95f, 0.39f, 0.32f, 1));
+                    if (ImGui.Button("Become a Patron"))
+                    {
+                        Functions.OpenWebsite("https://www.patreon.com/bePatron?u=5597973");
+                    }
+                    ImGui.PopStyleColor();
+                    ImGui.SameLine();
+                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.25f, 0.67f, 0.87f, 1));
+                    if (ImGui.Button("Support me on Ko-Fi"))
+                    {
+                        Functions.OpenWebsite("https://ko-fi.com/Y8Y114PMT");
+                    }
+                    ImGui.PopStyleColor();
+                }
 
                 if (!ShowWhy)
                 {

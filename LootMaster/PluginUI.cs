@@ -1,19 +1,23 @@
-using Dalamud.Game.Gui;
-using Dalamud.Utility;
+﻿using Dalamud.Utility;
 using ImGuiNET;
 using System;
-using System.Linq;
+using Veda;
 
 namespace LootMaster
 {
     public class PluginUI
     {
         public bool IsVisible;
+        private bool ShowSupport;
 
         public void Draw()
         {
             if (!IsVisible || !ImGui.Begin("LootMaster Config", ref IsVisible, (ImGuiWindowFlags)96))
                 return;
+            var OriginalStyle = ImGui.GetStyle();
+            //ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x00FF0000);
+            //ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x000000FF);
+            //ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x000000FF);
             ImGui.TextUnformatted("Commands:");
             if (ImGui.BeginTable("lootlootlootlootloot", 2))
             {
@@ -78,19 +82,47 @@ namespace LootMaster
             if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Recommended so that you don't miss loot!"); }
             //ImGui.Spacing();
             ImGui.Separator();
-            ImGui.Checkbox("Enable Delay", ref Plugin.PluginConfig.EnableDelay);
+            ImGui.Checkbox("Enable delay between rolls", ref Plugin.PluginConfig.EnableDelay);
             if (Plugin.PluginConfig.EnableDelay)
             {
                 ImGui.Spacing();
-                ImGui.Text("Sets the delay between rolls (in milliseconds)");
+                ImGui.SliderInt("Minimum delay (in milliseconds)", ref Plugin.PluginConfig.LowNum, 250, 750);
                 ImGui.Spacing();
-                ImGui.SliderInt("Min Delay", ref Plugin.PluginConfig.LowNum, 250, 750);
-                ImGui.Spacing();
-                ImGui.SliderInt("Max Delay", ref Plugin.PluginConfig.HighNum, 500, 1000);
+                ImGui.SliderInt("Maximum delay (in milliseconds)", ref Plugin.PluginConfig.HighNum, 500, 1000);
                 if (Plugin.PluginConfig.LowNum > Plugin.PluginConfig.HighNum)
                 {
                     Plugin.PluginConfig.LowNum = Plugin.PluginConfig.HighNum;
                 }
+            }
+            ImGui.Spacing();
+            if (ImGui.Button("Want to help support my work?"))
+            {
+                ShowSupport = !ShowSupport;
+            }
+            if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Click me!"); }
+            if (ShowSupport)
+            {
+                ImGui.Text("Here are the current ways you can support the work I do.\nEvery bit helps, thank you! Have a great day!");
+                ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.19f, 0.52f, 0.27f, 1));
+                if (ImGui.Button("Donate via Paypal"))
+                {
+                    Functions.OpenWebsite("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QXF8EL4737HWJ");
+                }
+                ImGui.PopStyleColor();
+                ImGui.SameLine();
+                ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.95f, 0.39f, 0.32f, 1));
+                if (ImGui.Button("Become a Patron"))
+                {
+                    Functions.OpenWebsite("https://www.patreon.com/bePatron?u=5597973");
+                }
+                ImGui.PopStyleColor();
+                ImGui.SameLine();
+                ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.25f, 0.67f, 0.87f, 1));
+                if (ImGui.Button("Support me on Ko-Fi"))
+                {
+                    Functions.OpenWebsite("https://ko-fi.com/Y8Y114PMT");
+                }
+                ImGui.PopStyleColor();
             }
             ImGui.End();
         }

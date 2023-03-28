@@ -79,11 +79,11 @@
   {
     "Author": "Aida Enna",
     "Name": "Loot Master",
-    "Description": "Adds various commands to need, greed, or pass on all loot.",
+    "Description": "Automatically roll on loot with various options. Also has commands to need, greed, or pass on all loot.",
     "Punchline": "Dungeon loot made lazy.",
     "InternalName": "LootMaster",
-    "AssemblyVersion": "1.0.0.4",
-    "Changelog": "- Internal rewrite, no new changes yet",
+    "AssemblyVersion": "1.0.0.5",
+    "Changelog": "- Added an autoroll option\n- Added some more configurable options such as posting if your inventory is low, passing on failed items, etc\n- Added some support links if you wanna help out\n- Various other bugfixes/enhancements",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
@@ -93,7 +93,7 @@
     "DalamudApiLevel": 8,
     "IsHide": "False",
     "IsTestingExclusive": "False",
-    "LastUpdated": 1678917266,
+    "LastUpdated": 1679995095,
     "DownloadCount": 69420,
     "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/LootMaster.png",
     "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/LootMaster.zip?raw=true",

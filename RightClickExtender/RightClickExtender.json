@@ -1,11 +1,11 @@
 {
   "Author": "Aida Enna",
-  "Name": "RightClickExtender",
+  "Name": "Right Click Extender",
   "InternalName": "RightClickExtender",
   "AssemblyVersion": "1.0.0.0",
   "ApplicableVersion": "any",
-  "Description": "Description placeholder",
-  "Punchline": "Punchline placeholder",
+  "Description": "Adding common sense entries to the right click menu",
+  "Punchline": "Why aren't these in the game officially?",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [
     "aida"
@@ -18,5 +18,5 @@
   "DownloadLinkUpdate": null,
   "DownloadLinkTesting": null,
   "ImageUrls": null,
-  "IconUrl": "IconUrl"
+  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/RightClickExtender.png"
 }
