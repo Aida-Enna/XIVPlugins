@@ -19,6 +19,7 @@ namespace LootMaster
         public bool NotifyOnCFPop = true;
         public bool PassOnFail = false;
         public bool InventoryCheck = true;
+        public bool DoNotRollInHighEndDuties = true;
 
         [JsonIgnore] private DalamudPluginInterface pluginInterface;
 

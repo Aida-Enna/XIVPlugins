@@ -4,29 +4,20 @@ using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using Lumina.Data.Parsing.Uld;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Timers;
 using Veda;
-using static Dalamud.Game.Text.SeStringHandling.Payloads.ItemPayload;
-using static FFXIVClientStructs.FFXIV.Component.GUI.AtkComponentList;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace LootMaster
 {
@@ -40,11 +31,14 @@ namespace LootMaster
         [PluginService] public static ChatGui Chat { get; set; }
         [PluginService] public static ClientState Client { get; set; }
         [PluginService] public static DataManager Data { get; set; }
+
+        [PluginService] public static ClientState ClientState { get; set; }
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
         private static IntPtr lootsAddr;
         internal static RollItemRaw rollItemRaw;
         private readonly PluginUI ui;
+        private bool InHighEndDuty = false;
 
         internal delegate void RollItemRaw(IntPtr lootIntPtr, RollOption option, uint lootItemIndex);
 
@@ -68,8 +62,9 @@ namespace LootMaster
             commandManager = new PluginCommandManager<Plugin>(this, commands);
 
             Client = client;
-            
+
             Client.CfPop += CFPop;
+            Client.TerritoryChanged += TerritoryChanged;
 
             LootTimer.Interval = 10000; //600000
             LootTimer.Elapsed += CheckLoot;
@@ -82,17 +77,60 @@ namespace LootMaster
             {
                 Chat.Print(Functions.BuildSeString(this.Name, "<c518>Warning: <c518>You <c518>have <g518>" + GetInventoryRemainingSpace() + " <c518>slot(s) <c518>remaining <c518>in <c518>your <c518>inventory."));
             }
-            if (PluginConfig.NotifyOnCFPop && PluginConfig.AutoRoll && queuedDuty.PvP == false) { Chat.Print(Functions.BuildSeString("LootMaster", "Your current <c17>auto-roll setting is <c573>" + PluginConfig.AutoRollOption.GetAttribute<Display>().Value.Replace(" ", " <c573>") + "</c>.")); }
+            if (PluginConfig.NotifyOnCFPop && PluginConfig.AutoRoll && queuedDuty.PvP == false)
+            {
+                if (queuedDuty.HighEndDuty && PluginConfig.DoNotRollInHighEndDuties)
+                {
+                    //Do nothing!
+                }
+                else
+                {
+                    Chat.Print(Functions.BuildSeString("LootMaster", "Your current <c17>auto-roll setting is <c573>" + PluginConfig.AutoRollOption.GetAttribute<Display>().Value.Replace(" ", " <c573>") + "</c>."));
+                }
+            }
+        }
+
+        private unsafe void TerritoryChanged(object? sender, ushort Territory)
+        {
+            //Chat.Print("Moving territory to " + territoryTypeInfo.PlaceName.Value.Name);
+            if (PluginConfig.DoNotRollInHighEndDuties)
+            {
+                var territoryTypeInfo = Data.GetExcelSheet<TerritoryType>()!.GetRow(ClientState.TerritoryType);
+                if (territoryTypeInfo.ContentFinderCondition.Value.HighEndDuty)
+                {
+                    LootTimer.Enabled = false;
+                    InHighEndDuty = true;
+                }
+                else
+                {
+                    LootTimer.Enabled = true;
+                    InHighEndDuty = false;
+                }
+            }
         }
 
         private async void CheckLoot(object source, ElapsedEventArgs e)
         {
             try
             {
+                if (PluginConfig.DoNotRollInHighEndDuties && InHighEndDuty)
+                {
+                    LootTimer.Enabled = false;
+                    return;
+                }
                 if (LootItems.Count == 0 && BlacklistedItems.Count() > 0) { BlacklistedItems.Clear(); }
                 if (LootItems.Any(x => (LootMaster.RollState)x.RollState == RollState.LootMasterNotDecided)) { return; }
                 if (LootItems.Where(x => x.RollResult == 0).Count() > 0 && PluginConfig.AutoRoll)
                 {
+                    if (PluginConfig.DoNotRollInHighEndDuties)
+                    {
+                        var territoryTypeInfo = Data.GetExcelSheet<TerritoryType>()!.GetRow(ClientState.TerritoryType);
+                        if (territoryTypeInfo.ContentFinderCondition.Value.HighEndDuty)
+                        {
+                            InHighEndDuty = true;
+                            return;
+                        }
+                    }
                     //List<LootItem> CurrentLoot = LootItems;
                     LootTimer.Enabled = false;
                     //Chat.Print("There's some loot waiting, " + LootItems.Where(x => x.RollResult == 0).Count() + " pieces. We're gonna roll " + PluginConfig.AutoRollOption.GetAttribute<Display>().Value);
@@ -103,7 +141,7 @@ namespace LootMaster
                     int PassedCount = 0;
                     int BlacklistedCount = 0;
                     LootItem StupidShitCheck = new LootItem();
-                    foreach(LootItem Item in LootItems.Where(x => x.RollResult == 0))
+                    foreach (LootItem Item in LootItems.Where(x => x.RollResult == 0))
                     {
                         //Chat.Print("Item ID: " + Item.ItemId + "\nChest ID: " + Item.ChestObjectId);
                         //if (BlacklistedItems.Count > 0)
@@ -114,7 +152,7 @@ namespace LootMaster
                         if (BlacklistedItems.FindIndex(x => x.ItemId == Item.ItemId && x.ChestObjectId == Item.ChestObjectId) != -1)
                         {
                             BlacklistedCount++;
-                            continue; 
+                            continue;
                         }
                         int ItemIndex = LootItems.FindIndex(x => x.ItemId == Item.ItemId && x.RollResult == 0);
                         try
@@ -146,7 +184,7 @@ namespace LootMaster
                             }
                             else
                             {
-                                if (!PluginConfig.PassOnFail) 
+                                if (!PluginConfig.PassOnFail)
                                 {
                                     //Item failed to be rolled on and we're not gonna pass on it
                                     //Add it to the blacklist
@@ -164,7 +202,7 @@ namespace LootMaster
                         {
                             StupidShitCheck = LootItems[ItemIndex];
                         }
-                        catch(Exception f)
+                        catch (Exception f)
                         {
                             PluginLog.Information("Error getting item, already rolled?");
                             continue;
@@ -308,6 +346,7 @@ namespace LootMaster
             PluginUI ui = this.ui;
             ui.IsVisible = !ui.IsVisible;
         }
+
         [Command("/need")]
         [HelpMessage("Roll need for everything. If impossible, roll greed. Else, roll pass.")]
         public async void NeedCommand(string command, string args)
@@ -419,7 +458,7 @@ namespace LootMaster
             if (!PluginConfig.EnableChatLogMessage)
                 return;
 
-            Chat.Print(Functions.BuildSeString(this.Name,"Greeded <c575>" + num.ToString() + " item(s)."));
+            Chat.Print(Functions.BuildSeString(this.Name, "Greeded <c575>" + num.ToString() + " item(s)."));
         }
 
         [Command("/pass")]
@@ -510,6 +549,7 @@ namespace LootMaster
             PluginInterface.UiBuilder.Draw -= new System.Action(ui.Draw);
             LootTimer.Dispose();
             Client.CfPop -= CFPop;
+            Client.TerritoryChanged -= TerritoryChanged;
         }
 
         public void Dispose()

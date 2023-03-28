@@ -73,6 +73,8 @@ namespace LootMaster
                 if (ImGui.IsItemHovered()) { ImGui.SetTooltip("HIGHLY RECOMMENDED so that you don't forget you have it set to something and lose loot you care about!"); }
                 ImGui.Checkbox("Automatically pass on items that fail need/greed", ref Plugin.PluginConfig.PassOnFail);
                 if (ImGui.IsItemHovered()) { ImGui.SetTooltip("For things like minions/green items you can't get more than one of/already have in your inventory."); }
+                ImGui.Checkbox("Do not auto-roll in high-end duties", ref Plugin.PluginConfig.DoNotRollInHighEndDuties);
+                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Disable auto-rolling for any duty that is in the \"High-end Duty\" tab of duty finder."); }
             }
             //ImGui.Spacing();
             ImGui.Separator();
