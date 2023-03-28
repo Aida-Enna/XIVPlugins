@@ -301,7 +301,7 @@ namespace LootMaster
         //}
 
         [Command("/lootmaster")]
-        [Aliases("/lm")]
+        [Aliases("/loot")]
         [HelpMessage("Opens the lootmaster configuration menu.")]
         public async void OpenConfig(string command, string args)
         {
