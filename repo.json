@@ -4,8 +4,8 @@
     "Name": "Auto Login",
     "Description": "Automatically logs you into a specified character when the game first opens.",
     "InternalName": "AutoLogin",
-    "AssemblyVersion": "1.2.0.1",
-    "Changelog": "- Internal rewrite, no new changes yet",
+    "AssemblyVersion": "1.0.0.5",
+    "Changelog": "- Updated for patch 6.5\n- Fixed an issue where a blue screen was present",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
@@ -13,10 +13,10 @@
       "auto",
       "aida"
     ],
-    "DalamudApiLevel": 8,
+    "DalamudApiLevel": 9,
     "IsHide": "False",
     "IsTestingExclusive": "False",
-    "LastUpdated": 1678917266,
+    "LastUpdated": 1696426376,
     "DownloadCount": 69420,
     "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/AutoLogin.png",
     "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/AutoLogin.zip?raw=true",
@@ -30,7 +30,7 @@
     "Punchline": "Just waiting till I get banned so square can implement this ingame.",
     "InternalName": "FATEAutoSync",
     "AssemblyVersion": "1.3.0.0",
-    "Changelog": "- Updated for 6.5",
+    "Changelog": "- Updated for patch 6.5",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
@@ -57,7 +57,7 @@
     "Punchline": "Someone in our group wouldn't eat their food. I got tired of telling them to. Now the plugin does.",
     "InternalName": "FoodCheck",
     "AssemblyVersion": "1.0.0.0",
-    "Changelog": "",
+    "Changelog": "- Updated for patch 6.5",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
@@ -83,7 +83,7 @@
     "Punchline": "Dungeon loot made lazy.",
     "InternalName": "LootMaster",
     "AssemblyVersion": "1.0.0.5",
-    "Changelog": "- Added an autoroll option\n- Added some more configurable options such as posting if your inventory is low, passing on failed items, etc\n- Added some support links if you wanna help out\n- Various other bugfixes/enhancements",
+    "Changelog": "- Updated for patch 6.5",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
@@ -107,7 +107,7 @@
     "Punchline": "Square, please give us miqote sandboxes and au ra heating lamps. We will pay real money.",
     "InternalName": "PotatoFamine2",
     "AssemblyVersion": "2.0.0.1",
-    "Changelog": "- Removed debug output",
+    "Changelog": "- Updated for patch 6.5",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
