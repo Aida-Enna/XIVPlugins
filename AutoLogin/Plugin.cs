@@ -248,7 +248,7 @@ namespace AutoLogin {
             if (addon == null) return false;
             PluginLog.Log("Found _CharaSelectListMenu");
             //originally 17?
-            GenerateCallback(addon, 17, 0, 0);
+            GenerateCallback(addon, 18, 0, tempCharacter ?? PluginConfig.CharacterSlot);
             //GenerateCallback(addon, 14, 0, tempCharacter ?? PluginConfig.CharacterSlot);
             var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
             return nextAddon != null;
@@ -293,7 +293,7 @@ namespace AutoLogin {
         private uint? tempDc = null;
         private uint? tempWorld = null;
         private uint? tempCharacter = null;
-        private bool drawDebugWindow = true;
+        private bool drawDebugWindow = false;
         private void DrawUI() {
             drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
 
