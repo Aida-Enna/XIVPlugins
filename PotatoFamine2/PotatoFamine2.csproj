@@ -33,8 +33,8 @@
   </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Dalamud.ContextMenu" Version="1.2.2" />
-		<PackageReference Include="DalamudPackager" Version="2.1.10" />
+		<PackageReference Include="Dalamud.ContextMenu" Version="1.3.1" />
+		<PackageReference Include="DalamudPackager" Version="2.1.12" />
 		<PackageReference Include="ILRepack" Version="2.0.18" GeneratePathProperty="true" />
 		<Reference Include="System.Runtime, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
 			

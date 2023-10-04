@@ -1,4 +1,5 @@
 using Dalamud.Game.Command;
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +11,11 @@ namespace Veda
 {
     public class PluginCommandManager<THost> : IDisposable
     {
-        private readonly CommandManager commandManager;
+        private readonly ICommandManager commandManager;
         private readonly (string, CommandInfo)[] pluginCommands;
         private readonly THost host;
 
-        public PluginCommandManager(THost host, CommandManager commands)
+        public PluginCommandManager(THost host, ICommandManager commands)
         {
             this.commandManager = commands;
             this.host = host;

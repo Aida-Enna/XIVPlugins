@@ -24,19 +24,21 @@ using System.Linq;
 using Veda;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.ClientState;
+using System.Threading.Tasks;
+using Dalamud.Plugin.Services;
 
 namespace AutoLogin {
     public unsafe class Plugin : IDalamudPlugin {
         public string Name => "AutoLogin";
         
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static CommandManager Commands { get; set; }
-        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Conditions { get; set; }
-        [PluginService] public static DataManager Data { get; set; }
-        [PluginService] public static Framework Framework { get; set; }
-        [PluginService] public static GameGui GameGui { get; set; }
-        [PluginService] public static KeyState KeyState { get; set; }
-        [PluginService] public static ChatGui Chat { get; set; }
+        [PluginService] public static ICommandManager Commands { get; set; }
+        [PluginService] public static ICondition Conditions { get; set; }
+        [PluginService] public static IDataManager Data { get; set; }
+        [PluginService] public static IFramework Framework { get; set; }
+        [PluginService] public static IGameGui GameGui { get; set; }
+        [PluginService] public static IKeyState KeyState { get; set; }
+        [PluginService] public static IChatGui Chat { get; set; }
 
         public static Configuration PluginConfig { get; set; }
         private bool drawConfigWindow;
@@ -129,7 +131,7 @@ namespace AutoLogin {
         }
 
 
-        private void OnFrameworkUpdate(Framework framework) {
+        private void OnFrameworkUpdate(IFramework framework) {
             if (actionQueue.Count == 0) {
                 if (sw.IsRunning) sw.Stop();
                 return;
@@ -183,28 +185,40 @@ namespace AutoLogin {
         }
 
         public bool OpenDataCenterMenu() {
-            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_TitleMenu", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_TitleMenu");
             if (addon == null || addon->IsVisible == false) return false;
-            GenerateCallback(addon, 12);
-            var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1);
+            PluginLog.Log("Found Title Screen");
+            GenerateCallback(addon, 13);
+            var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap");
             if (nextAddon == null) return false;
+            PluginLog.Log("Found TitleDCWorldMap");
             return true;
         }
 
         public bool SelectDataCentre() {
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1);
             if (addon == null) return false;
+            PluginLog.Log("Found TitleDCWorldMap");
+            var dcMenu = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMap");
+            if (dcMenu != null) dcMenu->Hide(true, true, 0);
+            var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg");
+            if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
             GenerateCallback(addon, 2, (int) (tempDc ?? PluginConfig.DataCenter));
             return true;
         }
 
         public bool SelectWorld() {
             // Select World
-            var dcMenu = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1);
-            if (dcMenu != null) dcMenu->Hide(true);
+            var dcMenu = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap");
+            if (dcMenu != null) dcMenu->Hide(true, true, 0);
+            var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg");
+            if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
+            //var TitleMenu = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu");
+            //if (TitleMenu != null) TitleMenu->Hide(true, true, 0);
+            //if (TitleMenu != null) TitleMenu->Hide(true, true, 1);
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectWorldServer", 1);
             if (addon == null) return false;
-
+            PluginLog.Log("Found World Server");
             var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder.StringArrays[1];
             if (stringArray == null) return false;
 
@@ -232,7 +246,10 @@ namespace AutoLogin {
             // Select Character
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectListMenu", 1);
             if (addon == null) return false;
-            GenerateCallback(addon, 17, 0, tempCharacter ?? PluginConfig.CharacterSlot);
+            PluginLog.Log("Found _CharaSelectListMenu");
+            //originally 17?
+            GenerateCallback(addon, 17, 0, 0);
+            //GenerateCallback(addon, 14, 0, tempCharacter ?? PluginConfig.CharacterSlot);
             var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
             return nextAddon != null;
         }
@@ -241,7 +258,7 @@ namespace AutoLogin {
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
             if (addon == null) return false;
             GenerateCallback(addon, 0);
-            addon->Hide(true);
+            addon->Hide(true, false, 0);
             return true;
         }
 
@@ -276,13 +293,10 @@ namespace AutoLogin {
         private uint? tempDc = null;
         private uint? tempWorld = null;
         private uint? tempCharacter = null;
-        private bool ShowSupport;
-#if DEBUG
-        private bool drawDebugWindow = false;
-#endif
+        private bool drawDebugWindow = true;
         private void DrawUI() {
             drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
-#if DEBUG
+
             if (!drawDebugWindow) return;
             if (ImGui.Begin($"{this.Name} Debugging", ref drawDebugWindow)) {
                 if (ImGui.Button("Open Config")) drawConfigWindow = true;
@@ -347,38 +361,7 @@ namespace AutoLogin {
                     ImGui.Text($"{l.Method.Name}");
                 }
             }
-            ImGui.Spacing();
-            if (ImGui.Button("Want to help support my work?"))
-            {
-                ShowSupport = !ShowSupport;
-            }
-            if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Click me!"); }
-            if (ShowSupport)
-            {
-                ImGui.Text("Here are the current ways you can support the work I do.\nEvery bit helps, thank you! Have a great day!");
-                ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.19f, 0.52f, 0.27f, 1));
-                if (ImGui.Button("Donate via Paypal"))
-                {
-                    Functions.OpenWebsite("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QXF8EL4737HWJ");
-                }
-                ImGui.PopStyleColor();
-                ImGui.SameLine();
-                ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.95f, 0.39f, 0.32f, 1));
-                if (ImGui.Button("Become a Patron"))
-                {
-                    Functions.OpenWebsite("https://www.patreon.com/bePatron?u=5597973");
-                }
-                ImGui.PopStyleColor();
-                ImGui.SameLine();
-                ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.25f, 0.67f, 0.87f, 1));
-                if (ImGui.Button("Support me on Ko-Fi"))
-                {
-                    Functions.OpenWebsite("https://ko-fi.com/Y8Y114PMT");
-                }
-                ImGui.PopStyleColor();
-            }
             ImGui.End();
-#endif
         }
 
 

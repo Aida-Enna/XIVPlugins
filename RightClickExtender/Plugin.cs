@@ -11,6 +11,7 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Runtime.InteropServices;
@@ -23,20 +24,20 @@ namespace RightClickExtender
         public string Name => "RightClickExtender";
 
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static CommandManager Commands { get; set; }
-        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Conditions { get; set; }
-        [PluginService] public static DataManager Data { get; set; }
-        [PluginService] public static Dalamud.Game.Framework Framework { get; set; }
-        [PluginService] public static GameGui GameGui { get; set; }
-        [PluginService] public static SigScanner SigScanner { get; set; }
-        [PluginService] public static KeyState KeyState { get; set; }
-        [PluginService] public static ChatGui Chat { get; set; }
-        [PluginService] public static ClientState ClientState { get; set; }
+        [PluginService] public static ICommandManager Commands { get; set; }
+        [PluginService] public static ICondition Conditions { get; set; }
+        [PluginService] public static IDataManager Data { get; set; }
+        [PluginService] public static IFramework Framework { get; set; }
+        [PluginService] public static IGameGui GameGui { get; set; }
+        [PluginService] public static ISigScanner SigScanner { get; set; }
+        [PluginService] public static IKeyState KeyState { get; set; }
+        [PluginService] public static IChatGui Chat { get; set; }
+        [PluginService] public static IClientState ClientState { get; set; }
 
         private PluginCommandManager<Plugin> commandManager;
         private PluginUI ui;
         public static Configuration PluginConfig { get; set; }
-        private DalamudContextMenu contextMenu = new DalamudContextMenu();
+        private DalamudContextMenu contextMenu = new DalamudContextMenu(PluginInterface);
 
         private delegate void ProcessChatBoxDelegate(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4);
 
@@ -48,7 +49,7 @@ namespace RightClickExtender
         [UnmanagedFunctionPointer(CallingConvention.ThisCall, CharSet = CharSet.Ansi)]
         private delegate IntPtr CountdownTimer(ulong p1);
 
-        public Plugin(DalamudPluginInterface pluginInterface, ChatGui chat, CommandManager commands, SigScanner sigScanner)
+        public Plugin(DalamudPluginInterface pluginInterface, IChatGui chat, ICommandManager commands, ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             Chat = chat;

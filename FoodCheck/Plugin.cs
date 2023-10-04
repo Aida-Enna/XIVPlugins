@@ -11,6 +11,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using Lumina.Excel.GeneratedSheets;
@@ -26,16 +27,17 @@ namespace FoodCheck
         public string Name => "FoodCheck";
 
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static CommandManager Commands { get; set; }
-        [PluginService] public static Dalamud.Game.ClientState.Conditions.Condition Conditions { get; set; }
-        [PluginService] public static DataManager Data { get; set; }
-        [PluginService] public static Dalamud.Game.Framework Framework { get; set; }
-        [PluginService] public static GameGui GameGui { get; set; }
-        [PluginService] public static SigScanner SigScanner { get; set; }
-        [PluginService] public static KeyState KeyState { get; set; }
-        [PluginService] public static ChatGui Chat { get; set; }
-        [PluginService] public static ClientState ClientState { get; set; }
-        [PluginService] public static PartyList PartyList { get; set; }
+        [PluginService] public static ICommandManager Commands { get; set; }
+        [PluginService] public static ICondition Conditions { get; set; }
+        [PluginService] public static IDataManager Data { get; set; }
+        [PluginService] public static IFramework Framework { get; set; }
+        [PluginService] public static IGameGui GameGui { get; set; }
+        [PluginService] public static ISigScanner SigScanner { get; set; }
+        [PluginService] public static IKeyState KeyState { get; set; }
+        [PluginService] public static IChatGui Chat { get; set; }
+        [PluginService] public static IClientState ClientState { get; set; }
+        [PluginService] public static IPartyList PartyList { get; set; }
+        [PluginService] public static IGameInteropProvider Hook { get; set; }
 
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
@@ -57,7 +59,7 @@ namespace FoodCheck
         [UnmanagedFunctionPointer(CallingConvention.ThisCall, CharSet = CharSet.Ansi)]
         private delegate IntPtr CountdownTimer(ulong p1);
 
-        public Plugin(DalamudPluginInterface pluginInterface, ChatGui chat, PartyList partyList, CommandManager commands, SigScanner sigScanner)
+        public Plugin(DalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             PartyList = partyList;
@@ -187,22 +189,30 @@ namespace FoodCheck
             _countdownPtr = SigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 40 8B 41");
             try
             {
-                _countdownTimerHook = new Hook<CountdownTimer>(_countdownPtr, _countdownTimer);
+                _countdownTimerHook = Hook.HookFromSignature<CountdownTimer>("48 89 5C 24 ?? 57 48 83 EC 40 8B 41", _countdownTimer);
                 _countdownTimerHook.Enable();
+                PluginLog.Error("Timer hooked!\n");
             }
             catch (Exception e)
             {
                 PluginLog.Error("Could not hook to timer\n" + e);
             }
+            try
+            {
+                var getUIModulePtr = SigScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
+                var easierProcessChatBoxPtr = SigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
+                var uiModulePtr = SigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
 
-            var getUIModulePtr = SigScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
-            var easierProcessChatBoxPtr = SigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
-            var uiModulePtr = SigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
+                var GetUIModule = Marshal.GetDelegateForFunctionPointer<GetUIModuleDelegate>(getUIModulePtr);
 
-            var GetUIModule = Marshal.GetDelegateForFunctionPointer<GetUIModuleDelegate>(getUIModulePtr);
-
-            uiModule = GetUIModule(*(IntPtr*)uiModulePtr);
-            ProcessChatBox = Marshal.GetDelegateForFunctionPointer<ProcessChatBoxDelegate>(easierProcessChatBoxPtr);
+                uiModule = GetUIModule(*(IntPtr*)uiModulePtr);
+                ProcessChatBox = Marshal.GetDelegateForFunctionPointer<ProcessChatBoxDelegate>(easierProcessChatBoxPtr);
+                PluginLog.Error("Chatbox hooked!\n");
+            }
+            catch (Exception e)
+            {
+                PluginLog.Error("Could not hook to chatbox\n" + e);
+            }
         }
 
         #region IDisposable Support

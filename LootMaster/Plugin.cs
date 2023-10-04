@@ -7,6 +7,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
@@ -25,14 +26,14 @@ namespace LootMaster
     {
         public string Name => "LootMaster";
 
-        [PluginService] public static CommandManager Commands { get; set; }
+        [PluginService] public static ICommandManager Commands { get; set; }
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static SigScanner SigScanner { get; set; }
-        [PluginService] public static ChatGui Chat { get; set; }
-        [PluginService] public static ClientState Client { get; set; }
-        [PluginService] public static DataManager Data { get; set; }
+        [PluginService] public static ISigScanner SigScanner { get; set; }
+        [PluginService] public static IChatGui Chat { get; set; }
+        [PluginService] public static IClientState Client { get; set; }
+        [PluginService] public static IDataManager Data { get; set; }
 
-        [PluginService] public static ClientState ClientState { get; set; }
+        [PluginService] public static IClientState ClientState { get; set; }
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
         private static IntPtr lootsAddr;
@@ -46,7 +47,7 @@ namespace LootMaster
         public Timer LootTimer = new System.Timers.Timer();
         public static List<LootItem> BlacklistedItems = new List<LootItem>();
 
-        public Plugin(CommandManager commands, ClientState client)
+        public Plugin(ICommandManager commands, IClientState client)
         {
             lootsAddr = SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 89 44 24 60", 0);
             rollItemRaw = Marshal.GetDelegateForFunctionPointer<RollItemRaw>(SigScanner.ScanText("41 83 F8 ?? 0F 83 ?? ?? ?? ?? 48 89 5C 24 08"));
@@ -71,7 +72,7 @@ namespace LootMaster
             LootTimer.Start();
         }
 
-        private unsafe void CFPop(object? sender, ContentFinderCondition queuedDuty)
+        private unsafe void CFPop(ContentFinderCondition queuedDuty)
         {
             if (PluginConfig.InventoryCheck && GetInventoryRemainingSpace() < 5)
             {
@@ -90,7 +91,7 @@ namespace LootMaster
             }
         }
 
-        private unsafe void TerritoryChanged(object? sender, ushort Territory)
+        private unsafe void TerritoryChanged(ushort Territory)
         {
             //Chat.Print("Moving territory to " + territoryTypeInfo.PlaceName.Value.Name);
             if (PluginConfig.DoNotRollInHighEndDuties)

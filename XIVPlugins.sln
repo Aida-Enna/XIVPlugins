@@ -15,9 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LootMaster", "LootMaster\Lo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PotatoFamine2", "PotatoFamine2\PotatoFamine2.csproj", "{4A540051-5AB7-4893-A555-572B9FD80C5B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwitchXIV", "TwitchXIV\TwitchXIV.csproj", "{20B29378-F1D7-4A8A-9480-37DE50718666}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RightClickExtender", "RightClickExtender\RightClickExtender.csproj", "{BFBEEE7E-3113-4252-B5D0-B2D016F82961}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatGPT", "ChatGPT\ChatGPT.csproj", "{245E3F52-53DD-4DF0-AD63-96133021173C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,14 +75,6 @@ Global
 		{4A540051-5AB7-4893-A555-572B9FD80C5B}.Release|Any CPU.Build.0 = Release|x64
 		{4A540051-5AB7-4893-A555-572B9FD80C5B}.Release|x64.ActiveCfg = Release|x64
 		{4A540051-5AB7-4893-A555-572B9FD80C5B}.Release|x64.Build.0 = Release|x64
-		{20B29378-F1D7-4A8A-9480-37DE50718666}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{20B29378-F1D7-4A8A-9480-37DE50718666}.Debug|Any CPU.Build.0 = Debug|x64
-		{20B29378-F1D7-4A8A-9480-37DE50718666}.Debug|x64.ActiveCfg = Debug|x64
-		{20B29378-F1D7-4A8A-9480-37DE50718666}.Debug|x64.Build.0 = Debug|x64
-		{20B29378-F1D7-4A8A-9480-37DE50718666}.Release|Any CPU.ActiveCfg = Release|x64
-		{20B29378-F1D7-4A8A-9480-37DE50718666}.Release|Any CPU.Build.0 = Release|x64
-		{20B29378-F1D7-4A8A-9480-37DE50718666}.Release|x64.ActiveCfg = Release|x64
-		{20B29378-F1D7-4A8A-9480-37DE50718666}.Release|x64.Build.0 = Release|x64
 		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Debug|Any CPU.Build.0 = Debug|x64
 		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Debug|x64.ActiveCfg = Debug|x64
@@ -91,6 +83,14 @@ Global
 		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Release|Any CPU.Build.0 = Release|x64
 		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Release|x64.ActiveCfg = Release|x64
 		{BFBEEE7E-3113-4252-B5D0-B2D016F82961}.Release|x64.Build.0 = Release|x64
+		{245E3F52-53DD-4DF0-AD63-96133021173C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{245E3F52-53DD-4DF0-AD63-96133021173C}.Debug|Any CPU.Build.0 = Debug|x64
+		{245E3F52-53DD-4DF0-AD63-96133021173C}.Debug|x64.ActiveCfg = Debug|x64
+		{245E3F52-53DD-4DF0-AD63-96133021173C}.Debug|x64.Build.0 = Debug|x64
+		{245E3F52-53DD-4DF0-AD63-96133021173C}.Release|Any CPU.ActiveCfg = Release|x64
+		{245E3F52-53DD-4DF0-AD63-96133021173C}.Release|Any CPU.Build.0 = Release|x64
+		{245E3F52-53DD-4DF0-AD63-96133021173C}.Release|x64.ActiveCfg = Release|x64
+		{245E3F52-53DD-4DF0-AD63-96133021173C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

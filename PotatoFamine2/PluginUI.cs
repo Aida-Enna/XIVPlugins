@@ -22,7 +22,7 @@ namespace PotatoFamine2
         private bool ShowWhy;
         private bool ShowSupport;
 
-        private TargetManager _targetManager;
+        private ITargetManager _targetManager;
 
         public PluginUI(Plugin plugin)
         {

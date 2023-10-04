@@ -36,7 +36,7 @@
       <Compile Include="..\Shared\PluginCommandManager.cs" Link="Shared\PluginCommandManager.cs" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.10" />
+        <PackageReference Include="DalamudPackager" Version="2.1.12" />
     </ItemGroup>
     <ItemGroup>
         <Reference Include="Dalamud">

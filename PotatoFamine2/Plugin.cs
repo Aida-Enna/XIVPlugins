@@ -16,6 +16,7 @@ using Dalamud.Hooking;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -46,12 +47,13 @@ namespace PotatoFamine2
         public string Name => "Potato Famine 2";
 
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static ObjectTable ObjectTable { get; set; }
-        [PluginService] public static CommandManager Commands { get; set; }
-        [PluginService] public static SigScanner SigScanner { get; set; }
-        [PluginService] public static ClientState ClientState { get; set; }
-        [PluginService] public static ObjectTable Objects { get; private set; } = null!;
-        [PluginService] public static ChatGui Chat { get; set; }
+        [PluginService] public static IObjectTable ObjectTable { get; set; }
+        [PluginService] public static ICommandManager Commands { get; set; }
+        [PluginService] public static ISigScanner SigScanner { get; set; }
+        [PluginService] public static IClientState ClientState { get; set; }
+        [PluginService] public static IObjectTable Objects { get; private set; } = null!;
+        [PluginService] public static IChatGui Chat { get; set; }
+        [PluginService] public static IGameInteropProvider Hook { get; set; }
 
         [Flags]
         public enum DrawState : uint
@@ -89,7 +91,7 @@ namespace PotatoFamine2
         private Race lastPlayerRace;
         private byte lastPlayerGender;
 
-        private DalamudContextMenu contextMenu = new DalamudContextMenu();
+        private DalamudContextMenu contextMenu = new DalamudContextMenu(PluginInterface);
 
         //This sucks, but here we are
         static Plugin()
@@ -106,7 +108,7 @@ namespace PotatoFamine2
             RACE_STARTER_GEAR_IDS = list.ToArray();
         }
 
-        public Plugin(ChatGui chat)
+        public Plugin(IChatGui chat)
         {
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
@@ -130,26 +132,19 @@ namespace PotatoFamine2
                 }
             );
 
-            var charaIsMountAddr =
-                SigScanner.ScanText("40 53 48 83 EC 20 48 8B 01 48 8B D9 FF 50 10 83 F8 08 75 08");
+            var charaIsMountAddr = SigScanner.ScanText("40 53 48 83 EC 20 48 8B 01 48 8B D9 FF 50 10 83 F8 08 75 08");
             PluginLog.Log($"Found IsMount address: {charaIsMountAddr.ToInt64():X}");
-            this.charaMountedHook ??=
-                new Hook<CharacterIsMount>(charaIsMountAddr, CharacterIsMountDetour);
+            this.charaMountedHook ??= Hook.HookFromSignature<CharacterIsMount>("40 53 48 83 EC 20 48 8B 01 48 8B D9 FF 50 10 83 F8 08 75 08", CharacterIsMountDetour);
             this.charaMountedHook.Enable();
 
-            var charaInitAddr = SigScanner.ScanText(
-                "48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 48 8B F9 48 8B EA 48 81 C1 ?? ?? ?? ?? E8 ?? ?? ?? ??");
+            var charaInitAddr = SigScanner.ScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 48 8B F9 48 8B EA 48 81 C1 ?? ?? ?? ?? E8 ?? ?? ?? ??");
             PluginLog.Log($"Found Initialize address: {charaInitAddr.ToInt64():X}");
-            this.charaInitHook ??=
-                new Hook<CharacterInitialize>(charaInitAddr, CharacterInitializeDetour);
+            this.charaInitHook ??= Hook.HookFromSignature<CharacterInitialize>("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 48 8B F9 48 8B EA 48 81 C1 ?? ?? ?? ?? E8 ?? ?? ?? ??", CharacterInitializeDetour);
             this.charaInitHook.Enable();
 
-            var flagSlotUpdateAddr =
-                SigScanner.ScanText(
-                    "48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 8B DA 49 8B F0 48 8B F9 83 FA 0A");
+            var flagSlotUpdateAddr = SigScanner.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 8B DA 49 8B F0 48 8B F9 83 FA 0A");
             PluginLog.Log($"Found FlagSlotUpdate address: {flagSlotUpdateAddr.ToInt64():X}");
-            this.flagSlotUpdateHook ??=
-                new Hook<FlagSlotUpdate>(flagSlotUpdateAddr, FlagSlotUpdateDetour);
+            this.flagSlotUpdateHook ??= Hook.HookFromSignature<FlagSlotUpdate>("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 8B DA 49 8B F0 48 8B F9 83 FA 0A", FlagSlotUpdateDetour);
             this.flagSlotUpdateHook.Enable();
 
             // Trigger an initial refresh of all players

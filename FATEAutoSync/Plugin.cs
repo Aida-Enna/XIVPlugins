@@ -9,6 +9,7 @@ using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using System;
 using System.Runtime.InteropServices;
@@ -21,16 +22,16 @@ namespace FATEAutoSync
         public string Name => "FATE AutoSync";
 
         [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static CommandManager Commands { get; set; }
-        [PluginService] public static Condition Conditions { get; set; }
-        [PluginService] public static DataManager Data { get; set; }
-        [PluginService] public static Framework Framework { get; set; }
-        [PluginService] public static GameGui GameGui { get; set; }
-        [PluginService] public static SigScanner SigScanner { get; set; }
-        [PluginService] public static KeyState KeyState { get; set; }
-        [PluginService] public static ChatGui Chat { get; set; }
-        [PluginService] internal static ClientState ClientState { get; set; }
-        [PluginService] public static PartyList PartyList { get; set; }
+        [PluginService] public static ICommandManager Commands { get; set; }
+        [PluginService] public static ICondition Conditions { get; set; }
+        [PluginService] public static IDataManager Data { get; set; }
+        [PluginService] public static IFramework Framework { get; set; }
+        [PluginService] public static IGameGui GameGui { get; set; }
+        [PluginService] public static ISigScanner SigScanner { get; set; }
+        [PluginService] public static IKeyState KeyState { get; set; }
+        [PluginService] public static IChatGui Chat { get; set; }
+        [PluginService] internal static IClientState ClientState { get; set; }
+        [PluginService] public static IPartyList PartyList { get; set; }
 
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> CommandManager;
@@ -53,7 +54,7 @@ namespace FATEAutoSync
         private bool IsMounted = false;
         private bool TankStanceShouldBeOnBitch = false;
 
-        public Plugin(DalamudPluginInterface pluginInterface, ChatGui chat, Framework framework, CommandManager commands, SigScanner sigScanner)
+        public Plugin(DalamudPluginInterface pluginInterface, IChatGui chat, IFramework framework, ICommandManager commands, ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             Chat = chat;
@@ -94,7 +95,7 @@ namespace FATEAutoSync
             if (ClassNameAbbr == "GNB") { ExecuteCommand("/action \"Royal Guard\""); }
         }
 
-        private void Update(Dalamud.Game.Framework framework)
+        private void Update(IFramework framework)
         {
             if (!PluginConfig.FateAutoSyncEnabled) return;
 
