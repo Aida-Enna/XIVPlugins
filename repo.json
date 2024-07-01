@@ -75,5 +75,30 @@
     "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/FoodCheck.zip?raw=true",
     "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/FoodCheck.zip?raw=true",
     "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/FoodCheck.zip?raw=true"
+  },
+  {
+    "Author": "Aida Enna",
+    "Name": "Macro Chain Redux",
+    "Description": "Run multiple macros one after the other (or repeat them).",
+    "Punchline": "A modified fork of the old Macro Chain that allows you to repeat a macro inside a macro.",
+    "InternalName": "MacroChainRedux",
+    "AssemblyVersion": "1.0.0.0",
+    "Changelog": "- Updated for patch 7.0",
+    "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+    "ApplicableVersion": "any",
+    "Tags": [
+      "macro",
+      "aida"
+    ],
+    "DalamudApiLevel": 10,
+    "IsHide": "False",
+    "IsTestingExclusive": "False",
+    "LastUpdated": 1696422694,
+    "DownloadCount": 69420,
+    "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/MacroChainRedux.png",
+    "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/MacroChainRedux.zip?raw=true",
+    "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/MacroChainRedux.zip?raw=true",
+    "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/MacroChainRedux.zip?raw=true"
   }
+]
 ]
