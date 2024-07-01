@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29920.165
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MacroChain", "MacroChain.csproj", "{03548070-60E8-472F-A73D-37B91D0D9E12}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03548070-60E8-472F-A73D-37B91D0D9E12}.Debug|x64.ActiveCfg = Debug|x64
+		{03548070-60E8-472F-A73D-37B91D0D9E12}.Debug|x64.Build.0 = Debug|x64
+		{03548070-60E8-472F-A73D-37B91D0D9E12}.Release|x64.ActiveCfg = Release|x64
+		{03548070-60E8-472F-A73D-37B91D0D9E12}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {56752C73-8AB3-4750-A931-797CBED67D73}
+	EndGlobalSection
+EndGlobal
