@@ -82,7 +82,7 @@
     "Description": "Automatically roll on loot with various options. Also has commands to need, greed, or pass on all loot.",
     "Punchline": "Dungeon loot made lazy.",
     "InternalName": "LootMaster",
-    "AssemblyVersion": "1.0.0.5",
+    "AssemblyVersion": "1.0.0.6",
     "Changelog": "- Updated for patch 6.5",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
