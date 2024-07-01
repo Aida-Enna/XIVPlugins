@@ -1,0 +1,23 @@
+{
+  "Author": "Aida Enna",
+  "Name": "Loot Master (beta)",
+  "InternalName": "LootMaster",
+  "AssemblyVersion": "1.0.0.6",
+  "ApplicableVersion": "any",
+  "Description": "Automatically roll on loot with various options. Also has commands to need, greed, or pass on all loot.",
+  "Punchline": "Dungeon loot made lazy.",
+  "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+  "Tags": [
+    "loot",
+    "aida"
+  ],
+  "CategoryTags": null,
+  "DalamudApiLevel": 9,
+  "LoadPriority": 0,
+  "LastUpdate": 0,
+  "DownloadLinkInstall": null,
+  "DownloadLinkUpdate": null,
+  "DownloadLinkTesting": null,
+  "ImageUrls": null,
+  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/LootMaster.png"
+}

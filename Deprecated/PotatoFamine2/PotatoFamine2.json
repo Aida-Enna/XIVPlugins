@@ -1,0 +1,26 @@
+{
+  "Author": "Aida Enna",
+  "Name": "Potato Famine 2",
+  "InternalName": "PotatoFamine2",
+  "AssemblyVersion": "2.0.0.2",
+  "ApplicableVersion": "any",
+  "Description": "Changes lalafells (or everyone) into another race of your choosing.",
+  "Punchline": "Square, please give us miqote sandboxes and au ra heating lamps. We will pay real money.",
+  "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+  "Tags": [
+    "lala",
+    "lalafell",
+    "potato",
+    "famine",
+    "aida"
+  ],
+  "CategoryTags": null,
+  "DalamudApiLevel": 9,
+  "LoadPriority": 0,
+  "LastUpdate": 0,
+  "DownloadLinkInstall": null,
+  "DownloadLinkUpdate": null,
+  "DownloadLinkTesting": null,
+  "ImageUrls": null,
+  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/PotatoFamine2/Resources/Icons/PotatoFamine2.png"
+}
