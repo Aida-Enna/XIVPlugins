@@ -21,7 +21,7 @@ namespace FATEAutoSync
     {
         public string Name => "FATE AutoSync";
 
-        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
         [PluginService] public static ICommandManager Commands { get; set; }
         [PluginService] public static ICondition Conditions { get; set; }
         [PluginService] public static IDataManager Data { get; set; }
@@ -32,6 +32,7 @@ namespace FATEAutoSync
         [PluginService] public static IChatGui Chat { get; set; }
         [PluginService] internal static IClientState ClientState { get; set; }
         [PluginService] public static IPartyList PartyList { get; set; }
+        [PluginService] public static IPluginLog PluginLog { get; set; }
 
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> CommandManager;
@@ -54,7 +55,7 @@ namespace FATEAutoSync
         private bool IsMounted = false;
         private bool TankStanceShouldBeOnBitch = false;
 
-        public Plugin(DalamudPluginInterface pluginInterface, IChatGui chat, IFramework framework, ICommandManager commands, ISigScanner sigScanner)
+        public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, IFramework framework, ICommandManager commands, ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             Chat = chat;

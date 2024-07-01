@@ -26,7 +26,7 @@ namespace FoodCheck
     {
         public string Name => "FoodCheck";
 
-        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
         [PluginService] public static ICommandManager Commands { get; set; }
         [PluginService] public static ICondition Conditions { get; set; }
         [PluginService] public static IDataManager Data { get; set; }
@@ -38,6 +38,7 @@ namespace FoodCheck
         [PluginService] public static IClientState ClientState { get; set; }
         [PluginService] public static IPartyList PartyList { get; set; }
         [PluginService] public static IGameInteropProvider Hook { get; set; }
+        [PluginService] public static IPluginLog PluginLog { get; set; }
 
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
@@ -59,7 +60,7 @@ namespace FoodCheck
         [UnmanagedFunctionPointer(CallingConvention.ThisCall, CharSet = CharSet.Ansi)]
         private delegate IntPtr CountdownTimer(ulong p1);
 
-        public Plugin(DalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
+        public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             PartyList = partyList;

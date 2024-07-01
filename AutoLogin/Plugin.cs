@@ -3,35 +3,27 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
-using Dalamud.Game;
 using Dalamud.Game.ClientState.Keys;
-using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
-using Dalamud.Interface.Internal.Notifications;
-using Dalamud.Logging;
 using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
-using Dalamud.Data;
-using Dalamud.Game.Gui;
 using Dalamud.IoC;
 using Dalamud.Interface;
 using ImGuiNET;
 using System.Linq;
-using Veda;
-using Dalamud.Game.ClientState.Party;
-using Dalamud.Game.ClientState;
-using System.Threading.Tasks;
 using Dalamud.Plugin.Services;
+using Dalamud.Interface.ImGuiNotification;
+using System.Threading;
 
 namespace AutoLogin {
     public unsafe class Plugin : IDalamudPlugin {
         public string Name => "AutoLogin";
         
-        [PluginService] public static DalamudPluginInterface PluginInterface { get; set; }
+        [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
         [PluginService] public static ICommandManager Commands { get; set; }
         [PluginService] public static ICondition Conditions { get; set; }
         [PluginService] public static IDataManager Data { get; set; }
@@ -39,18 +31,19 @@ namespace AutoLogin {
         [PluginService] public static IGameGui GameGui { get; set; }
         [PluginService] public static IKeyState KeyState { get; set; }
         [PluginService] public static IChatGui Chat { get; set; }
+        [PluginService] public static INotificationManager NotificationManager{ get; set; }
+        [PluginService] public static IPluginLog PluginLog { get; set; }
 
         public static Configuration PluginConfig { get; set; }
         private bool drawConfigWindow;
-        public static UiBuilder UiBuilder => PluginInterface?.UiBuilder;
 
-        public Plugin(DalamudPluginInterface pluginInterface) {
+        public Plugin(IDalamudPluginInterface pluginInterface) {
 
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
 
-            UiBuilder.Draw += DrawUI;
-            UiBuilder.OpenConfigUi += this.OpenConfigUI;
+            pluginInterface.UiBuilder.Draw += DrawUI;
+            pluginInterface.UiBuilder.OpenConfigUi += this.OpenConfigUI;
 
             Commands.AddHandler("/autologinconfig", new Dalamud.Game.Command.CommandInfo(OnConfigCommandHandler) {
                 HelpMessage = $"Open config window for {Name}",
@@ -66,15 +59,15 @@ namespace AutoLogin {
             });
 
             Framework.Update += OnFrameworkUpdate;
-            if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0) {
-                //PluginInterface.UiBuilder.AddNotification("Starting AutoLogin Process.\nPress and hold shift to cancel.", "Auto Login", NotificationType.Info);
-                actionQueue.Enqueue(OpenDataCenterMenu);
-                actionQueue.Enqueue(SelectDataCentre);
-                actionQueue.Enqueue(SelectWorld);
-                actionQueue.Enqueue(VariableDelay(10));
-                actionQueue.Enqueue(SelectCharacter);
-                actionQueue.Enqueue(SelectYes);
-            }
+            //if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0) {
+            //    //PluginInterface.UiBuilder.AddNotification("Starting AutoLogin Process.\nPress and hold shift to cancel.", "Auto Login", NotificationType.Info);
+            //    actionQueue.Enqueue(OpenDataCenterMenu);
+            //    actionQueue.Enqueue(SelectDataCentre);
+            //    actionQueue.Enqueue(SelectWorld);
+            //    actionQueue.Enqueue(VariableDelay(10));
+            //    actionQueue.Enqueue(SelectCharacter);
+            //    actionQueue.Enqueue(SelectYes);
+            //}
         }
 
         private void OnSwapCharacterCommandHandler(string command, string arguments) {
@@ -139,7 +132,11 @@ namespace AutoLogin {
             if (!sw.IsRunning) sw.Restart();
 
             if (KeyState[VirtualKey.SHIFT]) {
-                PluginInterface.UiBuilder.AddNotification("AutoLogin Cancelled.", "AutoLogin", NotificationType.Warning);
+                Notification Test = new Notification();
+                Test.Content = "Autologin Cancelled.";
+                Test.Title = "AutoLogin";
+                Test.Type = NotificationType.Warning;
+                NotificationManager.AddNotification(Test);
                 actionQueue.Clear();
             }
 
@@ -164,7 +161,7 @@ namespace AutoLogin {
                     }
                 }
             } catch (Exception ex){
-                PluginLog.Log($"Failed: {ex.Message}");
+                PluginLog.Error($"Failed: {ex.Message}");
             }
         }
 
@@ -187,23 +184,27 @@ namespace AutoLogin {
         public bool OpenDataCenterMenu() {
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("_TitleMenu");
             if (addon == null || addon->IsVisible == false) return false;
-            PluginLog.Log("Found Title Screen");
-            GenerateCallback(addon, 13);
+            PluginLog.Debug("Found Title Screen");
+            GenerateCallback(addon, 5); //4 is hitting start? Used to be 13
+            //Open Dalamud Dev Bar -> Open Data Window
+            //Type in the Addon we're on right now "_TitleMenu" in the search box
+            //Click "Node List" and hover over each till you find the button you want
+            //The number you need in that button's info is NodeID
             var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap");
             if (nextAddon == null) return false;
-            PluginLog.Log("Found TitleDCWorldMap");
+            PluginLog.Debug("Found TitleDCWorldMap");
             return true;
         }
 
         public bool SelectDataCentre() {
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1);
             if (addon == null) return false;
-            PluginLog.Log("Found TitleDCWorldMap");
+            PluginLog.Debug("Found TitleDCWorldMap");
             var dcMenu = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMap");
             if (dcMenu != null) dcMenu->Hide(true, true, 0);
             var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg");
             if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
-            GenerateCallback(addon, 2, (int) (tempDc ?? PluginConfig.DataCenter));
+            GenerateCallback(addon, 17, (int) (tempDc ?? PluginConfig.DataCenter));
             return true;
         }
 
@@ -218,7 +219,7 @@ namespace AutoLogin {
             //if (TitleMenu != null) TitleMenu->Hide(true, true, 1);
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectWorldServer", 1);
             if (addon == null) return false;
-            PluginLog.Log("Found World Server");
+            PluginLog.Debug("Found World Server");
             var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder.StringArrays[1];
             if (stringArray == null) return false;
 
@@ -234,7 +235,9 @@ namespace AutoLogin {
                 if (s.Trim().Length == 0) continue;
                 checkedWorldCount++;
                 if (s != world.Name.RawString) continue;
-                GenerateCallback(addon, 9, 0, i);
+                PluginLog.Debug("Found world [" + world.Name.RawString + "] at integer i[" + i + "]");
+                //GenerateCallback(addon, 7, 0, i);
+                GenerateCallback(addon, 7, 21013, 7);
                 return true;
             }
 
@@ -246,7 +249,7 @@ namespace AutoLogin {
             // Select Character
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectListMenu", 1);
             if (addon == null) return false;
-            PluginLog.Log("Found _CharaSelectListMenu");
+            PluginLog.Debug("Found _CharaSelectListMenu");
             //originally 17?
             GenerateCallback(addon, 18, 0, tempCharacter ?? PluginConfig.CharacterSlot);
             //GenerateCallback(addon, 14, 0, tempCharacter ?? PluginConfig.CharacterSlot);
@@ -278,7 +281,7 @@ namespace AutoLogin {
             var isLoggedIn = Conditions.Any();
             if (!isLoggedIn) return true;
 
-            FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->GetUiModule()->ExecuteMainCommand(23);
+            FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->GetUIModule()->ExecuteMainCommand(23);
             return true;
         }
 
@@ -293,7 +296,7 @@ namespace AutoLogin {
         private uint? tempDc = null;
         private uint? tempWorld = null;
         private uint? tempCharacter = null;
-        private bool drawDebugWindow = false;
+        private bool drawDebugWindow = true;
         private void DrawUI() {
             drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
 
@@ -372,6 +375,7 @@ namespace AutoLogin {
             try {
                 for (var i = 0; i < values.Length; i++) {
                     var v = values[i];
+                    PluginLog.Debug("Value: " + v);
                     switch (v) {
                         case uint uintValue:
                             atkValues[i].Type = ValueType.UInt;
@@ -403,7 +407,7 @@ namespace AutoLogin {
                     }
                 }
 
-                unitBase->FireCallback(values.Length, atkValues);
+                unitBase->FireCallback((uint)values.Length, atkValues);
             } finally {
                 for (var i = 0; i < values.Length; i++) {
                     if (atkValues[i].Type == ValueType.String) {
@@ -415,8 +419,8 @@ namespace AutoLogin {
         }
         public void Dispose()
         {
-            UiBuilder.Draw -= DrawUI;
-            UiBuilder.OpenConfigUi -= this.OpenConfigUI;
+            PluginInterface.UiBuilder.Draw -= DrawUI;
+            PluginInterface.UiBuilder.OpenConfigUi -= this.OpenConfigUI;
             Commands.RemoveHandler("/autologinconfig");
             Commands.RemoveHandler("/swapcharacter");
         }

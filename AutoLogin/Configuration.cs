@@ -11,7 +11,7 @@ namespace AutoLogin {
 
         public int Version { get; set; }
         private bool ShowSupport;
-        public void Initialize(DalamudPluginInterface pluginInterface)
+        public void Initialize(IDalamudPluginInterface pluginInterface)
         {
             Plugin.PluginInterface = pluginInterface;
         }

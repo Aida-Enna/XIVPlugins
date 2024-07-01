@@ -13,9 +13,9 @@ namespace FoodCheck
         public bool OnlyDoHighEndDuties = true;
         public string CustomizableMessage = "<names> should EAT FOOD! <se.7>";
 
-        private DalamudPluginInterface pluginInterface;
+        private IDalamudPluginInterface pluginInterface;
 
-        public void Initialize(DalamudPluginInterface pluginInterface)
+        public void Initialize(IDalamudPluginInterface pluginInterface)
         {
             this.pluginInterface = pluginInterface;
         }
