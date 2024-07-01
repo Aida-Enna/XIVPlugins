@@ -16,10 +16,16 @@ Automatically synchronizes the level of your character (and optionally auto-enab
 
 See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.
 
+# Deprecated Plugins
+
 ## Loot Master
 
 Adds various commands to need, greed, or pass on all loot.
 
+NOTE: Deprecated, [use this instead](https://github.com/PunishXIV/LazyLoot).
+
 ## Potato Famine 2
 
 Changes lalafells (or everyone or specific people) into another race of your choosing.
+
+NOTE: Deprecated because it was more of a meme than anything and AFAIK no one ever actually used it.
