@@ -1,9 +1,11 @@
-name: Macro Chain (Modified)
-author: Caraxi
+name: Macro Chain Redux
+author: Aida Enna (Original version by Caraxi)
 description: |-
   Allows for a macro to continue onto the next macro by using '/nextmacro' on the last line of a macro.
   Adding '/nextmacro' on the last line of Macro #01 will automatically execute Macro #02
   Adding '/nextmacro down' on the last line of Macro #01 will automatically execute Macro #11
   Also allows executing any macro from chat using '/runmacro'
+  Using '/macrocancel' will stop the currently running macro
 punchline: Run multiple macros one after the other.
-repo_url: https://github.com/Caraxi/MacroChain
+repo_url: https://github.com/Aida-Enna/XIVPlugins/MacroChainRedux
+icon_url: https://i.imgur.com/fT3PkFS.png

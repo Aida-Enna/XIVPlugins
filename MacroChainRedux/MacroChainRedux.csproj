@@ -5,8 +5,8 @@
         <LangVersion>latest</LangVersion>
         <Platforms>x64</Platforms>
         <Configurations>Debug;Release</Configurations>
-        <RootNamespace>MacroChain</RootNamespace>
-		<OutputPath>..\Build\MacroChain\</OutputPath>
+        <RootNamespace>MacroChainRedux</RootNamespace>
+		<OutputPath>..\Build\MacroChainRedux\</OutputPath>
     </PropertyGroup>
     <PropertyGroup Label="Build">
         <OutputType>Library</OutputType>
@@ -19,7 +19,7 @@
         <Version>2.1.1.0</Version>
     </PropertyGroup>
     <PropertyGroup>
-		<AssemblyName>MacroChain</AssemblyName>
+		<AssemblyName>MacroChainRedux</AssemblyName>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
