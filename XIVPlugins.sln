@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TextFormatter", "TextFormat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MacroChainRedux", "MacroChainRedux\MacroChainRedux.csproj", "{94CCDFD7-A260-4D19-9D83-F63984913F46}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PotatoFamine2", "PotatoFamine2\PotatoFamine2.csproj", "{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,14 @@ Global
 		{94CCDFD7-A260-4D19-9D83-F63984913F46}.Release|Any CPU.Build.0 = Release|x64
 		{94CCDFD7-A260-4D19-9D83-F63984913F46}.Release|x64.ActiveCfg = Release|x64
 		{94CCDFD7-A260-4D19-9D83-F63984913F46}.Release|x64.Build.0 = Release|x64
+		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Debug|Any CPU.Build.0 = Debug|x64
+		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Debug|x64.ActiveCfg = Debug|x64
+		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Debug|x64.Build.0 = Debug|x64
+		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Release|Any CPU.ActiveCfg = Release|x64
+		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Release|Any CPU.Build.0 = Release|x64
+		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Release|x64.ActiveCfg = Release|x64
+		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -17,6 +17,7 @@ using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -54,6 +55,7 @@ namespace PotatoFamine2
         [PluginService] public static IObjectTable Objects { get; private set; } = null!;
         [PluginService] public static IChatGui Chat { get; set; }
         [PluginService] public static IGameInteropProvider Hook { get; set; }
+        [PluginService] public static IPluginLog PluginLog { get; set; }
 
         [Flags]
         public enum DrawState : uint
@@ -133,17 +135,17 @@ namespace PotatoFamine2
             );
 
             var charaIsMountAddr = SigScanner.ScanText("40 53 48 83 EC 20 48 8B 01 48 8B D9 FF 50 10 83 F8 08 75 08");
-            PluginLog.Log($"Found IsMount address: {charaIsMountAddr.ToInt64():X}");
+            PluginLog.Debug($"Found IsMount address: {charaIsMountAddr.ToInt64():X}");
             this.charaMountedHook ??= Hook.HookFromSignature<CharacterIsMount>("40 53 48 83 EC 20 48 8B 01 48 8B D9 FF 50 10 83 F8 08 75 08", CharacterIsMountDetour);
             this.charaMountedHook.Enable();
 
             var charaInitAddr = SigScanner.ScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 48 8B F9 48 8B EA 48 81 C1 ?? ?? ?? ?? E8 ?? ?? ?? ??");
-            PluginLog.Log($"Found Initialize address: {charaInitAddr.ToInt64():X}");
+            PluginLog.Debug($"Found Initialize address: {charaInitAddr.ToInt64():X}");
             this.charaInitHook ??= Hook.HookFromSignature<CharacterInitialize>("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 30 48 8B F9 48 8B EA 48 81 C1 ?? ?? ?? ?? E8 ?? ?? ?? ??", CharacterInitializeDetour);
             this.charaInitHook.Enable();
 
             var flagSlotUpdateAddr = SigScanner.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 8B DA 49 8B F0 48 8B F9 83 FA 0A");
-            PluginLog.Log($"Found FlagSlotUpdate address: {flagSlotUpdateAddr.ToInt64():X}");
+            PluginLog.Debug($"Found FlagSlotUpdate address: {flagSlotUpdateAddr.ToInt64():X}");
             this.flagSlotUpdateHook ??= Hook.HookFromSignature<FlagSlotUpdate>("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 8B DA 49 8B F0 48 8B F9 83 FA 0A", FlagSlotUpdateDetour);
             this.flagSlotUpdateHook.Enable();
 
@@ -301,9 +303,9 @@ namespace PotatoFamine2
                 lastWasSelf = false;
 
                 if (actor != null &&
-                    (actor.ObjectId != CHARA_WINDOW_ACTOR_ID || PluginConfig.ImmersiveMode)
+                    (actor.GameObjectId != CHARA_WINDOW_ACTOR_ID || PluginConfig.ImmersiveMode)
                     && ClientState.LocalPlayer != null
-                    && actor.ObjectId != ClientState.LocalPlayer.ObjectId
+                    && actor.GameObjectId != ClientState.LocalPlayer.GameObjectId
                     && PluginConfig.ShouldChangeOthers)
                 {
                     if (PluginConfig.UseTrustedList) //If they're in the trusted list, don't change them
@@ -321,9 +323,9 @@ namespace PotatoFamine2
                 }
 
                 if (actor != null &&
-                    (actor.ObjectId != CHARA_WINDOW_ACTOR_ID || PluginConfig.ImmersiveMode)
+                    (actor.GameObjectId != CHARA_WINDOW_ACTOR_ID || PluginConfig.ImmersiveMode)
                     && ClientState.LocalPlayer != null
-                    && actor.ObjectId != ClientState.LocalPlayer.ObjectId
+                    && actor.GameObjectId != ClientState.LocalPlayer.GameObjectId
                     && PluginConfig.ForciblyChangePeople && Functions.ListContainsPlayer(PluginConfig.ForciblyChangeList, actor.Name.TextValue))
                 {
                     //They're in the forcibly change list so we're changing them
@@ -331,9 +333,9 @@ namespace PotatoFamine2
                 }
 
                 if (actor != null &&
-                    (actor.ObjectId != CHARA_WINDOW_ACTOR_ID || PluginConfig.ImmersiveMode)
+                    (actor.GameObjectId != CHARA_WINDOW_ACTOR_ID || PluginConfig.ImmersiveMode)
                     && ClientState.LocalPlayer != null
-                    && actor.ObjectId == ClientState.LocalPlayer.ObjectId
+                    && actor.GameObjectId == ClientState.LocalPlayer.GameObjectId
                     && PluginConfig.ChangeSelf)
                 {
                     lastWasSelf = true;
@@ -430,7 +432,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Only change lalafells players toggled to {onlyChangeLalafells}, refreshing players");
+            PluginLog.Debug($"Only change lalafells players toggled to {onlyChangeLalafells}, refreshing players");
             PluginConfig.OnlyChangeLalafells = onlyChangeLalafells;
             unsavedConfigChanges = true;
         }
@@ -442,7 +444,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Target race for other players toggled to {changeRace}, refreshing players");
+            PluginLog.Debug($"Target race for other players toggled to {changeRace}, refreshing players");
             PluginConfig.ShouldChangeOthers = changeRace;
             unsavedConfigChanges = true;
         }
@@ -454,7 +456,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Target race for player toggled to {changeSelf}, refreshing players");
+            PluginLog.Debug($"Target race for player toggled to {changeSelf}, refreshing players");
             PluginConfig.ChangeSelf = changeSelf;
             unsavedConfigChanges = true;
         }
@@ -466,7 +468,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Player toggled Forcibly Changed list, refreshing player");
+            PluginLog.Debug($"Player toggled Forcibly Changed list, refreshing player");
             PluginConfig.ForciblyChangePeople = ForciblyChangePeople;
             unsavedConfigChanges = true;
         }
@@ -478,7 +480,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Player toggled Trusted players, refreshing player");
+            PluginLog.Debug($"Player toggled Trusted players, refreshing player");
             PluginConfig.UseTrustedList = UseTrustedList;
             unsavedConfigChanges = true;
         }
@@ -490,7 +492,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Target race for other players changed to {race}, refreshing players");
+            PluginLog.Debug($"Target race for other players changed to {race}, refreshing players");
             PluginConfig.ChangeOthersTargetRace = race;
             unsavedConfigChanges = true;
         }
@@ -502,7 +504,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Target race for forcibly changed players changed to {race}, refreshing players");
+            PluginLog.Debug($"Target race for forcibly changed players changed to {race}, refreshing players");
             PluginConfig.ForciblyChangePeopleTargetRace = race;
             unsavedConfigChanges = true;
         }
@@ -514,7 +516,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Target race for player changed to {race}, refreshing players");
+            PluginLog.Debug($"Target race for player changed to {race}, refreshing players");
             PluginConfig.ChangeSelfTargetRace = race;
             unsavedConfigChanges = true;
         }
@@ -526,7 +528,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            PluginLog.Log($"Immersive mode set to {immersiveMode}, refreshing players");
+            PluginLog.Debug($"Immersive mode set to {immersiveMode}, refreshing players");
             PluginConfig.ImmersiveMode = immersiveMode;
             unsavedConfigChanges = true;
         }
@@ -562,7 +564,7 @@ namespace PotatoFamine2
             }
             catch (Exception ex)
             {
-                PluginLog.LogError(ex.ToString());
+                PluginLog.Error(ex.ToString());
             }
         }
 
@@ -571,13 +573,13 @@ namespace PotatoFamine2
             if (Array.IndexOf(RACE_STARTER_GEAR_IDS, eq.model) > -1)
             {
 #if DEBUG
-                PluginLog.Log($"Modified {eq.model}, {eq.variant}");
-                PluginLog.Log($"Race {race}, index {(byte) (race - 1)}, gender {gender}");
+                PluginLog.Debug($"Modified {eq.model}, {eq.variant}");
+                PluginLog.Debug($"Race {race}, index {(byte) (race - 1)}, gender {gender}");
 #endif
                 eq.model = RACE_STARTER_GEAR_ID_MAP[(byte)race - 1, gender];
                 eq.variant = 1;
 #if DEBUG
-                PluginLog.Log($"New {eq.model}, {eq.variant}");
+                PluginLog.Debug($"New {eq.model}, {eq.variant}");
 #endif
             }
 
@@ -649,7 +651,7 @@ namespace PotatoFamine2
                 return;
             }
 
-            *ActorDrawState(actor!) |= DrawState.Invisibility;
+            *ActorDrawState((GameObject)actor!) |= DrawState.Invisibility;
 
             if (/*actor is PlayerCharacter &&*/ Objects[tableIndex + 1] is { ObjectKind: ObjectKind.MountType } mount)
             {
@@ -664,9 +666,9 @@ namespace PotatoFamine2
                 return;
             }
 
-            *ActorDrawState(actor!) &= ~DrawState.Invisibility;
+            *ActorDrawState((GameObject)actor!) &= ~DrawState.Invisibility;
 
-            if (actor is PlayerCharacter && Objects[tableIndex + 1] is { ObjectKind: ObjectKind.MountType } mount)
+            if (actor is IPlayerCharacter && Objects[tableIndex + 1] is { ObjectKind: ObjectKind.MountType } mount)
             {
                 *ActorDrawState(mount) &= ~DrawState.Invisibility;
             }
@@ -680,7 +682,7 @@ namespace PotatoFamine2
                 return true;
             }
 
-            tableIndex = ObjectTableIndex(actor);
+            tableIndex = ObjectTableIndex((GameObject)actor);
             return tableIndex is >= 240 and < 245;
         }
     }
