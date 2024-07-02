@@ -1,21 +1,14 @@
 ﻿using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.IoC;
-using Dalamud.Plugin.Services;
-using Dalamud.Utility.Signatures;
-using FFXIVClientStructs.FFXIV.Client.System.Framework;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
 namespace Veda
 {
-    public unsafe class Functions
+    public class Functions
     {
 
         public static bool ListContainsPlayer(List<PlayerData> PlayerList, string PlayerName, uint WorldId = 0)
