@@ -19,6 +19,8 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Timers;
 using Veda;
+using ImGuiNET;
+using Dalamud.Interface.Utility.Raii;
 
 namespace LootMaster
 {
@@ -49,27 +51,28 @@ namespace LootMaster
 
         public Plugin(ICommandManager commands, IClientState client)
         {
-            lootsAddr = SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 89 44 24 60", 0);
-            rollItemRaw = Marshal.GetDelegateForFunctionPointer<RollItemRaw>(SigScanner.ScanText("41 83 F8 ?? 0F 83 ?? ?? ?? ?? 48 89 5C 24 08"));
+            //lootsAddr = SigScanner.GetStaticAddressFromSig("48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 89 44 24 60", 0);
+            //rollItemRaw = Marshal.GetDelegateForFunctionPointer<RollItemRaw>(SigScanner.ScanText("41 83 F8 ?? 0F 83 ?? ?? ?? ?? 48 89 5C 24 08"));
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
             ui = new PluginUI();
             PluginInterface.UiBuilder.Draw += new System.Action(ui.Draw);
             PluginInterface.UiBuilder.OpenConfigUi += () =>
-           {
+            {
                PluginUI ui = this.ui;
                ui.IsVisible = !ui.IsVisible;
-           };
+            };
             commandManager = new PluginCommandManager<Plugin>(this, commands);
 
-            Client = client;
+            ui.IsVisible = true;
+            
 
-            Client.CfPop += CFPop;
-            Client.TerritoryChanged += TerritoryChanged;
+            //Client.CfPop += CFPop;
+            //Client.TerritoryChanged += TerritoryChanged;
 
-            LootTimer.Interval = 10000; //600000
-            LootTimer.Elapsed += CheckLoot;
-            LootTimer.Start();
+            //LootTimer.Interval = 10000; //600000
+            //LootTimer.Elapsed += CheckLoot;
+            //LootTimer.Start();
         }
 
         private unsafe void CFPop(ContentFinderCondition queuedDuty)
@@ -313,7 +316,7 @@ namespace LootMaster
                 for (var s = 0; s < c->Size; s++)
                 {
                     var slot = c->GetInventorySlot(s);
-                    if (slot->ItemID == 0) empty++;
+                    if (slot->ItemId == 0) empty++;
                 }
             }
             return empty;
@@ -352,6 +355,9 @@ namespace LootMaster
         [HelpMessage("Roll need for everything. If impossible, roll greed. Else, roll pass.")]
         public async void NeedCommand(string command, string args)
         {
+            PluginUI ui = this.ui;
+            ui.IsVisible = !ui.IsVisible;
+            return;
             Random random = new Random();
             int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
             int num1 = 0;
@@ -400,6 +406,9 @@ namespace LootMaster
         [HelpMessage("Roll need for everything. If impossible, roll pass.")]
         public async void NeedOnlyCommand(string command, string args)
         {
+            PluginUI ui = this.ui;
+            ui.IsVisible = !ui.IsVisible;
+            return;
             Random random = new Random();
             int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
@@ -439,6 +448,9 @@ namespace LootMaster
         [HelpMessage("Greed on all items.")]
         public async void GreedCommand(string command, string args)
         {
+            PluginUI ui = this.ui;
+            ui.IsVisible = !ui.IsVisible;
+            return;
             Random random = new Random();
             int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
@@ -466,6 +478,9 @@ namespace LootMaster
         [HelpMessage("Pass on things you haven't rolled for yet.")]
         public async void PassCommand(string command, string args)
         {
+            PluginUI ui = this.ui;
+            ui.IsVisible = !ui.IsVisible;
+            return;
             Random random = new Random();
             int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 
@@ -499,6 +514,9 @@ namespace LootMaster
         [HelpMessage("Passes on all, even if you rolled on them previously.")]
         public async void PassAllCommand(string command, string args)
         {
+            PluginUI ui = this.ui;
+            ui.IsVisible = !ui.IsVisible;
+            return;
             Random random = new Random();
             int randomDelay = random.Next(PluginConfig.LowNum, (PluginConfig.HighNum + 1));
 

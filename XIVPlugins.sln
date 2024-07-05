@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MacroChainRedux", "MacroCha
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PotatoFamine2", "PotatoFamine2\PotatoFamine2.csproj", "{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LootMaster", "Deprecated\LootMaster\LootMaster.csproj", "{833A8118-5D33-43BF-9D4B-778F93B795DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,14 @@ Global
 		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Release|Any CPU.Build.0 = Release|x64
 		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Release|x64.ActiveCfg = Release|x64
 		{ADBEC527-6378-49C5-A7FD-1ABEDBB7A130}.Release|x64.Build.0 = Release|x64
+		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Debug|Any CPU.Build.0 = Debug|x64
+		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Debug|x64.ActiveCfg = Debug|x64
+		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Debug|x64.Build.0 = Debug|x64
+		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Release|Any CPU.ActiveCfg = Release|x64
+		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Release|Any CPU.Build.0 = Release|x64
+		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Release|x64.ActiveCfg = Release|x64
+		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

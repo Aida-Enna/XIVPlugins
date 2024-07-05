@@ -12,9 +12,18 @@ namespace LootMaster
 
         public void Draw()
         {
-            if (!IsVisible || !ImGui.Begin("LootMaster Config", ref IsVisible, (ImGuiWindowFlags)96))
+            if (!IsVisible || !ImGui.Begin("LootMaster", ref IsVisible, (ImGuiWindowFlags)96))
                 return;
             var OriginalStyle = ImGui.GetStyle();
+            ImGui.Text("This plugin is now deprecated, you can use LazyLoot from the\nrepo below instead if you're looking for a similar type of plugin.");
+            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.30f, 0.39f, 1f, 1));
+            if (ImGui.Button("LazyLoot Repo - https://github.com/PunishXIV/LazyLoot"))
+            {
+                Functions.OpenWebsite("https://github.com/PunishXIV/LazyLoot");
+            }
+            ImGui.Text("(Please not that I am not associated with the people running\nthis plugin and therefore make no assurances about it, I'm\nsimply providing an alternative since I won't be updating mine.)");
+            ImGui.End();
+            return;
             //ImGui.PushStyleColor(ImGuiCol.Button, 0xFF000000 | 0x00FF0000);
             //ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xDD000000 | 0x000000FF);
             //ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xAA000000 | 0x000000FF);
