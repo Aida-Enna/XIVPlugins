@@ -66,12 +66,6 @@
       <HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="Umbra.Common">
-      <HintPath>..\DLLs\Umbra.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="Umbra.Game">
-      <HintPath>..\DLLs\Umbra.Game.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
