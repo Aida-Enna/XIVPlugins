@@ -1,0 +1,23 @@
+{
+  "Author": "Aida Enna",
+  "Name": "Portrait Fixer",
+  "InternalName": "PortraitFixer",
+  "AssemblyVersion": "1.0.0.0",
+  "ApplicableVersion": "any",
+  "Description": "When you click \"Update Gear Set\", this plugin will automatically update and save your portait to match your new glam.\n\nThis plugin is in testing and will have one more issues, laid out below:\n\n- Rarely, a glitched desynth window will pop up when saving the gearset instead of it saving the portait. This is being investigated, closing the window and swapping classes seems to fix it.",
+  "Punchline": "Automatically update your portait when your gearset gets updated",
+  "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
+  "Tags": [
+    "portrait",
+    "aida"
+  ],
+  "CategoryTags": null,
+  "DalamudApiLevel": 10,
+  "LoadPriority": 0,
+  "LastUpdate": 0,
+  "DownloadLinkInstall": null,
+  "DownloadLinkUpdate": null,
+  "DownloadLinkTesting": null,
+  "ImageUrls": null,
+  "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/PortaitFixer.png"
+}
