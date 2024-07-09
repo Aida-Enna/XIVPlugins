@@ -19,8 +19,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PotatoFamine2", "PotatoFami
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LootMaster", "Deprecated\LootMaster\LootMaster.csproj", "{833A8118-5D33-43BF-9D4B-778F93B795DE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WhoIs", "WhoIs\WhoIs.csproj", "{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other stuff", "Other stuff", "{60AD11FE-3028-457E-913E-59685E43C3F1}"
 	ProjectSection(SolutionItems) = preProject
 		repo.json = repo.json
@@ -98,14 +96,6 @@ Global
 		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Release|Any CPU.Build.0 = Release|x64
 		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Release|x64.ActiveCfg = Release|x64
 		{833A8118-5D33-43BF-9D4B-778F93B795DE}.Release|x64.Build.0 = Release|x64
-		{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}.Debug|Any CPU.Build.0 = Debug|x64
-		{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}.Debug|x64.ActiveCfg = Debug|x64
-		{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}.Debug|x64.Build.0 = Debug|x64
-		{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}.Release|Any CPU.ActiveCfg = Release|x64
-		{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}.Release|Any CPU.Build.0 = Release|x64
-		{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}.Release|x64.ActiveCfg = Release|x64
-		{891C4EEC-3328-4ABD-BDCB-989C4F0FC893}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
