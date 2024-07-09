@@ -2,7 +2,7 @@
   "Name": "Auto Login",
   "Author": "Aida Enna",
   "InternalName": "AutoLogin",
-  "AssemblyVersion": "1.2.0.2",
+  "AssemblyVersion": "1.2.0.3",
   "ApplicableVersion": "any",
   "Description": "Automatically logs you into a specified character when the game first opens.",
   "Punchline": "Automatically logs you into a specified character when the game first opens.",

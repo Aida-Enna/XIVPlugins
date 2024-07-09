@@ -37,6 +37,10 @@ namespace AutoLogin {
         public static Configuration PluginConfig { get; set; }
         private bool drawConfigWindow;
 
+        public static Notification NotifObject = new Notification();
+        
+        
+
         public Plugin(IDalamudPluginInterface pluginInterface) {
 
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -44,6 +48,8 @@ namespace AutoLogin {
 
             pluginInterface.UiBuilder.Draw += DrawUI;
             pluginInterface.UiBuilder.OpenConfigUi += this.OpenConfigUI;
+
+            NotifObject.Title = "Auto Login";
 
             Commands.AddHandler("/autologinconfig", new Dalamud.Game.Command.CommandInfo(OnConfigCommandHandler) {
                 HelpMessage = $"Open config window for {Name}",
@@ -59,15 +65,19 @@ namespace AutoLogin {
             });
 
             Framework.Update += OnFrameworkUpdate;
-            //if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0) {
-            //    //PluginInterface.UiBuilder.AddNotification("Starting AutoLogin Process.\nPress and hold shift to cancel.", "Auto Login", NotificationType.Info);
-            //    actionQueue.Enqueue(OpenDataCenterMenu);
-            //    actionQueue.Enqueue(SelectDataCentre);
-            //    actionQueue.Enqueue(SelectWorld);
-            //    actionQueue.Enqueue(VariableDelay(10));
-            //    actionQueue.Enqueue(SelectCharacter);
-            //    actionQueue.Enqueue(SelectYes);
-            //}
+            if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
+            {
+
+                NotifObject.Content = "Starting AutoLogin - Hold shift to cancel.";
+                NotifObject.Type = NotificationType.Info;
+                NotificationManager.AddNotification(NotifObject);
+                actionQueue.Enqueue(OpenDataCenterMenu);
+                actionQueue.Enqueue(SelectDataCentre);
+                actionQueue.Enqueue(SelectWorld);
+                actionQueue.Enqueue(VariableDelay(10));
+                actionQueue.Enqueue(SelectCharacter);
+                actionQueue.Enqueue(SelectYes);
+            }
         }
 
         private void OnSwapCharacterCommandHandler(string command, string arguments) {
@@ -132,11 +142,9 @@ namespace AutoLogin {
             if (!sw.IsRunning) sw.Restart();
 
             if (KeyState[VirtualKey.SHIFT]) {
-                Notification Test = new Notification();
-                Test.Content = "Autologin Cancelled.";
-                Test.Title = "AutoLogin";
-                Test.Type = NotificationType.Warning;
-                NotificationManager.AddNotification(Test);
+                NotifObject.Content = "Autologin Cancelled.";
+                NotifObject.Type = NotificationType.Warning;
+                NotificationManager.AddNotification(NotifObject);
                 actionQueue.Clear();
             }
 
@@ -237,7 +245,7 @@ namespace AutoLogin {
                 if (s != world.Name.RawString) continue;
                 PluginLog.Debug("Found world [" + world.Name.RawString + "] at integer i[" + i + "]");
                 //GenerateCallback(addon, 7, 0, i);
-                GenerateCallback(addon, 7, 21013, 7);
+                GenerateCallback(addon, 24, 0, i);
                 return true;
             }
 
@@ -251,7 +259,7 @@ namespace AutoLogin {
             if (addon == null) return false;
             PluginLog.Debug("Found _CharaSelectListMenu");
             //originally 17?
-            GenerateCallback(addon, 18, 0, tempCharacter ?? PluginConfig.CharacterSlot);
+            GenerateCallback(addon, 29, 0, tempCharacter ?? PluginConfig.CharacterSlot);
             //GenerateCallback(addon, 14, 0, tempCharacter ?? PluginConfig.CharacterSlot);
             var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
             return nextAddon != null;
@@ -296,7 +304,7 @@ namespace AutoLogin {
         private uint? tempDc = null;
         private uint? tempWorld = null;
         private uint? tempCharacter = null;
-        private bool drawDebugWindow = true;
+        private bool drawDebugWindow = false;
         private void DrawUI() {
             drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
 
