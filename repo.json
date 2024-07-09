@@ -25,33 +25,6 @@
   },
   {
     "Author": "Aida Enna",
-    "Name": "FATE Auto Sync",
-    "Description": "[No longer updated] Automatically level syncs your character and activates your tank stance whenever you join a FATE.",
-    "Punchline": "Just waiting till I get banned so square can implement this ingame.",
-    "InternalName": "FATEAutoSync",
-    "AssemblyVersion": "1.3.0.0",
-    "Changelog": "",
-    "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
-    "ApplicableVersion": "any",
-    "Tags": [
-      "lvlsync",
-      "level",
-      "sync",
-      "auto",
-      "aida"
-    ],
-    "DalamudApiLevel": 10,
-    "IsHide": "False",
-    "IsTestingExclusive": "False",
-    "LastUpdated": 1696422694,
-    "DownloadCount": 69420,
-    "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/FATEAutoSync.png",
-    "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/FATEAutoSync.zip?raw=true",
-    "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/FATEAutoSync.zip?raw=true",
-    "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/FATEAutoSync.zip?raw=true"
-  },  
-  {
-    "Author": "Aida Enna",
     "Name": "Food Check",
     "Description": "See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.",
     "Punchline": "Someone in our group wouldn't eat their food. I got tired of telling them to. Now the plugin does.",

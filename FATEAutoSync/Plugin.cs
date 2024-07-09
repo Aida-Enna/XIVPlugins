@@ -78,7 +78,6 @@ namespace FATEAutoSync
             }
             ImGui.Text("(Please not that I am not associated with the people running\nthis plugin and therefore make no assurances about it, I'm\nsimply providing an alternative since I won't be updating mine.)");
             ImGui.End();
-            return;
 
             //framework.Update += Update;
 
@@ -233,11 +232,11 @@ namespace FATEAutoSync
         {
             if (!disposing) return;
 
-            CommandManager.Dispose();
+            //CommandManager.Dispose();
 
             PluginInterface.SavePluginConfig(PluginConfig);
 
-            Framework.Update -= Update;
+            //Framework.Update -= Update;
         }
 
         public void Dispose()
