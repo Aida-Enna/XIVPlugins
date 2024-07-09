@@ -11,9 +11,11 @@ using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using ImGuiNET;
 using System;
 using System.Runtime.InteropServices;
 using Veda;
+using static FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode.Delegates;
 
 namespace FATEAutoSync
 {
@@ -66,11 +68,23 @@ namespace FATEAutoSync
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
 
-            framework.Update += Update;
+            ImGui.Begin("FATE Auto Sync");
+            var OriginalStyle = ImGui.GetStyle();
+            ImGui.Text("This plugin is now deprecated, you can use Pandora's Box from the\nrepo below instead if you're looking for a plugin that offers FATE Auto Syncing.");
+            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.30f, 0.39f, 1f, 1));
+            if (ImGui.Button("LazyLoot Repo - https://github.com/PunishXIV/PandorasBox"))
+            {
+                Functions.OpenWebsite("https://github.com/PunishXIV/PandorasBox");
+            }
+            ImGui.Text("(Please not that I am not associated with the people running\nthis plugin and therefore make no assurances about it, I'm\nsimply providing an alternative since I won't be updating mine.)");
+            ImGui.End();
+            return;
 
-            CommandManager = new PluginCommandManager<Plugin>(this, commands);
+            //framework.Update += Update;
 
-            InitializePointers();
+            //CommandManager = new PluginCommandManager<Plugin>(this, commands);
+
+            //InitializePointers();
         }
 
         private bool TankStanceEnabled()

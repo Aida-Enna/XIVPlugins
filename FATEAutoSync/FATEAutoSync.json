@@ -4,7 +4,7 @@
   "InternalName": "FATEAutoSync",
   "AssemblyVersion": "1.2.0.3",
   "ApplicableVersion": "any",
-  "Description": "Automatically level syncs your character and activates your tank stance whenever you join a FATE.",
+  "Description": "[No longer updated] Automatically level syncs your character and activates your tank stance whenever you join a FATE.",
   "Punchline": "Just waiting till I get banned so square can implement this ingame",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [
@@ -14,7 +14,7 @@
     "aida"
   ],
   "CategoryTags": null,
-  "DalamudApiLevel": 9,
+  "DalamudApiLevel": 10,
   "LoadPriority": 0,
   "LastUpdate": 0,
   "DownloadLinkInstall": null,
