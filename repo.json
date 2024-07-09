@@ -129,7 +129,7 @@
     "Name": "Portrait Fixer",
     "Description": "When you click \"Update Gear Set\", this plugin will automatically update and save your portait to match your new glam.\n\nThis plugin is in testing and will have one more issues.",
     "Punchline": "Automatically update your portait when your gearset gets updated",
-    "InternalName": "PortaitFixer",
+    "InternalName": "PortraitFixer",
     "AssemblyVersion": "1.0.0.0",
     "Changelog": "",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
@@ -143,9 +143,9 @@
     "IsTestingExclusive": "False",
     "LastUpdated": 1720568168,
     "DownloadCount": 69420,
-    "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/PortaitFixer.png",
-    "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/PortaitFixer.zip?raw=true",
-    "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/PortaitFixer.zip?raw=true",
-    "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/PortaitFixer.zip?raw=true"
+    "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/PortraitFixer.png",
+    "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/PortraitFixer.zip?raw=true",
+    "DownloadLinkTesting": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/PortraitFixer.zip?raw=true",
+    "DownloadLinkUpdate": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/PortraitFixer.zip?raw=true"
   }
 ]
