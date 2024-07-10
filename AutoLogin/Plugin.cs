@@ -68,7 +68,7 @@ namespace AutoLogin {
             if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
             {
 
-                NotifObject.Content = "Starting AutoLogin - Hold shift to cancel.";
+                NotifObject.Content = "Starting AutoLogin - Hold space to cancel.";
                 NotifObject.Type = NotificationType.Info;
                 NotificationManager.AddNotification(NotifObject);
                 actionQueue.Enqueue(OpenDataCenterMenu);
@@ -141,7 +141,7 @@ namespace AutoLogin {
             }
             if (!sw.IsRunning) sw.Restart();
 
-            if (KeyState[VirtualKey.SHIFT]) {
+            if (KeyState[VirtualKey.SPACE]) {
                 NotifObject.Content = "Autologin Cancelled.";
                 NotifObject.Type = NotificationType.Warning;
                 NotificationManager.AddNotification(NotifObject);

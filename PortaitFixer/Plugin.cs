@@ -1,40 +1,30 @@
 ﻿using Dalamud.Game;
-using Dalamud.Game.ClientState.Keys;
-using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Hooking;
 using Dalamud.IoC;
+using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Client.UI.Shell;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Veda;
 
 namespace PortraitFixer
 {
-    public unsafe class Plugin : IDalamudPlugin
+    public class Plugin : IDalamudPlugin
     {
         public unsafe string Name => "PortraitFixer";
 
         [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static ICommandManager Commands { get; set; }
-        [PluginService] public static ICondition Conditions { get; set; }
-        [PluginService] public static IDataManager Data { get; set; }
         [PluginService] public static IFramework Framework { get; set; }
         [PluginService] public static IGameGui GameGui { get; set; }
         [PluginService] public static ISigScanner SigScanner { get; set; }
-        [PluginService] public static IKeyState KeyState { get; set; }
         [PluginService] public static IChatGui Chat { get; set; }
-        [PluginService] public static IClientState ClientState { get; set; }
         [PluginService] public static IPluginLog PluginLog { get; set; }
         [PluginService] public static IGameInteropProvider HookProvider { get; private set; } = null!;
 
@@ -49,7 +39,9 @@ namespace PortraitFixer
 
         private Hook<RaptureGearsetDelegate> onUpdateGearsetHook;
 
-        private delegate void RaptureGearsetDelegate(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff);
+        private unsafe delegate void RaptureGearsetDelegate(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff);
+
+        public static bool HideWindows = true;
 
         public unsafe Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, ICommandManager commands, IFramework framework, ISigScanner sigScanner)
         {
@@ -77,6 +69,8 @@ namespace PortraitFixer
 
             onUpdateGearsetHook = HookProvider.HookFromAddress<RaptureGearsetDelegate>(new nint(RaptureGearsetModule.MemberFunctionPointers.UpdateGearset), OnUpdateGearset);
             onUpdateGearsetHook.Enable();
+
+            Functions.GetChatSignatures(sigScanner);
         }
 
         private unsafe void OnUpdateGearset(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff)
@@ -84,21 +78,20 @@ namespace PortraitFixer
             onUpdateGearsetHook?.Original(RaptureShellModule, GearsetStuff);
             if (PluginConfig.AutoUpdatePortaitFromGearsetUpdate)
             {
-                if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortaitFromGearsetUpdate) 
+                if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortaitFromGearsetUpdate)
                 {
                     SavePortait("Gearset updated");
                 }
                 else
                 {
-                    SavePortait("",true);
+                    SavePortait("", true);
                 }
             }
-            
         }
 
         [Command("/pfixsave")]
         [HelpMessage("Updates the portait for the currently selected gearset/equipment")]
-        public void PortraitFixSave(string command, string args)
+        public unsafe void PortraitFixSave(string command, string args)
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
             if (addon == null || addon->IsVisible == false)
@@ -116,22 +109,26 @@ namespace PortraitFixer
             ui.IsVisible = !ui.IsVisible;
         }
 
-        public void SavePortait(string ExtraInfo = "", bool Silent = false)
+        public static void SavePortait(string ExtraInfo = "", bool Silent = false)
         {
-            Plugin.actionQueue.Enqueue(Plugin.OpenGearSetMenu);
-            Plugin.actionQueue.Enqueue(Plugin.RightClickOnGearSet);
-            Plugin.actionQueue.Enqueue(Plugin.OpenPortaitMenu);
-            Plugin.actionQueue.Enqueue(Plugin.CheckForPortaitEditor);
-            Plugin.actionQueue.Enqueue(Plugin.PressSaveOnPortaitMenuAndClose);
+            actionQueue.Enqueue(OpenGearSetMenu);
+            actionQueue.Enqueue(RightClickOnGearSet);
+            actionQueue.Enqueue(OpenPortaitMenu);
+            actionQueue.Enqueue(CheckForPortraitEditor);
+            actionQueue.Enqueue(VariableDelay(100));
+            actionQueue.Enqueue(PressSaveOnPortaitMenu);
+            actionQueue.Enqueue(VariableDelay(100));
+            actionQueue.Enqueue(ClosePortraitMenu);
+            Chat.Print("[PortraitFixer] Portait Saved!");
             if (!Silent)
             {
                 if (ExtraInfo == "")
                 {
-                    Plugin.Chat.Print("[PortraitFix] Portait saved!");
+                    Chat.Print("[PortraitFixer] Portait saved!");
                 }
                 else
                 {
-                    Plugin.Chat.Print("[PortraitFix] " + ExtraInfo + " - portait saved!");
+                    Chat.Print("[PortraitFixer] " + ExtraInfo + " - portait saved!");
                 }
             }
         }
@@ -160,7 +157,7 @@ namespace PortraitFixer
                 return;
             }
 
-            if (sw.ElapsedMilliseconds > 30000)
+            if (sw.ElapsedMilliseconds > 3000)
             {
                 actionQueue.Clear();
                 return;
@@ -189,10 +186,11 @@ namespace PortraitFixer
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
             if (addon == null || addon->IsVisible == false) return false;
             PluginLog.Debug("Found Character Menu");
+            //var gearsetName = MemoryHelper.ReadStringNullTerminated((nint)gearset->Name);
             GenerateCallback(addon, 14, 2297, 454);
             var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
             if (nextAddon == null) return false;
-            nextAddon->Hide(true, true, 0);
+            if (HideWindows) nextAddon->Hide(true, true, 0);
             PluginLog.Debug("Found GearSetList");
             return true;
         }
@@ -202,10 +200,16 @@ namespace PortraitFixer
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
             if (addon == null) return false;
             PluginLog.Debug("Found GearSetList");
-            GenerateCallback(addon, 5, 5);
+            var module = RaptureGearsetModule.Instance();
+            var currentGearsetIndex = module->CurrentGearsetIndex;
+            //Chat.Print("CurrentGearsetIndex: " + currentGearsetIndex);
+            if (!module->IsValidGearset(currentGearsetIndex)) { Chat.Print("This isn't a valid gearset? Aborting..."); actionQueue.Clear(); return true; }
+            //var gearset = module->GetGearset(currentGearsetIndex);
+            //if (gearset == null) { Chat.Print("This isn't a valid gearset? Aborting..."); actionQueue.Clear(); return true; }
+            GenerateCallback(addon, 5, currentGearsetIndex);
             var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
             if (nextAddon == null) return false;
-            nextAddon->Hide(true, true, 0);
+            if (HideWindows) nextAddon->Hide(true, true, 0);
             PluginLog.Debug("Found ContextMenu");
             return true;
         }
@@ -221,45 +225,181 @@ namespace PortraitFixer
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
             if (addon == null) return false;
             PluginLog.Debug("Found ContextMenu");
-            addon->Hide(true, true, 0);
-            GenerateCallback(addon, 0, 8, 0);
+            if (HideWindows) addon->Hide(true, true, 0);
+            GenerateCallback(addon, 0, 9, 0);
+            var ChangeGearSetNameAddon = (AtkUnitBase*)GameGui.GetAddonByName("InputString");
+            if (ChangeGearSetNameAddon != null)
+            {
+                PluginLog.Debug("Uh oh, rename opened instead!");
+                ChangeGearSetNameAddon->Close(false);
+                GenerateCallback(addon, 0, 8, 0);
+            }
+            //If we open the rename thing then close it and then try 0,9,0
+
             actionQueue.Dequeue();
             return true;
         }
 
-        public static unsafe bool CheckForPortaitEditor()
+        //public static unsafe bool GetStrings()
+        //{
+        //    //var addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
+        //    //if (addon == null) return false;
+        //    //PluginLog.Debug("Found ContextMenu");
+        //    ////GenerateCallback(addon->GetTextNodeById(31009)->unitb(),1);
+
+        //    for (var x = 0; x < 50; x++)
+        //    {
+        //        var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureTextModule()->GetAddonText;
+
+        //        if (stringArray == null) continue;
+
+        //        for (var i = 0; i < 16; i++)
+        //        {
+        //            var n = stringArray->StringArray[i];
+        //            if (n == null) continue;
+        //            var s = MemoryHelper.ReadStringNullTerminated(new IntPtr(n));
+        //            if (s.Contains("Edit Portrait"))
+        //            {
+        //                PluginLog.Debug("Edit Portrait found at " + x);
+        //            }
+        //            if (s.Trim().Length == 0) continue;
+        //            //PluginLog.Debug("s " + s);
+
+        //        }
+        //    }
+        //    return true;
+        //}
+
+        //public static unsafe bool OpenPortaitMenuV2()
+        //{
+        //    Functions.Send("/portrait");
+        //    return true;
+        //}
+
+
+        //public static unsafe bool CheckForPortaitListV2()
+        //{
+        //    try
+        //    {
+        //        var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerList");
+        //        PluginLog.Debug("where plogon");
+        //        if (nextAddon != null)
+        //        {
+        //            if (nextAddon->IsFullyLoaded())
+        //            {
+        //                PluginLog.Debug("Found Portrait List!");
+        //                //nextAddon->Hide(true, true, 0);
+        //                return true;
+        //            }
+        //            else
+        //            {
+        //                PluginLog.Debug("Didn't find Portrait List :c");
+        //                return false;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            PluginLog.Debug("Didn't find Portrait List :c");
+        //            return false;
+        //        }
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        PluginLog.Error(e.ToString());
+        //        return false;
+        //    }
+        //}
+
+        //public static unsafe bool SelectPortraitV2()
+        //{
+        //    try
+        //    {
+        //        var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerList");
+        //        if (addon == null)
+        //        {
+        //            PluginLog.Debug("Couldn't find BannerList?");
+        //            return false;
+        //        }
+        //        PluginLog.Debug("Found BannerList");
+        //        var module = RaptureGearsetModule.Instance();
+        //        var currentGearsetIndex = module->CurrentGearsetIndex;
+        //        //Chat.Print("CurrentGearsetIndex: " + currentGearsetIndex);
+        //        if (!module->IsValidGearset(currentGearsetIndex)) { Chat.Print("This isn't a valid gearset? Aborting..."); actionQueue.Clear(); return true; }
+        //        //var gearset = module->GetGearset(currentGearsetIndex);
+        //        //if (gearset == null) { Chat.Print("This isn't a valid gearset? Aborting..."); actionQueue.Clear(); return true; }
+        //        GenerateCallback(addon, 3, currentGearsetIndex);
+        //        Delay = 500;
+        //        GenerateCallback(addon, 2, currentGearsetIndex);
+        //        addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
+        //        if (addon == null) return false;
+        //        PluginLog.Debug("Found ContextMenu");
+        //        //addon->Hide(true, true, 0);
+        //        GenerateCallback(addon, 0, 0);
+        //        return true;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        PluginLog.Error(e.ToString());
+        //        return false;
+        //    }
+        //}
+
+        public static unsafe bool CheckForPortraitEditor()
         {
-            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
-            if (nextAddon != null)
+            try
             {
-                if (nextAddon->IsFullyLoaded())
+                var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
+                PluginLog.Debug("where plogon");
+                if (nextAddon != null)
                 {
-                    PluginLog.Debug("Found Portrait Editor!");
-                    nextAddon->Hide(true, true, 0);
-                    return true;
+                    if (nextAddon->IsFullyLoaded())
+                    {
+                        PluginLog.Debug("Found Portrait Editor!");
+                        if (HideWindows) nextAddon->Hide(true, true, 0);
+                        return true;
+                    }
+                    else
+                    {
+                        PluginLog.Debug("Didn't find Portrait Editor :c");
+                        return false;
+                    }
                 }
                 else
                 {
-                    //PluginLog.Debug("Didn't find Portrait Editor :c");
+                    PluginLog.Debug("Didn't find Portrait Editor :c");
                     return false;
                 }
             }
-            else
+            catch (Exception e)
             {
-                //PluginLog.Debug("Didn't find Portrait Editor :c");
+                PluginLog.Error(e.ToString());
                 return false;
             }
         }
 
-        public static unsafe bool PressSaveOnPortaitMenuAndClose()
+        public unsafe static bool PressSaveOnPortaitMenu()
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
             if (addon == null) return false;
             PluginLog.Debug("Found BannerEditor");
-            //addon->Hide(true, true, 0);
+            addon->Hide(true, true, 0);
             GenerateCallback(addon, 0, 9, -1, -1);
-            actionQueue.Clear();
-            addon->Close(true);
+            PluginLog.Debug("Clicked Save");
+            actionQueue.Dequeue();
+            addon->Close(false);
+            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
+            if (nextAddon != null) return false;
+            PluginLog.Debug("BannerEditor was closed!");
+            return true;
+        }
+
+
+        public unsafe static bool ClosePortraitMenu()
+        {
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
+            if (addon == null) return false;
+            PluginLog.Debug("Found BannerEditor");
+            addon->Close(false);
             var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
             if (nextAddon != null) return false;
             PluginLog.Debug("BannerEditor was closed!");
