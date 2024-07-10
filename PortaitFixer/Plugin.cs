@@ -76,7 +76,6 @@ namespace PortraitFixer
         private unsafe void OnUpdateGearset(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff)
         {
             onUpdateGearsetHook?.Original(RaptureShellModule, GearsetStuff);
-            return;
             if (PluginConfig.AutoUpdatePortaitFromGearsetUpdate)
             {
                 if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortaitFromGearsetUpdate)
