@@ -19,12 +19,21 @@ namespace PortraitFixer
                 Plugin.actionQueue.Clear();
             }
 
-            //if (ImGui.Button("Test Step: Open GearSetMenu")) Plugin.actionQueue.Enqueue(Plugin.OpenGearSetMenu);
-            //if (ImGui.Button("Test Step: RightClickOnGearSet")) Plugin.actionQueue.Enqueue(Plugin.RightClickOnGearSet);
-            //if (ImGui.Button("Test Step: CheckForPortaitEditor")) Plugin.actionQueue.Enqueue(Plugin.CheckForPortraitEditor);
-            //if (ImGui.Button("Test Step: OpenPortaitMenu")) Plugin.actionQueue.Enqueue(Plugin.OpenPortaitMenu);
-            //if (ImGui.Button("Test Step: PressSaveOnPortaitMenuAndClose")) Plugin.actionQueue.Enqueue(Plugin.PressSaveOnPortaitMenuAndClose);
-            //if (ImGui.Button("Test Step: Print Strings")) Plugin.actionQueue.Enqueue(Plugin.GetStrings);
+            if (ImGui.Button("Test Step: Open GearSetMenu")) Plugin.actionQueue.Enqueue(Plugin.OpenGearSetMenu);
+            if (ImGui.Button("Test Step: RightClickOnGearSet")) Plugin.actionQueue.Enqueue(Plugin.RightClickOnGearSet);
+            if (ImGui.Button("Test Step: OpenPortaitMenu")) Plugin.actionQueue.Enqueue(Plugin.OpenPortaitMenu);
+            if (ImGui.Button("Test Step: CheckForPortaitEditor"))
+            {
+                Plugin.actionQueue.Enqueue(Plugin.VariableDelay(100));
+                Plugin.actionQueue.Enqueue(Plugin.CheckForPortraitEditor);
+            }
+            if (ImGui.Button("Test Step: PressSaveOnPortaitMenu"))
+            {
+                Plugin.actionQueue.Enqueue(Plugin.VariableDelay(100));
+                Plugin.actionQueue.Enqueue(Plugin.PressSaveOnPortaitMenu);
+            }
+            if (ImGui.Button("Test Step: ClosePortraitMenu")) Plugin.actionQueue.Enqueue(Plugin.ClosePortraitMenu);
+            
             if (ImGui.Button("JOHN FUCKING MADDEN"))
             {
                 //V2

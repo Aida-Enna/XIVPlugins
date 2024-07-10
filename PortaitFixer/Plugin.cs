@@ -76,6 +76,7 @@ namespace PortraitFixer
         private unsafe void OnUpdateGearset(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff)
         {
             onUpdateGearsetHook?.Original(RaptureShellModule, GearsetStuff);
+            return;
             if (PluginConfig.AutoUpdatePortaitFromGearsetUpdate)
             {
                 if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortaitFromGearsetUpdate)
@@ -115,9 +116,9 @@ namespace PortraitFixer
             actionQueue.Enqueue(RightClickOnGearSet);
             actionQueue.Enqueue(OpenPortaitMenu);
             actionQueue.Enqueue(CheckForPortraitEditor);
-            actionQueue.Enqueue(VariableDelay(100));
+            actionQueue.Enqueue(VariableDelay(50));
             actionQueue.Enqueue(PressSaveOnPortaitMenu);
-            actionQueue.Enqueue(VariableDelay(100));
+            //actionQueue.Enqueue(VariableDelay(60));
             actionQueue.Enqueue(ClosePortraitMenu);
             Chat.Print("[PortraitFixer] Portait Saved!");
             if (!Silent)
@@ -236,7 +237,7 @@ namespace PortraitFixer
             }
             //If we open the rename thing then close it and then try 0,9,0
 
-            actionQueue.Dequeue();
+            //actionQueue.Dequeue();
             return true;
         }
 
@@ -355,7 +356,7 @@ namespace PortraitFixer
                     if (nextAddon->IsFullyLoaded())
                     {
                         PluginLog.Debug("Found Portrait Editor!");
-                        if (HideWindows) nextAddon->Hide(true, true, 0);
+                        if (HideWindows) nextAddon->Hide(true, false, 0);
                         return true;
                     }
                     else
@@ -382,14 +383,10 @@ namespace PortraitFixer
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
             if (addon == null) return false;
             PluginLog.Debug("Found BannerEditor");
-            addon->Hide(true, true, 0);
             GenerateCallback(addon, 0, 9, -1, -1);
+            if (HideWindows) addon->Hide(true, true, 0);
             PluginLog.Debug("Clicked Save");
-            actionQueue.Dequeue();
-            addon->Close(false);
-            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
-            if (nextAddon != null) return false;
-            PluginLog.Debug("BannerEditor was closed!");
+            //actionQueue.Dequeue();
             return true;
         }
 
@@ -399,7 +396,7 @@ namespace PortraitFixer
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
             if (addon == null) return false;
             PluginLog.Debug("Found BannerEditor");
-            addon->Close(false);
+            addon->Close(true);
             var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
             if (nextAddon != null) return false;
             PluginLog.Debug("BannerEditor was closed!");
