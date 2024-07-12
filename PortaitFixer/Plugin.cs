@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
 using Dalamud.IoC;
 using Dalamud.Memory;
@@ -26,6 +27,7 @@ namespace PortraitFixer
         [PluginService] public static ISigScanner SigScanner { get; set; }
         [PluginService] public static IChatGui Chat { get; set; }
         [PluginService] public static IPluginLog PluginLog { get; set; }
+        [PluginService] public static ICondition Condition { get; set; }
         [PluginService] public static IGameInteropProvider HookProvider { get; private set; } = null!;
 
         private PluginCommandManager<Plugin> commandManager;
@@ -69,13 +71,21 @@ namespace PortraitFixer
 
             onUpdateGearsetHook = HookProvider.HookFromAddress<RaptureGearsetDelegate>(new nint(RaptureGearsetModule.MemberFunctionPointers.UpdateGearset), OnUpdateGearset);
             onUpdateGearsetHook.Enable();
+        }
 
-            Functions.GetChatSignatures(sigScanner);
+        public static void Print(string Message, ushort ColorType = 0)
+        {
+            Chat.Print(Functions.BuildSeString("Portrait Fixer", Message, ColorType));
         }
 
         private unsafe void OnUpdateGearset(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff)
         {
             onUpdateGearsetHook?.Original(RaptureShellModule, GearsetStuff);
+            if (Condition[ConditionFlag.InCombat] || Condition[ConditionFlag.BoundByDuty] || Condition[ConditionFlag.BoundByDuty56] || Condition[ConditionFlag.BoundByDuty95])
+            {
+                Print("You cannot save your portrait at this time. Please wait until you are out of combat/the duty and try saving again with /pfixsave.",ColorType.Error);
+                return;
+            }
             if (PluginConfig.AutoUpdatePortaitFromGearsetUpdate)
             {
                 if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortaitFromGearsetUpdate)
@@ -96,7 +106,12 @@ namespace PortraitFixer
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
             if (addon == null || addon->IsVisible == false)
             {
-                Chat.PrintError("You can only use this command while the character menu is open.");
+                Print("You can only use this command while the character menu is open.", ColorType.Error);
+                return;
+            }
+            if (Condition[ConditionFlag.InCombat] || Condition[ConditionFlag.BoundByDuty] || Condition[ConditionFlag.BoundByDuty56] || Condition[ConditionFlag.BoundByDuty95])
+            {
+                Print("You cannot save your portrait at this time. Please wait until you are out of combat/the duty and try saving again.", ColorType.Error);
                 return;
             }
             SavePortait();
@@ -119,16 +134,15 @@ namespace PortraitFixer
             actionQueue.Enqueue(PressSaveOnPortaitMenu);
             //actionQueue.Enqueue(VariableDelay(60));
             actionQueue.Enqueue(ClosePortraitMenu);
-            Chat.Print("[PortraitFixer] Portait Saved!");
             if (!Silent)
             {
                 if (ExtraInfo == "")
                 {
-                    Chat.Print("[PortraitFixer] Portait saved!");
+                    Print("Portait saved!", ColorType.Success);
                 }
                 else
                 {
-                    Chat.Print("[PortraitFixer] " + ExtraInfo + " - portait saved!");
+                    Print(ExtraInfo + " - portait saved!", ColorType.Success);
                 }
             }
         }
@@ -240,110 +254,6 @@ namespace PortraitFixer
             return true;
         }
 
-        //public static unsafe bool GetStrings()
-        //{
-        //    //var addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
-        //    //if (addon == null) return false;
-        //    //PluginLog.Debug("Found ContextMenu");
-        //    ////GenerateCallback(addon->GetTextNodeById(31009)->unitb(),1);
-
-        //    for (var x = 0; x < 50; x++)
-        //    {
-        //        var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureTextModule()->GetAddonText;
-
-        //        if (stringArray == null) continue;
-
-        //        for (var i = 0; i < 16; i++)
-        //        {
-        //            var n = stringArray->StringArray[i];
-        //            if (n == null) continue;
-        //            var s = MemoryHelper.ReadStringNullTerminated(new IntPtr(n));
-        //            if (s.Contains("Edit Portrait"))
-        //            {
-        //                PluginLog.Debug("Edit Portrait found at " + x);
-        //            }
-        //            if (s.Trim().Length == 0) continue;
-        //            //PluginLog.Debug("s " + s);
-
-        //        }
-        //    }
-        //    return true;
-        //}
-
-        //public static unsafe bool OpenPortaitMenuV2()
-        //{
-        //    Functions.Send("/portrait");
-        //    return true;
-        //}
-
-
-        //public static unsafe bool CheckForPortaitListV2()
-        //{
-        //    try
-        //    {
-        //        var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerList");
-        //        PluginLog.Debug("where plogon");
-        //        if (nextAddon != null)
-        //        {
-        //            if (nextAddon->IsFullyLoaded())
-        //            {
-        //                PluginLog.Debug("Found Portrait List!");
-        //                //nextAddon->Hide(true, true, 0);
-        //                return true;
-        //            }
-        //            else
-        //            {
-        //                PluginLog.Debug("Didn't find Portrait List :c");
-        //                return false;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            PluginLog.Debug("Didn't find Portrait List :c");
-        //            return false;
-        //        }
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        PluginLog.Error(e.ToString());
-        //        return false;
-        //    }
-        //}
-
-        //public static unsafe bool SelectPortraitV2()
-        //{
-        //    try
-        //    {
-        //        var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerList");
-        //        if (addon == null)
-        //        {
-        //            PluginLog.Debug("Couldn't find BannerList?");
-        //            return false;
-        //        }
-        //        PluginLog.Debug("Found BannerList");
-        //        var module = RaptureGearsetModule.Instance();
-        //        var currentGearsetIndex = module->CurrentGearsetIndex;
-        //        //Chat.Print("CurrentGearsetIndex: " + currentGearsetIndex);
-        //        if (!module->IsValidGearset(currentGearsetIndex)) { Chat.Print("This isn't a valid gearset? Aborting..."); actionQueue.Clear(); return true; }
-        //        //var gearset = module->GetGearset(currentGearsetIndex);
-        //        //if (gearset == null) { Chat.Print("This isn't a valid gearset? Aborting..."); actionQueue.Clear(); return true; }
-        //        GenerateCallback(addon, 3, currentGearsetIndex);
-        //        Delay = 500;
-        //        GenerateCallback(addon, 2, currentGearsetIndex);
-        //        addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
-        //        if (addon == null) return false;
-        //        PluginLog.Debug("Found ContextMenu");
-        //        //addon->Hide(true, true, 0);
-        //        GenerateCallback(addon, 0, 0);
-        //        return true;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        PluginLog.Error(e.ToString());
-        //        return false;
-        //    }
-        //}
-
         public static unsafe bool CheckForPortraitEditor()
         {
             try
@@ -385,7 +295,6 @@ namespace PortraitFixer
             GenerateCallback(addon, 0, 9, -1, -1);
             if (HideWindows) addon->Hide(true, true, 0);
             PluginLog.Debug("Clicked Save");
-            //actionQueue.Dequeue();
             return true;
         }
 
@@ -501,8 +410,6 @@ namespace PortraitFixer
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-
-            //Marshal.FreeHGlobal(textPtr);
         }
 
         #endregion IDisposable Support
