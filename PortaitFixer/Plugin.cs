@@ -197,6 +197,10 @@ namespace PortraitFixer
 
         public static unsafe bool OpenGearSetMenu()
         {
+            var GearsetMenu = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
+            //The gearset menu is already open!
+            if (GearsetMenu == null) return true;
+
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
             if (addon == null || addon->IsVisible == false) return false;
             PluginLog.Debug("Found Character Menu");
@@ -403,6 +407,7 @@ namespace PortraitFixer
             };
 
             Framework.Update -= OnFrameworkUpdate;
+            onUpdateGearsetHook.Disable();
             onUpdateGearsetHook.Dispose();
         }
 
