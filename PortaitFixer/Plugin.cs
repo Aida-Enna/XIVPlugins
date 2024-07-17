@@ -197,20 +197,39 @@ namespace PortraitFixer
 
         public static unsafe bool OpenGearSetMenu()
         {
-            var GearsetMenu = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
-            //The gearset menu is already open!
-            if (GearsetMenu->IsVisible) return true;
+            try
+            {
+                var GearsetMenu = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
+                //The gearset menu is already open!
+                if (GearsetMenu != null)
+                {
+                    //Leaves it in the space as it was
+                    //GenerateCallback(GearsetMenu, 3, 0);
+                    GearsetMenu->Close(true);
+                    //GearsetMenu->FireCloseCallback();
+                    //Print("Closing Gearset menu");
+                }
+                else
+                {
+                    //Print("Didn't find Gearset menu");
+                }
 
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
-            if (addon == null || addon->IsVisible == false) return false;
-            PluginLog.Debug("Found Character Menu");
-            //var gearsetName = MemoryHelper.ReadStringNullTerminated((nint)gearset->Name);
-            GenerateCallback(addon, 14, 2297, 454);
-            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
-            if (nextAddon == null) return false;
-            if (HideWindows) nextAddon->Hide(true, true, 0);
-            PluginLog.Debug("Found GearSetList");
-            return true;
+                var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
+                if (addon == null || addon->IsVisible == false) return false;
+                PluginLog.Debug("Found Character Menu");
+                //var gearsetName = MemoryHelper.ReadStringNullTerminated((nint)gearset->Name);
+                GenerateCallback(addon, 14, 2297, 454);
+                var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
+                if (nextAddon == null) return false;
+                if (HideWindows) nextAddon->Hide(true, true, 0);
+                PluginLog.Debug("Found GearSetList");
+                return true;
+            }
+            catch(Exception f)
+            {
+                Print("Error - " + f.ToString(), ColorType.Error);
+                return false;
+            }
         }
 
         public static unsafe bool RightClickOnGearSet()
