@@ -11,6 +11,7 @@ namespace FoodCheck
         public bool PostToEcho = true;
         public bool PostToParty = false;
         public bool OnlyDoHighEndDuties = true;
+        public bool OnlyUseFirstNames = true;
         public string CustomizableMessage = "<names> should EAT FOOD! <se.7>";
 
         private IDalamudPluginInterface pluginInterface;

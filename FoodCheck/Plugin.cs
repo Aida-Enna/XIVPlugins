@@ -12,12 +12,14 @@ using Dalamud.IoC;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Veda;
 
 namespace FoodCheck
@@ -27,38 +29,28 @@ namespace FoodCheck
         public string Name => "FoodCheck";
 
         [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static ICommandManager Commands { get; set; }
         [PluginService] public static ICondition Conditions { get; set; }
         [PluginService] public static IDataManager Data { get; set; }
-        [PluginService] public static IFramework Framework { get; set; }
-        [PluginService] public static IGameGui GameGui { get; set; }
         [PluginService] public static ISigScanner SigScanner { get; set; }
-        [PluginService] public static IKeyState KeyState { get; set; }
         [PluginService] public static IChatGui Chat { get; set; }
         [PluginService] public static IClientState ClientState { get; set; }
         [PluginService] public static IPartyList PartyList { get; set; }
-        [PluginService] public static IGameInteropProvider Hook { get; set; }
         [PluginService] public static IPluginLog PluginLog { get; set; }
+
+        [PluginService] public static IGameInteropProvider GameInterop { get; set; }
 
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
-        private readonly WindowSystem windowSystem;
-        private IntPtr _countdownPtr;
-        private readonly CountdownTimer _countdownTimer;
-        private Hook<CountdownTimer> _countdownTimerHook;
         private PluginUI ui;
 
         public static bool FirstRun = true;
 
-        private delegate void ProcessChatBoxDelegate(IntPtr uiModule, IntPtr message, IntPtr unused, byte a4);
+        private delegate nint CountdownTimerHookDelegate(ulong a1);
 
-        private delegate IntPtr GetUIModuleDelegate(IntPtr basePtr);
+        [Signature("40 53 48 83 EC 40 80 79 38 00", DetourName = nameof(OnCountdownTimer))]
+        private readonly Hook<CountdownTimerHookDelegate>? _countdownTimerHook = null;
 
-        private ProcessChatBoxDelegate? ProcessChatBox;
-        private IntPtr uiModule = IntPtr.Zero;
-
-        [UnmanagedFunctionPointer(CallingConvention.ThisCall, CharSet = CharSet.Ansi)]
-        private delegate IntPtr CountdownTimer(ulong p1);
+        private readonly CountdownEvent _countdownEvent;
 
         public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
         {
@@ -66,8 +58,10 @@ namespace FoodCheck
             PartyList = partyList;
             Chat = chat;
             SigScanner = sigScanner;
-            this._countdownTimer = CountdownTimerFunc;
-            HookCountdownPointer();
+
+            Plugin.GameInterop.InitializeFromAttributes(this);
+            _countdownTimerHook?.Enable();
+            Functions.GetChatSignatures(sigScanner);
 
             // Get or create a configuration object
             PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
@@ -87,7 +81,7 @@ namespace FoodCheck
         }
 
         [Command("/foodcheck")]
-        [HelpMessage("Toggles auto fate syncing on/off.")]
+        [HelpMessage("Opens the Food Check config menu")]
         public void ToggleAutoFate(string command, string args)
         {
             ui.IsVisible = !ui.IsVisible;
@@ -95,7 +89,7 @@ namespace FoodCheck
 
         private float _start;
 
-        private IntPtr CountdownTimerFunc(ulong value)
+        private nint OnCountdownTimer(ulong value)
         {
             try
             {
@@ -105,24 +99,27 @@ namespace FoodCheck
                     _start = countDownPointerValue;
                     return _countdownTimerHook.Original(value);
                 }
-                //if (FirstRun == true)
-                //{
+
                 bool Debug = true;
                 if (Conditions[ConditionFlag.BoundByDuty] || Conditions[ConditionFlag.BoundByDuty56] || Conditions[ConditionFlag.BoundByDuty95] || Debug)
                 {
-                    var currentZone = ClientState.TerritoryType;
-                    var territoryTypeInfo = Data.GetExcelSheet<TerritoryType>()!.GetRow(currentZone);
-                    if (!territoryTypeInfo.ContentFinderCondition.Value.HighEndDuty && PluginConfig.OnlyDoHighEndDuties)
+                    if (!PlayerIsInHighEndDuty() & PluginConfig.OnlyDoHighEndDuties)
                     {
                         _start = countDownPointerValue;
                         return _countdownTimerHook.Original(value);
                     }
                     string PlayersWhoNeedToEat = "";
-                    if (PartyList.Count() == 0) Chat.Print("(There are no other party members)");
+                    //Chat.Print("Hit - " + PartyList.Count());
+                    if (PartyList.Count() == 0)
+                    {
+                        //Chat.Print("(There are no other party members)");
+                        _start = countDownPointerValue;
+                        return _countdownTimerHook.Original(value);
+                    }
                     foreach (var partyMember in PartyList)
                     {
                         //Chat.Print("Found party member " + partyMember.Name);
-                        //chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
+                        //Chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
                         //Check for food
                         if (partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed") == null)
                         {
@@ -131,24 +128,29 @@ namespace FoodCheck
                             //this.chat.Print($"FOOD CHECK!");
                             //    first = false;
                             //}
-                            PlayersWhoNeedToEat += partyMember.Name.TextValue + " ";
+                            if (Plugin.PluginConfig.OnlyUseFirstNames)
+                            {
+                                PlayersWhoNeedToEat += partyMember.Name.TextValue.Split(' ')[0] + ", ";
+                            }
+                            else
+                            {
+                                PlayersWhoNeedToEat += partyMember.Name.TextValue + ", ";
+                            }
                             //this.chat.Print($"{partyMember.Name}");
                         }
                     }
                     if (PlayersWhoNeedToEat != "")
                     {
-                        string FinalMessage = PluginConfig.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 1, 1));
+                        string FinalMessage = PluginConfig.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 2, 2));
                         if (PluginConfig.PostToParty)
                         {
-                            ExecuteCommand("/p " + FinalMessage);
+                            Functions.Send("/p " + FinalMessage);
                         }
                         if (PluginConfig.PostToEcho)
                         {
                             Chat.Print(Functions.BuildSeString("FoodCheck", FinalMessage));
                         }
                     }
-                    ///FirstRun = false;
-                    //}
                 }
                 _start = countDownPointerValue;
                 return _countdownTimerHook.Original(value);
@@ -161,59 +163,40 @@ namespace FoodCheck
         }
 
 
-        public void ExecuteCommand(string command)
+        //Taken from the Stanley Parable plugin, https://github.com/rekyuu/StanleyParableXiv/blob/main/StanleyParableXiv/Utility/XivUtility.cs
+        //Based and hilarious plugin, you should check it out
+        /// <summary>
+        /// Checks if the territory is Unreal, Extreme, Savage, or Ultimate difficulty.
+        /// </summary>
+        /// <param name="territoryType">The territory to check against.</param>
+        /// <returns>True if high-end, false otherwise.</returns>
+        public static bool TerritoryIsHighEndDuty(ushort territoryType)
         {
-            try
-            {
-                var bytes = System.Text.Encoding.UTF8.GetBytes(command);
+            string name = Plugin.Data.Excel
+                .GetSheet<TerritoryType>()!
+                .GetRow(territoryType)!
+                .ContentFinderCondition.Value!
+                .Name
+                .RawString;
 
-                var mem1 = Marshal.AllocHGlobal(400);
-                var mem2 = Marshal.AllocHGlobal(bytes.Length + 30);
+            bool isHighEndDuty = name.StartsWith("the Minstrel's Ballad")
+                || name.EndsWith("(Unreal)")
+                || name.EndsWith("(Extreme)")
+                || name.EndsWith("(Savage)")
+                || name.EndsWith("(Ultimate)");
 
-                Marshal.Copy(bytes, 0, mem2, bytes.Length);
-                Marshal.WriteByte(mem2 + bytes.Length, 0);
-                Marshal.WriteInt64(mem1, mem2.ToInt64());
-                Marshal.WriteInt64(mem1 + 8, 64);
-                Marshal.WriteInt64(mem1 + 8 + 8, bytes.Length + 1);
-                Marshal.WriteInt64(mem1 + 8 + 8 + 8, 0);
+            PluginLog.Debug("{DutyName} is high end: {IsHighEnd}", name, isHighEndDuty);
 
-                ProcessChatBox(uiModule, mem1, IntPtr.Zero, 0);
-
-                Marshal.FreeHGlobal(mem1);
-                Marshal.FreeHGlobal(mem2);
-            }
-            catch (Exception err) { Chat.PrintError(err.Message); }
+            return isHighEndDuty;
         }
 
-        private unsafe void HookCountdownPointer()
+        /// <summary>
+        /// Checks if player's current territory is Unreal, Extreme, Savage, or Ultimate difficulty.
+        /// </summary>
+        /// <returns>True if high-end, false otherwise.</returns>
+        public static bool PlayerIsInHighEndDuty()
         {
-            _countdownPtr = SigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 40 8B 41");
-            try
-            {
-                _countdownTimerHook = Hook.HookFromSignature<CountdownTimer>("48 89 5C 24 ?? 57 48 83 EC 40 8B 41", _countdownTimer);
-                _countdownTimerHook.Enable();
-                PluginLog.Error("Timer hooked!\n");
-            }
-            catch (Exception e)
-            {
-                PluginLog.Error("Could not hook to timer\n" + e);
-            }
-            try
-            {
-                var getUIModulePtr = SigScanner.ScanText("E8 ?? ?? ?? ?? 48 83 7F ?? 00 48 8B F0");
-                var easierProcessChatBoxPtr = SigScanner.ScanText("48 89 5C 24 ?? 57 48 83 EC 20 48 8B FA 48 8B D9 45 84 C9");
-                var uiModulePtr = SigScanner.GetStaticAddressFromSig("48 8B 0D ?? ?? ?? ?? 48 8D 54 24 ?? 48 83 C1 10 E8");
-
-                var GetUIModule = Marshal.GetDelegateForFunctionPointer<GetUIModuleDelegate>(getUIModulePtr);
-
-                uiModule = GetUIModule(*(IntPtr*)uiModulePtr);
-                ProcessChatBox = Marshal.GetDelegateForFunctionPointer<ProcessChatBoxDelegate>(easierProcessChatBoxPtr);
-                PluginLog.Error("Chatbox hooked!\n");
-            }
-            catch (Exception e)
-            {
-                PluginLog.Error("Could not hook to chatbox\n" + e);
-            }
+            return TerritoryIsHighEndDuty(Plugin.ClientState.TerritoryType);
         }
 
         #region IDisposable Support
@@ -232,6 +215,11 @@ namespace FoodCheck
                 PluginUI ui = this.ui;
                 ui.IsVisible = !ui.IsVisible;
             };
+
+            if (_countdownTimerHook == null) return;
+            _countdownTimerHook.Disable();
+            _countdownTimerHook.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         public void Dispose()
