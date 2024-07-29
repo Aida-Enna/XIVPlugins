@@ -37,3 +37,4 @@ obj/
 /DLLs
 /Shared/Functions.cs
 /EmptyPlugin
+/AutoPillion/AutoFillFunctions.cs
