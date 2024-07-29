@@ -5,13 +5,16 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.GeneratedSheets;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using Veda;
 
 namespace AutoPillion
 {
@@ -127,10 +130,16 @@ namespace AutoPillion
             AutoPillionCooldownTimer.Restart();
             //Chat.Print("You can ride the mount " + partyMember.Name + " is on!");
             TargetManager.Target = PartyMemberObject;
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
-            Chat.Print("Found ContextMenu");
-            GenerateCallback(addon, 1);
-            GenerateCallback(addon, 0, 2, 0);
+            var ContextMenu = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
+            //Chat.Print("Found ContextMenu");
+            GenerateCallback(ContextMenu, 1);
+            GenerateCallback(ContextMenu, 0, Functions.GetAddonEntries("ContextMenu").IndexOf("Ride Pillion"), 0);
+            //var AddonContextSub = (AtkUnitBase*)GameGui.GetAddonByName("AddonContextSub");
+            //if (AddonContextSub != null)
+            //{
+            //    Chat.Print("Found AddonContextSub");
+            //    GenerateCallback(AddonContextSub, 0, 3, 0);
+            //}
             TargetManager.Target = null;
             return;
         }
@@ -199,7 +208,7 @@ namespace AutoPillion
 
         public static unsafe uint GetMountID(IPlayerCharacter playerCharacter)
         {
-            var characterPtr = (FFXIVClientStructs.FFXIV.Client.Game.Character.Character*)playerCharacter.Address;
+            var characterPtr = (Character*)playerCharacter.Address;
             if (characterPtr == null) return 0;
             var mountContainer = characterPtr->Mount;
 

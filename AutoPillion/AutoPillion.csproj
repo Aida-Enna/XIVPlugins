@@ -32,7 +32,6 @@
   <ItemGroup>
     <Compile Include="..\Shared\Attributes.cs" Link="Shared\Attributes.cs" />
     <Compile Include="..\Shared\Classes.cs" Link="Shared\Classes.cs" />
-    <Compile Include="..\Shared\Functions.cs" Link="Shared\Functions.cs" />
     <Compile Include="..\Shared\PluginCommandManager.cs" Link="Shared\PluginCommandManager.cs" />
   </ItemGroup>
 
