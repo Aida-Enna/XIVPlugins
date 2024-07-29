@@ -8,6 +8,10 @@ These are plugins which were abandoned by their creators/maintainers that I've f
 
 Automatically logs into the specified character (selected via the configuration menu) when FFXIV first starts.
 
+## Auto Pillion
+
+When a party member gets on a mount that supports more than 1 person and is close enough, you will automatically get on.
+
 ## Food Check
 
 See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.
@@ -15,6 +19,10 @@ See who is missing food buff at countdown start and optionally post to party/ech
 ## Macro Chain Redux
 
 A fork of the original macro chain, this re-adds support for running a macro inside of a macro.
+
+## Portrait Fixer
+
+When you click "Update Gear Set", this plugin will automatically update and save your portait to match your new glam.
 
 ## Potato Famine 2
 
