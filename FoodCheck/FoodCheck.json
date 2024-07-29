@@ -4,8 +4,8 @@
   "InternalName": "FoodCheck",
   "AssemblyVersion": "1.0.0.3",
   "ApplicableVersion": "any",
-  "Description": "See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.",
   "Punchline": "Someone in our group wouldn't eat their food. I got tired of telling them to. Now the plugin does.",
+  "Description": "See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [
     "food",

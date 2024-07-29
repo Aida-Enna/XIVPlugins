@@ -36,11 +36,11 @@ namespace AutoLogin {
 
         public static Configuration PluginConfig { get; set; }
         private bool drawConfigWindow;
-
+        private readonly Queue<Func<bool>> actionQueue = new();
+        private readonly Stopwatch sw = new();
+        private uint Delay = 0;
         public static Notification NotifObject = new Notification();
         
-        
-
         public Plugin(IDalamudPluginInterface pluginInterface) {
 
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -123,9 +123,6 @@ namespace AutoLogin {
             actionQueue.Enqueue(ClearTemp);
         }
 
-        private readonly Stopwatch sw = new();
-        private uint Delay = 0;
-
         private Func<bool> VariableDelay(uint frameDelay) {
             return () => {
                 Delay = frameDelay;
@@ -172,8 +169,6 @@ namespace AutoLogin {
                 PluginLog.Error($"Failed: {ex.Message}");
             }
         }
-
-        private readonly Queue<Func<bool>> actionQueue = new();
 
         public void OnConfigCommandHandler(string command, string args) {
             #if DEBUG

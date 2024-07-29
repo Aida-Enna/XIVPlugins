@@ -16,7 +16,7 @@
     </PropertyGroup>
     <PropertyGroup Label="Feature">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>2.1.1.0</Version>
+        <Version>2.1.1.1</Version>
     </PropertyGroup>
     <PropertyGroup>
 		<AssemblyName>MacroChainRedux</AssemblyName>

@@ -4,13 +4,12 @@
   "InternalName": "AutoLogin",
   "AssemblyVersion": "1.0.0.0",
   "ApplicableVersion": "any",
-  "Description": "Automatically logs you into a specified character when the game first opens.",
   "Punchline": "Automatically logs you into a specified character when the game first opens.",
+  "Description": "Automatically logs you into a specified character when the game first opens.",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [
-    "level",
-    "sync",
     "auto",
+    "login",
     "aida"
   ],
   "CategoryTags": null,

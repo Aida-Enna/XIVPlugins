@@ -52,10 +52,10 @@
   {
     "Author": "Aida Enna",
     "Name": "Macro Chain Redux",
-    "Description": "Run multiple macros one after the other (or repeat them).",
-    "Punchline": "A modified fork of the old Macro Chain that allows you to repeat a macro inside a macro.",
+    "Description": "Allows for a macro to continue onto the next macro by using '/nextmacro' on the last line of a macro.\nAdding '/nextmacro' on the last line of Macro #01 will automatically execute Macro #02\nAdding '/nextmacro down' on the last line of Macro #01 will automatically execute Macro #11\nAlso allows executing any macro from chat using '/runmacro'\nYou can repeat a macro by using /runmacro inside the macro followed by the number of the macro you're editing\nUsing '/macrocancel' will stop the currently running macro",
+    "Punchline": "A modified fork of the old Macro Chain that allows you to run multiple macros one after the other (or repeat them).",
     "InternalName": "MacroChainRedux",
-    "AssemblyVersion": "1.0.0.0",
+    "AssemblyVersion": "2.1.1.1",
     "Changelog": "- Updated for patch 7.0",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
