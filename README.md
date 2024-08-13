@@ -24,10 +24,6 @@ A fork of the original macro chain, this re-adds support for running a macro ins
 
 When you click "Update Gear Set", this plugin will automatically update and save your portait to match your new glam.
 
-## Potato Famine 2
-
-Changes lalafells (or everyone or specific people) into another race of your choosing.
-
 # Deprecated Plugins
 
 ## Loot Master
@@ -41,3 +37,9 @@ NOTE: Deprecated, [use this instead](https://github.com/PunishXIV/LazyLoot).
 Automatically synchronizes the level of your character (and optionally auto-enables tank stance!) whenever you join a FATE in Final Fantasy XIV.
 
 NOTE: Deprecated, [use this instead](https://github.com/PunishXIV/PandorasBox).
+
+## Potato Famine 2
+
+Changes lalafells (or everyone or specific people) into another race of your choosing.
+
+NOTE: Deprecated, [use this instead](https://github.com/kelvin124124/OopsAllLalafellsSRE).
