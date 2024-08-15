@@ -86,15 +86,15 @@ namespace PortraitFixer
                 Print("You cannot save your portrait at this time. Please wait until you are out of combat/the duty and try saving again with /pfixsave.",ColorType.Error);
                 return;
             }
-            if (PluginConfig.AutoUpdatePortaitFromGearsetUpdate)
+            if (PluginConfig.AutoUpdatePortraitFromGearsetUpdate)
             {
-                if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortaitFromGearsetUpdate)
+                if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortraitFromGearsetUpdate)
                 {
-                    SavePortait("Gearset updated");
+                    SavePortrait("Gearset updated");
                 }
                 else
                 {
-                    SavePortait("", true);
+                    SavePortrait("", true);
                 }
             }
         }
@@ -114,31 +114,31 @@ namespace PortraitFixer
                 Print("You cannot save your portrait at this time. Please wait until you are out of combat/the duty and try saving again.", ColorType.Error);
                 return;
             }
-            SavePortait();
+            SavePortrait();
         }
 
         [Command("/pfixconfig")]
-        [HelpMessage("Show the Portait Fixer settings")]
+        [HelpMessage("Show the Portrait Fixer settings")]
         public void ToggleConfig(string command, string args)
         {
             ui.IsVisible = !ui.IsVisible;
         }
 
-        public static void SavePortait(string ExtraInfo = "", bool Silent = false)
+        public static void SavePortrait(string ExtraInfo = "", bool Silent = false)
         {
             actionQueue.Enqueue(OpenGearSetMenu);
             actionQueue.Enqueue(RightClickOnGearSet);
-            actionQueue.Enqueue(OpenPortaitMenu);
+            actionQueue.Enqueue(OpenPortraitMenu);
             actionQueue.Enqueue(CheckForPortraitEditor);
             actionQueue.Enqueue(VariableDelay(50));
-            actionQueue.Enqueue(PressSaveOnPortaitMenu);
+            actionQueue.Enqueue(PressSaveOnPortraitMenu);
             //actionQueue.Enqueue(VariableDelay(60));
             actionQueue.Enqueue(ClosePortraitMenu);
             if (!Silent)
             {
                 if (ExtraInfo == "")
                 {
-                    Print("Portait saved!", ColorType.Success);
+                    Print("Portrait saved!", ColorType.Success);
                 }
                 else
                 {
@@ -251,7 +251,7 @@ namespace PortraitFixer
             return true;
         }
 
-        public static unsafe bool OpenPortaitMenu()
+        public static unsafe bool OpenPortraitMenu()
         {
             var previousAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
             if (previousAddon != null)
@@ -310,7 +310,7 @@ namespace PortraitFixer
             }
         }
 
-        public unsafe static bool PressSaveOnPortaitMenu()
+        public unsafe static bool PressSaveOnPortraitMenu()
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
             if (addon == null) return false;

@@ -6,8 +6,8 @@ namespace PortraitFixer
     public class Configuration : IPluginConfiguration
     {
         public int Version { get; set; }
-        public bool AutoUpdatePortaitFromGearsetUpdate = true;
-        public bool ShowMessageInChatWhenAutoUpdatingPortaitFromGearsetUpdate = true;
+        public bool AutoUpdatePortraitFromGearsetUpdate = true;
+        public bool ShowMessageInChatWhenAutoUpdatingPortraitFromGearsetUpdate = true;
 
         private IDalamudPluginInterface pluginInterface;
 
