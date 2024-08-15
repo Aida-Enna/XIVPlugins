@@ -60,7 +60,7 @@ namespace AutoLogin {
                 Commands.RemoveHandler("/swapcharacter");
             }
             Commands.AddHandler("/swapcharacter", new CommandInfo(OnSwapCharacterCommandHandler) {
-                HelpMessage = $"Swap character /swapcharacter <World.Name> <Character.Index>",
+                HelpMessage = $"Swap character /swapcharacter WorldName CharacterIndex",
                 ShowInHelp = true
             });
 
@@ -84,7 +84,7 @@ namespace AutoLogin {
 
             var args = arguments.Split(' ');
 
-            void ShowHelp() => Chat.PrintError("/swapcharacter <World.Name> <Character.Index>");
+            void ShowHelp() => Chat.PrintError("/swapcharacter WorldName CharacterIndex");
 
             if (args.Length != 2) {
                 ShowHelp();
@@ -99,8 +99,9 @@ namespace AutoLogin {
                 return;
             }
 
-            if (!uint.TryParse(args[1], out var characterIndex) || characterIndex >= 8) {
-                Chat.PrintError("Invalid Character Index. Must be between 0 and 7.");
+            //Disabled in case they're doing a DC/World visit
+            if (!uint.TryParse(args[1], out var characterIndex)) {
+                Chat.PrintError("Invalid Character Index. Please make sure to choose a number that matches your character slot with 0 being the first character.");
                 ShowHelp();
                 return;
             }
