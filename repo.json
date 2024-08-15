@@ -4,8 +4,8 @@
     "Name": "Auto Login",
     "Description": "Automatically logs you into a specified character when the game first opens.",
     "InternalName": "AutoLogin",
-    "AssemblyVersion": "1.0.0.7",
-    "Changelog": "- Updated for patch 7.0\nChanged cancel button from shift to spacebar",
+    "AssemblyVersion": "1.0.0.8",
+    "Changelog": "- Removed the limit on the swap character command to accomidate for world visiting characters\n- Changed cancel button from shift to spacebar",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
