@@ -100,7 +100,7 @@ namespace PortraitFixer
         }
 
         [Command("/pfixsave")]
-        [HelpMessage("Updates the portait for the currently selected gearset/equipment")]
+        [HelpMessage("Updates the portrait for the currently selected gearset/equipment")]
         public unsafe void PortraitFixSave(string command, string args)
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
@@ -142,7 +142,7 @@ namespace PortraitFixer
                 }
                 else
                 {
-                    Print(ExtraInfo + " - portait saved!", ColorType.Success);
+                    Print(ExtraInfo + " - portrait saved!", ColorType.Success);
                 }
             }
         }

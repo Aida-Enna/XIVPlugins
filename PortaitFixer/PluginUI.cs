@@ -71,8 +71,8 @@ namespace PortraitFixer
 
             //ImGui.End();
 
-            ImGui.Checkbox("Automatically update portait when gearset is updated", ref Plugin.PluginConfig.AutoUpdatePortraitFromGearsetUpdate);
-            if (Plugin.PluginConfig.AutoUpdatePortraitFromGearsetUpdate) { ImGui.Checkbox("Display message when portait is autosaved via gearset update", ref Plugin.PluginConfig.ShowMessageInChatWhenAutoUpdatingPortraitFromGearsetUpdate); }
+            ImGui.Checkbox("Automatically update portrait when gearset is updated", ref Plugin.PluginConfig.AutoUpdatePortraitFromGearsetUpdate);
+            if (Plugin.PluginConfig.AutoUpdatePortraitFromGearsetUpdate) { ImGui.Checkbox("Display message when portrait is autosaved via gearset update", ref Plugin.PluginConfig.ShowMessageInChatWhenAutoUpdatingPortraitFromGearsetUpdate); }
             if (ImGui.Button("Save"))
             {
                 Plugin.PluginConfig.Save();
