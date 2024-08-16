@@ -8,20 +8,15 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.System.Memory;
-using FFXIVClientStructs.FFXIV.Client.System.String;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Veda;
 
 namespace CustomSounds
 {
+    //A large part of this code was lifted directly from StanleyParableXIV, go check them out! https://github.com/rekyuu/StanleyParableXiv
     public class Plugin : IDalamudPlugin
     {
         public string Name => "CustomSounds";
