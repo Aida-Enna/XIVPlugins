@@ -16,7 +16,7 @@ using Veda;
 
 namespace CustomSounds
 {
-    //A large part of this code was lifted directly from StanleyParableXIV, go check them out! https://github.com/rekyuu/StanleyParableXiv
+    //Most of this plugin was lifted directly from the StanleyParableXIV plugin, go check them out! https://github.com/rekyuu/StanleyParableXiv
     public class Plugin : IDalamudPlugin
     {
         public string Name => "CustomSounds";
