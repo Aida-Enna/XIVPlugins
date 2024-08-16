@@ -7,6 +7,7 @@ namespace AutoPillion
     {
         public int Version { get; set; }
         public int CooldownInSeconds = 20;
+        public bool OnlyMountFriends = false;
 
         private IDalamudPluginInterface pluginInterface;
 

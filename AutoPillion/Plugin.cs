@@ -34,9 +34,10 @@ namespace AutoPillion
         private PluginUI ui;
         private bool TryingToMount = false;
         public static readonly Stopwatch AutoPillionCooldownTimer = new();
+        private PluginCommandManager<Plugin> commandManager;
         public static Configuration PluginConfig { get; set; }
 
-        public Plugin(IDalamudPluginInterface pluginInterface, IFramework framework)
+        public Plugin(IDalamudPluginInterface pluginInterface, IFramework framework, ICommandManager commands)
         {
             PluginInterface = pluginInterface;
             Framework = framework;
@@ -54,6 +55,16 @@ namespace AutoPillion
                 PluginUI ui = this.ui;
                 ui.IsVisible = !ui.IsVisible;
             };
+
+            this.commandManager = new PluginCommandManager<Plugin>(this, commands);
+        }
+
+        [Command("/autopillion")]
+        [Aliases("/ap")]
+        [HelpMessage("Opens the Auto Pillion config menu")]
+        public void ToggleConfig(string command, string args)
+        {
+            ui.IsVisible = !ui.IsVisible;
         }
 
         private unsafe void Framework_Update(IFramework framework)
@@ -86,11 +97,10 @@ namespace AutoPillion
                 }
                 if (PartyList.Count() > 0 & !TryingToMount)
                 {
-                    int count = 0;
                     foreach (var partyMember in PartyList)
                     {
-                        count++;
-                        if (count == 1) { continue; }
+                        //Chat.Print("Party member " + count + ": " + partyMember.Name);
+                        if (partyMember.Name == ClientState.LocalPlayer.Name) { continue; }
                         try
                         {
                             if (partyMember.GameObject.YalmDistanceX > 3 || partyMember.GameObject.YalmDistanceZ > 3) { continue; }
@@ -102,13 +112,18 @@ namespace AutoPillion
                         var characterPtr = (Character*)partyMember.GameObject.Address;
                         if (characterPtr->IsNotMounted()) { continue; }
                         if (characterPtr == null) continue;
-                        var mountContainer = characterPtr->Mount;
+                        if (PluginConfig.OnlyMountFriends)
+                        {
+                            if (!characterPtr->IsFriend) { continue; }
+                        }
 
+                        var mountContainer = characterPtr->Mount;
                         var mountObjectID = mountContainer.MountId;
                         if (mountObjectID == 0) continue;
                         var mountRow = Data.GetExcelSheet<Mount>()?.GetRow(mountObjectID);
                         if (mountRow.ExtraSeats > 0)
                         {
+                            //Chat.Print("Trying to mount");
                             TryingToMount = true;
                             TryToMount(partyMember.GameObject);
                         }

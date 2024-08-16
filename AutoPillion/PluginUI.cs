@@ -11,7 +11,7 @@ namespace AutoPillion
         {
             if (!IsVisible || !ImGui.Begin("AutoPillion Config", ref IsVisible, ImGuiWindowFlags.AlwaysAutoResize))
                 return;
-            ImGui.Text("Seconds to wait before trying\nto auto-pillion after getting off:");
+            ImGui.Text("Seconds to wait before trying to\nauto-pillion after dismounting:");
             ImGui.SetNextItemWidth(190);
             ImGui.DragInt("###Cooldown", ref Plugin.PluginConfig.CooldownInSeconds, 1, 1, 60);
             if (ImGui.Button("Save"))
@@ -19,6 +19,8 @@ namespace AutoPillion
                 Plugin.PluginConfig.Save();
                 this.IsVisible = false;
             }
+            ImGui.SameLine();
+            ImGui.Checkbox("Only mount friends", ref Plugin.PluginConfig.OnlyMountFriends);
             ImGui.End();
         }
     }
