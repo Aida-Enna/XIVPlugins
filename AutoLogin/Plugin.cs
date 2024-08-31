@@ -18,6 +18,8 @@ using System.Linq;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.ImGuiNotification;
 using System.Threading;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Gui.Toast;
 
 namespace AutoLogin {
     public unsafe class Plugin : IDalamudPlugin {
@@ -33,6 +35,7 @@ namespace AutoLogin {
         [PluginService] public static IChatGui Chat { get; set; }
         [PluginService] public static INotificationManager NotificationManager{ get; set; }
         [PluginService] public static IPluginLog PluginLog { get; set; }
+        [PluginService] public static IToastGui ToastyGoodness { get; set; }
 
         public static Configuration PluginConfig { get; set; }
         private bool drawConfigWindow;
@@ -41,7 +44,7 @@ namespace AutoLogin {
         private uint Delay = 0;
         public static Notification NotifObject = new Notification();
         
-        public Plugin(IDalamudPluginInterface pluginInterface) {
+        public Plugin(IDalamudPluginInterface pluginInterface, IToastGui ToastGui) {
 
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
@@ -65,10 +68,11 @@ namespace AutoLogin {
             });
 
             Framework.Update += OnFrameworkUpdate;
+            ToastyGoodness = ToastGui;
+            ToastyGoodness.ErrorToast += OnToastShown;
             if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
             {
-
-                NotifObject.Content = "Starting AutoLogin - Hold space to cancel.";
+                NotifObject.Content = "Auto logging in - Hold SPACE to cancel.";
                 NotifObject.Type = NotificationType.Info;
                 NotificationManager.AddNotification(NotifObject);
                 actionQueue.Enqueue(OpenDataCenterMenu);
@@ -131,6 +135,33 @@ namespace AutoLogin {
             };
         }
 
+        private void OnToastShown(ref SeString message, ref bool isHandled)
+        {
+            //Don't log toasts if we're not doing something with the plugin
+            if (actionQueue.Count == 0) { return; }
+            //Generic error message
+            if (message.TextValue.Contains("Character is currently visiting"))
+            {
+                //NotifObject.Title = "Error";
+                NotifObject.Title = "";
+                NotifObject.Content = "AutoLogin has been cancelled because your character is visiting another data center.";
+                NotifObject.Type = NotificationType.Error;
+                NotifObject.InitialDuration = TimeSpan.FromSeconds(15);
+                NotificationManager.AddNotification(NotifObject).Minimized = false;
+                actionQueue.Clear();
+                return;
+            }
+            if (message.TextValue.Contains("Unable to execute command"))
+            {
+                NotifObject.Title = "";
+                NotifObject.Content = "AutoLogin has been cancelled due to an unknown error.\n\"" + message.TextValue + "\"";
+                NotifObject.Type = NotificationType.Error;
+                NotifObject.InitialDuration = TimeSpan.FromSeconds(15);
+                NotificationManager.AddNotification(NotifObject).Minimized = false;
+                actionQueue.Clear();
+                return;
+            }
+        }
 
         private void OnFrameworkUpdate(IFramework framework) {
             if (actionQueue.Count == 0) {
@@ -140,7 +171,7 @@ namespace AutoLogin {
             if (!sw.IsRunning) sw.Restart();
 
             if (KeyState[VirtualKey.SPACE]) {
-                NotifObject.Content = "Autologin Cancelled.";
+                NotifObject.Content = "AutoLogin cancelled.";
                 NotifObject.Type = NotificationType.Warning;
                 NotificationManager.AddNotification(NotifObject);
                 actionQueue.Clear();
@@ -189,11 +220,7 @@ namespace AutoLogin {
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("_TitleMenu");
             if (addon == null || addon->IsVisible == false) return false;
             PluginLog.Debug("Found Title Screen");
-            GenerateCallback(addon, 5); //4 is hitting start? Used to be 13
-            //Open Dalamud Dev Bar -> Open Data Window
-            //Type in the Addon we're on right now "_TitleMenu" in the search box
-            //Click "Node List" and hover over each till you find the button you want
-            //The number you need in that button's info is NodeID
+            GenerateCallback(addon, 5); 
             var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap");
             if (nextAddon == null) return false;
             PluginLog.Debug("Found TitleDCWorldMap");
@@ -209,6 +236,7 @@ namespace AutoLogin {
             var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg");
             if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
             GenerateCallback(addon, 17, (int) (tempDc ?? PluginConfig.DataCenter));
+            dcMenu->Close(true);
             return true;
         }
 
@@ -218,9 +246,6 @@ namespace AutoLogin {
             if (dcMenu != null) dcMenu->Hide(true, true, 0);
             var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg");
             if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
-            //var TitleMenu = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu");
-            //if (TitleMenu != null) TitleMenu->Hide(true, true, 0);
-            //if (TitleMenu != null) TitleMenu->Hide(true, true, 1);
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectWorldServer", 1);
             if (addon == null) return false;
             PluginLog.Debug("Found World Server");
@@ -240,7 +265,6 @@ namespace AutoLogin {
                 checkedWorldCount++;
                 if (s != world.Name.RawString) continue;
                 PluginLog.Debug("Found world [" + world.Name.RawString + "] at integer i[" + i + "]");
-                //GenerateCallback(addon, 7, 0, i);
                 GenerateCallback(addon, 24, 0, i);
                 return true;
             }
@@ -254,9 +278,7 @@ namespace AutoLogin {
             var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectListMenu", 1);
             if (addon == null) return false;
             PluginLog.Debug("Found _CharaSelectListMenu");
-            //originally 17?
             GenerateCallback(addon, 29, 0, tempCharacter ?? PluginConfig.CharacterSlot);
-            //GenerateCallback(addon, 14, 0, tempCharacter ?? PluginConfig.CharacterSlot);
             var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
             return nextAddon != null;
         }
@@ -379,7 +401,6 @@ namespace AutoLogin {
             try {
                 for (var i = 0; i < values.Length; i++) {
                     var v = values[i];
-                    PluginLog.Debug("Value: " + v);
                     switch (v) {
                         case uint uintValue:
                             atkValues[i].Type = ValueType.UInt;
