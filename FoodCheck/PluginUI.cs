@@ -12,15 +12,37 @@ namespace FoodCheck
         {
             if (!IsVisible || !ImGui.Begin("FoodCheck Config", ref IsVisible, (ImGuiWindowFlags)96))
                 return;
-
+            if (!Plugin.PluginConfig.PostOnReadyCheck & !Plugin.PluginConfig.PostOnCountdown)
+            {
+                ImGui.TextColored(new System.Numerics.Vector4(255, 0, 0, 255), "Note: You have both checking methods disabled, the plugin will do nothing.");
+                ImGui.Separator();
+            }
+            if (!Plugin.PluginConfig.PostToEcho & !Plugin.PluginConfig.PostToParty)
+            {
+                ImGui.TextColored(new System.Numerics.Vector4(255, 0, 0, 255), "Note: You have both posting methods disabled, the plugin will do nothing.");
+                ImGui.Separator();
+            }
+            ImGui.Checkbox("Check food when ready check starts", ref Plugin.PluginConfig.PostOnReadyCheck);
+            ImGui.SameLine();
+            ImGui.Checkbox("Check food when countdown starts", ref Plugin.PluginConfig.PostOnCountdown);
             ImGui.Checkbox("Post in echo chat", ref Plugin.PluginConfig.PostToEcho);
+            ImGui.SameLine();
             ImGui.Checkbox("Post in party chat", ref Plugin.PluginConfig.PostToParty);
-            ImGui.Checkbox("Only post in high-end duties", ref Plugin.PluginConfig.OnlyDoHighEndDuties);
+            ImGui.Text("This is the message that will be shown, you can modify it here:");
+            ImGui.SetNextItemWidth(500);
+            ImGui.InputText("", ref Plugin.PluginConfig.CustomizableMessage, 400);
+            ImGui.Text("<names> will be replaced with the name(s) of the people who need to eat food.");
             ImGui.Checkbox("Only use first names", ref Plugin.PluginConfig.OnlyUseFirstNames);
-            ImGui.Text("Please format the message as you would like it to show:");
-            ImGui.InputText("", ref Plugin.PluginConfig.CustomizableMessage, 100);
-            ImGui.Text("<names> will be replaced with the names of the people\nwho need to eat food.");
+            ImGui.SameLine();
+            ImGui.Checkbox("Only check in high-end duties", ref Plugin.PluginConfig.OnlyDoHighEndDuties);
             ImGui.Spacing();
+            if (ImGui.Button("Save and close"))
+            {
+                Plugin.PluginConfig.Save();
+                IsVisible = !IsVisible;
+            }
+            ImGui.SameLine();
+            ImGui.Indent(300);
             if (ImGui.Button("Want to help support my work?"))
             {
                 ShowSupport = !ShowSupport;
@@ -28,7 +50,8 @@ namespace FoodCheck
             if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Click me!"); }
             if (ShowSupport)
             {
-                ImGui.Text("Here are the current ways you can support the work I do.\nEvery bit helps, thank you! Have a great day!");
+                ImGui.Indent(-300);
+                ImGui.Text("Here are the current ways you can support the work I do.\nEvery bit helps, thank you! ♥ Have a great day!");
                 ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.19f, 0.52f, 0.27f, 1));
                 if (ImGui.Button("Donate via Paypal"))
                 {

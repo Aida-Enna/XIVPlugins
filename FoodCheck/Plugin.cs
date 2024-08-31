@@ -15,8 +15,11 @@ using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Common.Lua;
 using Lumina.Excel.GeneratedSheets;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -36,6 +39,7 @@ namespace FoodCheck
         [PluginService] public static IClientState ClientState { get; set; }
         [PluginService] public static IPartyList PartyList { get; set; }
         [PluginService] public static IPluginLog PluginLog { get; set; }
+        [PluginService] public static IGameInteropProvider Hook { get; set; }
 
         [PluginService] public static IGameInteropProvider GameInterop { get; set; }
 
@@ -44,15 +48,18 @@ namespace FoodCheck
         private PluginUI ui;
 
         public static bool FirstRun = true;
+        public static bool Debug = false;
 
         private delegate nint CountdownTimerHookDelegate(ulong a1);
 
         [Signature("40 53 48 83 EC 40 80 79 38 00", DetourName = nameof(OnCountdownTimer))]
         private readonly Hook<CountdownTimerHookDelegate>? _countdownTimerHook = null;
 
+        private static Hook<AgentReadyCheck.Delegates.InitiateReadyCheck> ReadyCheckHook;
+
         private readonly CountdownEvent _countdownEvent;
 
-        public Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
+        public unsafe Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, IPartyList partyList, ICommandManager commands, ISigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             PartyList = partyList;
@@ -66,7 +73,10 @@ namespace FoodCheck
             // Get or create a configuration object
             PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
-           
+
+            ReadyCheckHook = Plugin.Hook.HookFromAddress<AgentReadyCheck.Delegates.InitiateReadyCheck>(AgentReadyCheck.MemberFunctionPointers.InitiateReadyCheck, ReadyCheckInitiatedDetour);
+            ReadyCheckHook.Enable();
+
             ui = new PluginUI();
             PluginInterface.UiBuilder.Draw += new System.Action(ui.Draw);
             PluginInterface.UiBuilder.OpenConfigUi += () =>
@@ -77,7 +87,6 @@ namespace FoodCheck
 
             // Load all of our commands
             this.commandManager = new PluginCommandManager<Plugin>(this, commands);
-
         }
 
         [Command("/foodcheck")]
@@ -100,7 +109,6 @@ namespace FoodCheck
                     return _countdownTimerHook.Original(value);
                 }
 
-                bool Debug = true;
                 if (Conditions[ConditionFlag.BoundByDuty] || Conditions[ConditionFlag.BoundByDuty56] || Conditions[ConditionFlag.BoundByDuty95] || Debug)
                 {
                     if (!PlayerIsInHighEndDuty() & PluginConfig.OnlyDoHighEndDuties)
@@ -108,60 +116,82 @@ namespace FoodCheck
                         _start = countDownPointerValue;
                         return _countdownTimerHook.Original(value);
                     }
-                    string PlayersWhoNeedToEat = "";
-                    //Chat.Print("Hit - " + PartyList.Count());
                     if (PartyList.Count() == 0)
                     {
                         //Chat.Print("(There are no other party members)");
                         _start = countDownPointerValue;
                         return _countdownTimerHook.Original(value);
                     }
-                    foreach (var partyMember in PartyList)
-                    {
-                        //Chat.Print("Found party member " + partyMember.Name);
-                        //Chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
-                        //Check for food
-                        if (partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed") == null)
-                        {
-                            //if (first)
-                            //{
-                            //this.chat.Print($"FOOD CHECK!");
-                            //    first = false;
-                            //}
-                            if (Plugin.PluginConfig.OnlyUseFirstNames)
-                            {
-                                PlayersWhoNeedToEat += partyMember.Name.TextValue.Split(' ')[0] + ", ";
-                            }
-                            else
-                            {
-                                PlayersWhoNeedToEat += partyMember.Name.TextValue + ", ";
-                            }
-                            //this.chat.Print($"{partyMember.Name}");
-                        }
-                    }
-                    if (PlayersWhoNeedToEat != "")
-                    {
-                        string FinalMessage = PluginConfig.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 2, 2));
-                        if (PluginConfig.PostToParty)
-                        {
-                            Functions.Send("/p " + FinalMessage);
-                        }
-                        if (PluginConfig.PostToEcho)
-                        {
-                            Chat.Print(Functions.BuildSeString("FoodCheck", FinalMessage));
-                        }
-                    }
+                    CheckWhoNeedsToEat();
                 }
+
                 _start = countDownPointerValue;
                 return _countdownTimerHook.Original(value);
             }
-            catch(Exception f)
+            catch (Exception f)
             {
                 Chat.PrintError("Something went wrong - " + f.ToString());
                 return _countdownTimerHook.Original(value);
             }
         }
 
+        private static unsafe void ReadyCheckInitiatedDetour(AgentReadyCheck* ptr)
+        {
+            ReadyCheckHook.Original(ptr);
+            if (Conditions[ConditionFlag.BoundByDuty] || Conditions[ConditionFlag.BoundByDuty56] || Conditions[ConditionFlag.BoundByDuty95] || Debug)
+            {
+                if (!PlayerIsInHighEndDuty() & PluginConfig.OnlyDoHighEndDuties)
+                {
+                    return;
+                }
+                if (PartyList.Count() == 0)
+                {
+                    //Chat.Print("(There are no other party members)");
+                    return;
+                }
+                CheckWhoNeedsToEat();
+            }
+        }
+
+        public static void CheckWhoNeedsToEat()
+        {
+            string PlayersWhoNeedToEat = "";
+            foreach (var partyMember in PartyList)
+            {
+                //Chat.Print("Found party member " + partyMember.Name);
+                //Chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
+                //Check for food
+                if (partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed") == null)
+                {
+                    //if (first)
+                    //{
+                    //this.chat.Print($"FOOD CHECK!");
+                    //    first = false;
+                    //}
+                    if (Plugin.PluginConfig.OnlyUseFirstNames)
+                    {
+                        PlayersWhoNeedToEat += partyMember.Name.TextValue.Split(' ')[0] + ", ";
+                    }
+                    else
+                    {
+                        PlayersWhoNeedToEat += partyMember.Name.TextValue + ", ";
+                    }
+                    //this.chat.Print($"{partyMember.Name}");
+                }
+            }
+            if (PlayersWhoNeedToEat != "")
+            {
+                string FinalMessage = PluginConfig.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 2, 2));
+                if (PluginConfig.PostToParty)
+                {
+                    Functions.Send("/p " + FinalMessage);
+                }
+                if (PluginConfig.PostToEcho)
+                {
+                    Chat.Print(Functions.BuildSeString("FoodCheck", FinalMessage));
+                }
+            }
+        }
 
         //Taken from the Stanley Parable plugin, https://github.com/rekyuu/StanleyParableXiv/blob/main/StanleyParableXiv/Utility/XivUtility.cs
         //Based and hilarious plugin, you should check it out
@@ -216,9 +246,11 @@ namespace FoodCheck
                 ui.IsVisible = !ui.IsVisible;
             };
 
-            if (_countdownTimerHook == null) return;
+            //if (_countdownTimerHook == null) return;
             _countdownTimerHook.Disable();
             _countdownTimerHook.Dispose();
+            ReadyCheckHook.Disable();
+            ReadyCheckHook.Dispose();
             GC.SuppressFinalize(this);
         }
 

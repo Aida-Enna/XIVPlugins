@@ -10,6 +10,8 @@ namespace FoodCheck
         public int Version { get; set; }
         public bool PostToEcho = true;
         public bool PostToParty = false;
+        public bool PostOnReadyCheck = true;
+        public bool PostOnCountdown = true;
         public bool OnlyDoHighEndDuties = true;
         public bool OnlyUseFirstNames = true;
         public string CustomizableMessage = "<names> should EAT FOOD! <se.7>";
