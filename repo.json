@@ -4,7 +4,7 @@
     "Name": "Auto Login",
     "Description": "Automatically logs you into a specified character when the game first opens.",
     "InternalName": "AutoLogin",
-    "AssemblyVersion": "1.0.0.9",
+    "AssemblyVersion": "1.3.0.0",
     "Changelog": "- Detect toast (pop up) errors during login\n- Cancel autologin if the specified character is on another data center (by reading the error that pops up)\n- Cancel autologin if there's an unspecified error toast ('Unable to execute command')\n- Fixed an issue where you couldn't change data centers if you cancelled the autologin process",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
