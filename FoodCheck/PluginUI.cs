@@ -1,5 +1,12 @@
 ﻿using Veda;
 using ImGuiNET;
+using Dalamud.Game.Text;
+using System;
+using System.Linq;
+using Dalamud.Interface.Utility.Raii;
+using Dalamud.Interface.Utility;
+using System.Collections.Generic;
+using Dalamud.Configuration;
 
 namespace FoodCheck
 {
@@ -17,25 +24,31 @@ namespace FoodCheck
                 ImGui.TextColored(new System.Numerics.Vector4(255, 0, 0, 255), "Note: You have both checking methods disabled, the plugin will do nothing.");
                 ImGui.Separator();
             }
-            if (!Plugin.PluginConfig.PostToEcho & !Plugin.PluginConfig.PostToParty)
+            if (Plugin.PluginConfig.ChatType.ToString().ToLower() == "none" & !Plugin.PluginConfig.PostToParty)
             {
                 ImGui.TextColored(new System.Numerics.Vector4(255, 0, 0, 255), "Note: You have both posting methods disabled, the plugin will do nothing.");
                 ImGui.Separator();
             }
-            ImGui.Checkbox("Check food when ready check starts", ref Plugin.PluginConfig.PostOnReadyCheck);
+            ImGui.Text("Post messages in this channel:");
+            ImGui.SetNextItemWidth(400);
+            DropDown(" ",
+            () => Plugin.PluginConfig.ChatType.ToString(),
+            s => Plugin.PluginConfig.ChatType = Enum.Parse<XivChatType>(s),
+            s => s == Plugin.PluginConfig.ChatType.ToString(),
+            Enum.GetValues<XivChatType>().Select(c => c.ToString()).ToList());
             ImGui.SameLine();
-            ImGui.Checkbox("Check food when countdown starts", ref Plugin.PluginConfig.PostOnCountdown);
-            ImGui.Checkbox("Post in echo chat", ref Plugin.PluginConfig.PostToEcho);
-            ImGui.SameLine();
-            ImGui.Checkbox("Post in party chat", ref Plugin.PluginConfig.PostToParty);
+            ImGui.Checkbox("Also post in party chat (so others can see)", ref Plugin.PluginConfig.PostToParty);
             ImGui.Text("This is the message that will be shown, you can modify it here:");
             ImGui.SetNextItemWidth(500);
             ImGui.InputText("", ref Plugin.PluginConfig.CustomizableMessage, 400);
             ImGui.Text("<names> will be replaced with the name(s) of the people who need to eat food.");
-            ImGui.Checkbox("Only use first names", ref Plugin.PluginConfig.OnlyUseFirstNames);
+            ImGui.Checkbox("Only use first names         ", ref Plugin.PluginConfig.OnlyUseFirstNames);
             ImGui.SameLine();
             ImGui.Checkbox("Only check in high-end duties", ref Plugin.PluginConfig.OnlyDoHighEndDuties);
             ImGui.Spacing();
+            ImGui.Checkbox("Check food (ready check)", ref Plugin.PluginConfig.PostOnReadyCheck);
+            ImGui.SameLine();
+            ImGui.Checkbox("Check food (countdown)", ref Plugin.PluginConfig.PostOnCountdown);
             if (ImGui.Button("Save and close"))
             {
                 Plugin.PluginConfig.Save();
@@ -74,6 +87,38 @@ namespace FoodCheck
                 ImGui.PopStyleColor();
             }
             ImGui.End();
+        }
+
+        //Lifted from the Orchestration plugin, thank you perchbird!
+        //https://github.com/lmcintyre/OrchestrionPlugin/blob/main/Orchestrion/UI/Windows/SettingsWindow.cs
+        private static void DropDown(string text,
+        Func<string> get,
+        Action<string> set,
+        Func<string, bool> isSelected,
+        List<string> items,
+        Func<string, string> displayFunc = null,
+        Action<bool> onChange = null)
+        {
+            var value = get();
+            ImGui.SetNextItemWidth(200f * ImGuiHelpers.GlobalScale);
+            using var combo = ImRaii.Combo(text, value);
+            if (!combo.Success)
+            {
+                // ImGui.PopItemWidth();
+                return;
+            }
+            foreach (var item in items)
+            {
+                var display = displayFunc != null ? displayFunc(item) : item;
+                if (ImGui.Selectable(display, isSelected(item)))
+                {
+                    set(item);
+                    Plugin.PluginConfig.Save();
+                }
+            }
+            if (get() != value)
+                onChange?.Invoke(true);
+            // ImGui.PopItemWidth();
         }
     }
 }

@@ -186,9 +186,14 @@ namespace FoodCheck
                 {
                     Functions.Send("/p " + FinalMessage);
                 }
-                if (PluginConfig.PostToEcho)
+                if (PluginConfig.ChatType.ToString().ToLower() != "none")
                 {
-                    Chat.Print(Functions.BuildSeString("FoodCheck", FinalMessage));
+                    //Chat.Print(Functions.BuildSeString("FoodCheck", FinalMessage));
+                    Chat.Print(new Dalamud.Game.Text.XivChatEntry
+                    {
+                        Message = Functions.BuildSeString("FoodCheck", FinalMessage),
+                        Type = PluginConfig.ChatType,
+                    });
                 }
             }
         }
