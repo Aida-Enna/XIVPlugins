@@ -39,11 +39,12 @@ namespace AutoLogin {
 
         public static Configuration PluginConfig { get; set; }
         private bool drawConfigWindow;
-        private readonly Queue<Func<bool>> actionQueue = new();
+        private bool hasDoneLogin;
+		private readonly Queue<Func<bool>> actionQueue = new();
         private readonly Stopwatch sw = new();
         private uint Delay = 0;
         public static Notification NotifObject = new Notification();
-        
+
         public Plugin(IDalamudPluginInterface pluginInterface, IToastGui ToastGui) {
 
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -70,8 +71,14 @@ namespace AutoLogin {
             Framework.Update += OnFrameworkUpdate;
             ToastyGoodness = ToastGui;
             ToastyGoodness.ErrorToast += OnToastShown;
+
+        }
+
+        private void OnLogin()
+        {
             if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
             {
+                hasDoneLogin = true;
                 NotifObject.Content = "Auto logging in - Hold SPACE to cancel.";
                 NotifObject.Type = NotificationType.Info;
                 NotificationManager.AddNotification(NotifObject);
@@ -164,7 +171,15 @@ namespace AutoLogin {
         }
 
         private void OnFrameworkUpdate(IFramework framework) {
-            if (actionQueue.Count == 0) {
+			if (!hasDoneLogin && PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
+			{
+				var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu");
+				if (addon == null || addon->IsVisible == false)
+					return;
+
+				OnLogin();
+			}
+			if (actionQueue.Count == 0) {
                 if (sw.IsRunning) sw.Stop();
                 return;
             }
