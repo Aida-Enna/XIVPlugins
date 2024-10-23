@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoPillion", "AutoPillion\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomSounds", "Custom Sounds\CustomSounds.csproj", "{7C2CEA40-AE04-4CDA-974E-401C4D648C71}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maily", "..\XIVPlugins_public\Maily\Maily.csproj", "{CF91C264-5134-45A6-A3A6-3E961706383E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,14 @@ Global
 		{7C2CEA40-AE04-4CDA-974E-401C4D648C71}.Release|Any CPU.Build.0 = Release|x64
 		{7C2CEA40-AE04-4CDA-974E-401C4D648C71}.Release|x64.ActiveCfg = Release|x64
 		{7C2CEA40-AE04-4CDA-974E-401C4D648C71}.Release|x64.Build.0 = Release|x64
+		{CF91C264-5134-45A6-A3A6-3E961706383E}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{CF91C264-5134-45A6-A3A6-3E961706383E}.Debug|Any CPU.Build.0 = Debug|x64
+		{CF91C264-5134-45A6-A3A6-3E961706383E}.Debug|x64.ActiveCfg = Debug|x64
+		{CF91C264-5134-45A6-A3A6-3E961706383E}.Debug|x64.Build.0 = Debug|x64
+		{CF91C264-5134-45A6-A3A6-3E961706383E}.Release|Any CPU.ActiveCfg = Release|x64
+		{CF91C264-5134-45A6-A3A6-3E961706383E}.Release|Any CPU.Build.0 = Release|x64
+		{CF91C264-5134-45A6-A3A6-3E961706383E}.Release|x64.ActiveCfg = Release|x64
+		{CF91C264-5134-45A6-A3A6-3E961706383E}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
