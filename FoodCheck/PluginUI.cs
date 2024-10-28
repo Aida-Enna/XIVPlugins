@@ -38,6 +38,10 @@ namespace FoodCheck
             Enum.GetValues<XivChatType>().Select(c => c.ToString()).ToList());
             ImGui.SameLine();
             ImGui.Checkbox("Also post in party chat (so others can see)", ref Plugin.PluginConfig.PostToParty);
+            ImGui.Checkbox("Post if someone has food with less than these minutes remaining: ", ref Plugin.PluginConfig.CheckForFoodUnderXMinutes);
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(50);
+            ImGui.DragInt("###MinutesRemaining", ref Plugin.PluginConfig.MinutesToCheck,1,1,61);
             ImGui.Text("This is the message that will be shown, you can modify it here:");
             ImGui.SetNextItemWidth(500);
             ImGui.InputText("", ref Plugin.PluginConfig.CustomizableMessage, 400);
@@ -49,6 +53,7 @@ namespace FoodCheck
             ImGui.Checkbox("Check food (ready check)", ref Plugin.PluginConfig.PostOnReadyCheck);
             ImGui.SameLine();
             ImGui.Checkbox("Check food (countdown)", ref Plugin.PluginConfig.PostOnCountdown);
+
             if (ImGui.Button("Save and close"))
             {
                 Plugin.PluginConfig.Save();

@@ -16,6 +16,8 @@ namespace FoodCheck
         public bool OnlyUseFirstNames = true;
         public string CustomizableMessage = "<names> should EAT FOOD! <se.7>";
         public XivChatType ChatType;
+        public bool CheckForFoodUnderXMinutes = false;
+        public int MinutesToCheck = 10;
 
         private IDalamudPluginInterface pluginInterface;
 

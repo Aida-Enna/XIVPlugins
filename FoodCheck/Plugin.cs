@@ -13,6 +13,8 @@ using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
@@ -153,7 +155,7 @@ namespace FoodCheck
             }
         }
 
-        public static void CheckWhoNeedsToEat()
+        public static unsafe void CheckWhoNeedsToEat()
         {
             string PlayersWhoNeedToEat = "";
             foreach (var partyMember in PartyList)
@@ -177,6 +179,25 @@ namespace FoodCheck
                         PlayersWhoNeedToEat += partyMember.Name.TextValue + ", ";
                     }
                     //this.chat.Print($"{partyMember.Name}");
+                }
+                else
+                {
+                    var statusManager = ((Character*)partyMember.GameObject.Address)->GetStatusManager();
+                    var statusIndex = statusManager->GetStatusIndex(48);
+                    var RemainingTime = statusManager->GetRemainingTime(statusIndex)/60;
+
+                    //Chat.Print(partyMember.Name.TextValue + " has " + RemainingTime + " minutes left on their food buff.");
+                    if (PluginConfig.CheckForFoodUnderXMinutes && RemainingTime < PluginConfig.MinutesToCheck)
+                    {
+                        if (Plugin.PluginConfig.OnlyUseFirstNames)
+                        {
+                            PlayersWhoNeedToEat += partyMember.Name.TextValue.Split(' ')[0] + ", ";
+                        }
+                        else
+                        {
+                            PlayersWhoNeedToEat += partyMember.Name.TextValue + ", ";
+                        }
+                    }
                 }
             }
             if (PlayersWhoNeedToEat != "")
