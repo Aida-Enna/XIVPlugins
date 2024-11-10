@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "AutoLogin": {
-      "commandName": "Project",
-      "nativeDebugging": true
-    }
-  }
-}
