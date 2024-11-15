@@ -2,7 +2,7 @@
   "Name": "Macro Chain Redux",
   "Author": "Aida Enna (Original version by Caraxi)",
   "InternalName": "MacroChain",
-  "AssemblyVersion": "2.1.1.1",
+  "AssemblyVersion": "2.1.1.2",
   "ApplicableVersion": "any",
   "Punchline": "Run multiple macros one after the other (or repeat them).",
   "Description": "Allows for a macro to continue onto the next macro by using '/nextmacro' on the last line of a macro.\nAdding '/nextmacro' on the last line of Macro #01 will automatically execute Macro #02\nAdding '/nextmacro down' on the last line of Macro #01 will automatically execute Macro #11\nAlso allows executing any macro from chat using '/runmacro'\nYou can repeat a macro by using /runmacro inside the macro followed by the number of the macro you're editing\nUsing '/macrocancel' will stop the currently running macro",
@@ -14,7 +14,7 @@
     "aida"
   ],
   "CategoryTags": null,
-  "DalamudApiLevel": 10,
+  "DalamudApiLevel": 11,
   "LoadPriority": 0,
   "LastUpdate": 0,
   "DownloadLinkInstall": null,

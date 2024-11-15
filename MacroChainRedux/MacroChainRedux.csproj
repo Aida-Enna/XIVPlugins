@@ -16,7 +16,7 @@
     </PropertyGroup>
     <PropertyGroup Label="Feature">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>2.1.1.1</Version>
+        <Version>2.1.1.2</Version>
     </PropertyGroup>
     <PropertyGroup>
 		<AssemblyName>MacroChainRedux</AssemblyName>
@@ -41,7 +41,7 @@
         <None Remove="lib\**" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.13" />
+        <PackageReference Include="DalamudPackager" Version="11.0.0" />
     </ItemGroup>
     <Target Name="PackagePlugin" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
         <DalamudPackager ProjectDir="$(ProjectDir)" OutputPath="$(OutputPath)" AssemblyName="$(AssemblyName)" MakeZip="true" />
