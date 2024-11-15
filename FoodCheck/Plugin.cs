@@ -19,7 +19,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Common.Lua;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -163,7 +163,7 @@ namespace FoodCheck
                 //Chat.Print("Found party member " + partyMember.Name);
                 //Chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
                 //Check for food
-                if (partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed") == null)
+                if (partyMember.Statuses.FirstOrDefault(status => status.GameData.Value.Name == "Well Fed") == null)
                 {
                     //if (first)
                     //{
@@ -233,7 +233,7 @@ namespace FoodCheck
                 .GetRow(territoryType)!
                 .ContentFinderCondition.Value!
                 .Name
-                .RawString;
+                .ToString();
 
             bool isHighEndDuty = name.StartsWith("the Minstrel's Ballad")
                 || name.EndsWith("(Unreal)")
