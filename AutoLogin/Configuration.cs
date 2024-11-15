@@ -2,7 +2,7 @@
 using ImGuiNET;
 using System;
 using System.Linq;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using Veda;
 using Dalamud.Plugin;
 
@@ -34,16 +34,16 @@ namespace AutoLogin {
             if (worldSheet == null) return false;
 
             var currentDc = dcSheet.GetRow(DataCenter);
-            if (currentDc == null) {
+            if (currentDc.Region == 0) {
                 DataCenter = 0;
                 return true;
             }
 
             if (ImGui.Begin("AutoLogin Config", ref drawConfig, windowFlags)) {
 
-                if (ImGui.BeginCombo("Data Center", DataCenter == 0 ? "Not Selected" : currentDc.Name.RawString)) {
-                    foreach (var dc  in dcSheet.Where(w => w.Region > 0 && w.Name.RawString.Trim().Length > 0)) {
-                        if (ImGui.Selectable(dc.Name.RawString, dc.RowId == DataCenter)) {
+                if (ImGui.BeginCombo("Data Center", DataCenter == 0 ? "Not Selected" : currentDc.Name.ToString())) {
+                    foreach (var dc  in dcSheet.Where(w => w.Region > 0 && w.Name.ToString().Trim().Length > 0)) {
+                        if (ImGui.Selectable(dc.Name.ToString(), dc.RowId == DataCenter)) {
                             DataCenter = dc.RowId;
                             Save();
                         }
@@ -54,14 +54,14 @@ namespace AutoLogin {
                 if (currentDc.Region != 0) {
 
                     var currentWorld = worldSheet.GetRow(World);
-                    if (currentWorld == null || (World != 0 && currentWorld.DataCenter.Row != DataCenter)) {
+                    if (/*currentWorld.RowId == 0 || */World != 0 && currentWorld.DataCenter.RowId != DataCenter) {
                         World = 0;
                         return true;
                     }
 
-                    if (ImGui.BeginCombo("World", World == 0 ? "Not Selected" : currentWorld.Name.RawString)) {
-                        foreach (var w in worldSheet.Where(w => w.DataCenter.Row == DataCenter && w.IsPublic)) {
-                            if (ImGui.Selectable(w.Name.RawString, w.RowId == World)) {
+                    if (ImGui.BeginCombo("World", World == 0 ? "Not Selected" : currentWorld.Name.ToString())) {
+                        foreach (var w in worldSheet.Where(w => w.DataCenter.RowId == DataCenter && w.IsPublic)) {
+                            if (ImGui.Selectable(w.Name.ToString(), w.RowId == World)) {
                                 World = w.RowId;
                                 Save();
                             }

@@ -9,7 +9,7 @@ using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 using Dalamud.IoC;
 using Dalamud.Interface;
@@ -55,7 +55,7 @@ namespace AutoLogin {
 
             NotifObject.Title = "Auto Login";
 
-            Commands.AddHandler("/autologinconfig", new Dalamud.Game.Command.CommandInfo(OnConfigCommandHandler) {
+            Commands.AddHandler("/autologin", new CommandInfo(OnConfigCommandHandler) {
                 HelpMessage = $"Open config window for {Name}",
                 ShowInHelp = true
             });
@@ -117,8 +117,8 @@ namespace AutoLogin {
                 return;
             }
 
-            tempDc = world.DataCenter.Row;
-            tempWorld = world.RowId;
+            tempDc = world.Value.DataCenter.RowId;
+            tempWorld = world.Value.RowId;
             tempCharacter = characterIndex;
             actionQueue.Clear();
             actionQueue.Enqueue(VariableDelay(5));
@@ -278,8 +278,8 @@ namespace AutoLogin {
                 var s = MemoryHelper.ReadStringNullTerminated(new IntPtr(n));
                 if (s.Trim().Length == 0) continue;
                 checkedWorldCount++;
-                if (s != world.Name.RawString) continue;
-                PluginLog.Debug("Found world [" + world.Name.RawString + "] at integer i[" + i + "]");
+                if (s != world.Value.Name.ToString()) continue;
+                PluginLog.Debug("Found world [" + world.Value.ToString() + "] at integer i[" + i + "]");
                 GenerateCallback(addon, 24, 0, i);
                 return true;
             }
@@ -461,7 +461,7 @@ namespace AutoLogin {
         {
             PluginInterface.UiBuilder.Draw -= DrawUI;
             PluginInterface.UiBuilder.OpenConfigUi -= this.OpenConfigUI;
-            Commands.RemoveHandler("/autologinconfig");
+            Commands.RemoveHandler("/autologin");
             Commands.RemoveHandler("/swapcharacter");
         }
     }
