@@ -5,11 +5,9 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -121,7 +119,7 @@ namespace AutoPillion
                         var mountObjectID = mountContainer.MountId;
                         if (mountObjectID == 0) continue;
                         var mountRow = Data.GetExcelSheet<Mount>()?.GetRow(mountObjectID);
-                        if (mountRow.ExtraSeats > 0)
+                        if (mountRow.Value.ExtraSeats > 0)
                         {
                             //Chat.Print("Trying to mount");
                             TryingToMount = true;
