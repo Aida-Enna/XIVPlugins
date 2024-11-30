@@ -36,7 +36,7 @@ namespace AutoLogin {
             var currentDc = dcSheet.GetRow(DataCenter);
             if (currentDc.Region == 0) {
                 DataCenter = 0;
-                return true;
+                //return true;
             }
 
             if (ImGui.Begin("AutoLogin Config", ref drawConfig, windowFlags)) {
