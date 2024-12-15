@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomSounds", "Custom Soun
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maily", "Maily\Maily.csproj", "{3788C647-D01A-4E4D-999C-514A810D2977}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BangbooPlugin", "BangbooPlugin\BangbooPlugin.csproj", "{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,14 @@ Global
 		{3788C647-D01A-4E4D-999C-514A810D2977}.Release|Any CPU.Build.0 = Release|x64
 		{3788C647-D01A-4E4D-999C-514A810D2977}.Release|x64.ActiveCfg = Release|x64
 		{3788C647-D01A-4E4D-999C-514A810D2977}.Release|x64.Build.0 = Release|x64
+		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Debug|Any CPU.Build.0 = Debug|x64
+		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Debug|x64.ActiveCfg = Debug|x64
+		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Debug|x64.Build.0 = Debug|x64
+		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Release|Any CPU.ActiveCfg = Release|x64
+		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Release|Any CPU.Build.0 = Release|x64
+		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Release|x64.ActiveCfg = Release|x64
+		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
