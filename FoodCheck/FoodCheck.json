@@ -1,8 +1,6 @@
 ﻿{
   "Author": "Aida Enna",
   "Name": "Food Check",
-  "InternalName": "FoodCheck",
-  "AssemblyVersion": "1.0.0.8",
   "ApplicableVersion": "any",
   "Punchline": "Someone in our group wouldn't eat their food. I got tired of telling them to. Now the plugin does.",
   "Description": "See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.",
@@ -14,7 +12,6 @@
     "aida"
   ],
   "CategoryTags": null,
-  "DalamudApiLevel": 11,
   "LoadPriority": 0,
   "LastUpdate": 0,
   "DownloadLinkInstall": null,
