@@ -1,8 +1,6 @@
 {
   "Name": "Auto Login",
   "Author": "Aida Enna",
-  "InternalName": "AutoLogin",
-  "AssemblyVersion": "1.3.0.3",
   "ApplicableVersion": "any",
   "Punchline": "Automatically logs you into a specified character when the game first opens.",
   "Description": "Automatically logs you into a specified character when the game first opens.",
@@ -12,13 +10,7 @@
     "login",
     "aida"
   ],
-  "CategoryTags": null,
-  "DalamudApiLevel": 11,
   "LoadPriority": 1,
   "LastUpdate": 0,
-  "DownloadLinkInstall": null,
-  "DownloadLinkUpdate": null,
-  "DownloadLinkTesting": null,
-  "ImageUrls": null,
   "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/AutoLogin.png"
 }

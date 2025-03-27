@@ -1,30 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup Label="Target">
-        <PlatformTarget>x64</PlatformTarget>
-        <TargetFramework>net8.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
-        <Platforms>x64</Platforms>
-		<OutputPath>..\Build\AutoLogin\</OutputPath>
-    </PropertyGroup>
-    <PropertyGroup Label="Build">
-        <OutputType>Library</OutputType>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-    </PropertyGroup>
-    <PropertyGroup Label="Feature">
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>1.3.0.3</Version>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
-        <Deterministic>true</Deterministic>
-    </PropertyGroup>
+<Project Sdk="Dalamud.NET.Sdk/12.0.2">
     <PropertyGroup>
-        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <TargetFramework>net9.0</TargetFramework>
+		<Version>1.3.0.4</Version>
+		<OutputPath>..\Build\AutoLogin\</OutputPath>
     </PropertyGroup>
     <ItemGroup>
       <None Remove="README.md" />
@@ -36,28 +15,6 @@
       <Compile Include="..\Shared\PluginCommandManager.cs" Link="Shared\PluginCommandManager.cs" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="11.0.0" />
-    </ItemGroup>
-    <ItemGroup>
-        <Reference Include="Dalamud">
-            <Private>false</Private>
-            <HintPath>$(APPDATA)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
-        </Reference>
-        <Reference Include="FFXIVClientStructs">
-            <Private>false</Private>
-            <HintPath>$(APPDATA)\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
-        </Reference>
-        <Reference Include="ImGui.NET">
-            <Private>false</Private>
-            <HintPath>$(APPDATA)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>
-        </Reference>
-        <Reference Include="Lumina">
-            <Private>false</Private>
-            <HintPath>$(APPDATA)\XIVLauncher\addon\Hooks\dev\Lumina.dll</HintPath>
-        </Reference>
-        <Reference Include="Lumina.Excel">
-            <Private>false</Private>
-            <HintPath>$(APPDATA)\XIVLauncher\addon\Hooks\dev\Lumina.Excel.dll</HintPath>
-        </Reference>
+      <Content Include="AutoLogin.json" />
     </ItemGroup>
 </Project>

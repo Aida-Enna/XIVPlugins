@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Maily", "Maily\Maily.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BangbooPlugin", "BangbooPlugin\BangbooPlugin.csproj", "{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoQueue", "AutoQueue\AutoQueue.csproj", "{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,14 @@ Global
 		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Release|Any CPU.Build.0 = Release|x64
 		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Release|x64.ActiveCfg = Release|x64
 		{1500F714-C4DC-4E84-B3FE-7BC5EA4650DD}.Release|x64.Build.0 = Release|x64
+		{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}.Debug|Any CPU.Build.0 = Debug|x64
+		{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}.Debug|x64.ActiveCfg = Debug|x64
+		{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}.Debug|x64.Build.0 = Debug|x64
+		{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}.Release|Any CPU.ActiveCfg = Release|x64
+		{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}.Release|Any CPU.Build.0 = Release|x64
+		{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}.Release|x64.ActiveCfg = Release|x64
+		{723C08DE-331A-4EFA-99F3-FD3A94C1DBF8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
