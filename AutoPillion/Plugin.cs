@@ -143,7 +143,7 @@ namespace AutoPillion
             AutoPillionCooldownTimer.Restart();
             //Chat.Print("You can ride the mount " + partyMember.Name + " is on!");
             TargetManager.Target = PartyMemberObject;
-            var ContextMenu = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
+            var ContextMenu = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu").Address;
             //Chat.Print("Found ContextMenu");
             GenerateCallback(ContextMenu, 1);
             GenerateCallback(ContextMenu, 0, Functions.GetAddonEntries("ContextMenu").IndexOf("Ride Pillion"), 0);
