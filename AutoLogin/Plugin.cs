@@ -12,14 +12,11 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.Sheets;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 using Dalamud.IoC;
-using Dalamud.Interface;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System.Linq;
 using Dalamud.Plugin.Services;
 using Dalamud.Interface.ImGuiNotification;
-using System.Threading;
 using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Gui.Toast;
 
 namespace AutoLogin {
     public unsafe class Plugin : IDalamudPlugin {
@@ -173,7 +170,7 @@ namespace AutoLogin {
         private void OnFrameworkUpdate(IFramework framework) {
 			if (!hasDoneLogin && PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
 			{
-				var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu");
+				var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu").Address;
 				if (addon == null || addon->IsVisible == false)
 					return;
 
@@ -232,23 +229,23 @@ namespace AutoLogin {
         }
 
         public bool OpenDataCenterMenu() {
-            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_TitleMenu");
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_TitleMenu").Address;
             if (addon == null || addon->IsVisible == false) return false;
             PluginLog.Debug("Found Title Screen");
             GenerateCallback(addon, 5); 
-            var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap");
+            var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap").Address;
             if (nextAddon == null) return false;
             PluginLog.Debug("Found TitleDCWorldMap");
             return true;
         }
 
         public bool SelectDataCentre() {
-            var addon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap", 1).Address;
             if (addon == null) return false;
             PluginLog.Debug("Found TitleDCWorldMap");
-            var dcMenu = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMap");
+            var dcMenu = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMap").Address;
             if (dcMenu != null) dcMenu->Hide(true, true, 0);
-            var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg");
+            var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg").Address;
             if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
             GenerateCallback(addon, 17, (int) (tempDc ?? PluginConfig.DataCenter));
             dcMenu->Close(true);
@@ -257,11 +254,11 @@ namespace AutoLogin {
 
         public bool SelectWorld() {
             // Select World
-            var dcMenu = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap");
+            var dcMenu = (AtkUnitBase*) GameGui.GetAddonByName("TitleDCWorldMap").Address;
             if (dcMenu != null) dcMenu->Hide(true, true, 0);
-            var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg");
+            var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg").Address;
             if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
-            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectWorldServer", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectWorldServer", 1).Address;
             if (addon == null) return false;
             PluginLog.Debug("Found World Server");
             var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder.StringArrays[1];
@@ -290,16 +287,16 @@ namespace AutoLogin {
 
         public bool SelectCharacter() {
             // Select Character
-            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectListMenu", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("_CharaSelectListMenu", 1).Address;
             if (addon == null) return false;
             PluginLog.Debug("Found _CharaSelectListMenu");
             GenerateCallback(addon, 29, 0, tempCharacter ?? PluginConfig.CharacterSlot);
-            var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
+            var nextAddon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1).Address;
             return nextAddon != null;
         }
 
         public bool SelectYes() {
-            var addon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1);
+            var addon = (AtkUnitBase*) GameGui.GetAddonByName("SelectYesno", 1).Address;
             if (addon == null) return false;
             GenerateCallback(addon, 0);
             addon->Hide(true, false, 0);
