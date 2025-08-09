@@ -46,6 +46,7 @@ namespace BangbooPlugin
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing) return;
+
         }
 
         public void Dispose()
