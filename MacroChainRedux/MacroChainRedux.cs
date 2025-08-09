@@ -34,7 +34,7 @@ namespace MacroChain {
                 ShowInHelp = true
             });
             CommandManager.AddHandler("/runmacro", new Dalamud.Game.Command.CommandInfo(OnRunMacroCommand) {
-                HelpMessage = "Execute a macro (Not usable inside macros). - /runmacro ## [individual|shared].",
+                HelpMessage = "Execute a macro. Usage: /runmacro ## [individual|shared].",
                 ShowInHelp = true
             });
 
