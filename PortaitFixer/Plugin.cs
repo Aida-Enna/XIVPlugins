@@ -103,7 +103,7 @@ namespace PortraitFixer
         [HelpMessage("Updates the portrait for the currently selected gearset/equipment")]
         public unsafe void PortraitFixSave(string command, string args)
         {
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character").Address;
             if (addon == null || addon->IsVisible == false)
             {
                 Print("You can only use this command while the character menu is open.", ColorType.Error);
@@ -199,7 +199,7 @@ namespace PortraitFixer
         {
             try
             {
-                var GearsetMenu = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
+                var GearsetMenu = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList").Address;
                 //The gearset menu is already open!
                 if (GearsetMenu != null)
                 {
@@ -214,12 +214,12 @@ namespace PortraitFixer
                     //Print("Didn't find Gearset menu");
                 }
 
-                var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character");
+                var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character").Address;
                 if (addon == null || addon->IsVisible == false) return false;
                 PluginLog.Debug("Found Character Menu");
                 //var gearsetName = MemoryHelper.ReadStringNullTerminated((nint)gearset->Name);
                 GenerateCallback(addon, 14, 2297, 454);
-                var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
+                var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList").Address;
                 if (nextAddon == null) return false;
                 if (HideWindows) nextAddon->Hide(true, true, 0);
                 PluginLog.Debug("Found GearSetList");
@@ -234,7 +234,7 @@ namespace PortraitFixer
 
         public static unsafe bool RightClickOnGearSet()
         {
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList").Address;
             if (addon == null) return false;
             PluginLog.Debug("Found GearSetList");
             var module = RaptureGearsetModule.Instance();
@@ -244,7 +244,7 @@ namespace PortraitFixer
             //var gearset = module->GetGearset(currentGearsetIndex);
             //if (gearset == null) { Chat.Print("This isn't a valid gearset? Aborting..."); actionQueue.Clear(); return true; }
             GenerateCallback(addon, 5, currentGearsetIndex);
-            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
+            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu").Address;
             if (nextAddon == null) return false;
             if (HideWindows) nextAddon->Hide(true, true, 0);
             PluginLog.Debug("Found ContextMenu");
@@ -253,18 +253,18 @@ namespace PortraitFixer
 
         public static unsafe bool OpenPortraitMenu()
         {
-            var previousAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
+            var previousAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor").Address;
             if (previousAddon != null)
             {
                 PluginLog.Debug("Found BannerEditor, not trying to open again");
                 return true;
             }
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu");
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu").Address;
             if (addon == null) return false;
             PluginLog.Debug("Found ContextMenu");
             if (HideWindows) addon->Hide(true, true, 0);
             GenerateCallback(addon, 0, 9, 0);
-            var ChangeGearSetNameAddon = (AtkUnitBase*)GameGui.GetAddonByName("InputString");
+            var ChangeGearSetNameAddon = (AtkUnitBase*)GameGui.GetAddonByName("InputString").Address;
             if (ChangeGearSetNameAddon != null)
             {
                 PluginLog.Debug("Uh oh, rename opened instead!");
@@ -281,7 +281,7 @@ namespace PortraitFixer
         {
             try
             {
-                var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
+                var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor").Address;
                 PluginLog.Debug("where plogon");
                 if (nextAddon != null)
                 {
@@ -312,7 +312,7 @@ namespace PortraitFixer
 
         public unsafe static bool PressSaveOnPortraitMenu()
         {
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor").Address;
             if (addon == null) return false;
             PluginLog.Debug("Found BannerEditor");
             GenerateCallback(addon, 0, 9, -1, -1);
@@ -324,11 +324,11 @@ namespace PortraitFixer
 
         public unsafe static bool ClosePortraitMenu()
         {
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor").Address;
             if (addon == null) return false;
             PluginLog.Debug("Found BannerEditor");
             addon->Close(true);
-            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor");
+            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor").Address;
             if (nextAddon != null) return false;
             PluginLog.Debug("BannerEditor was closed!");
             return true;
@@ -336,11 +336,11 @@ namespace PortraitFixer
 
         public static unsafe bool CloseGearSetMenu()
         {
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList").Address;
             if (addon == null || addon->IsVisible == false) return false;
             PluginLog.Debug("Found GearSetList");
             addon->Close(true);
-            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList");
+            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("GearSetList").Address;
             if (nextAddon == null) return false;
             PluginLog.Debug("Found GearSetList");
             return true;
