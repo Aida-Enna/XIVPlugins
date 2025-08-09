@@ -93,9 +93,16 @@ namespace FoodCheck
 
         [Command("/foodcheck")]
         [HelpMessage("Opens the Food Check config menu")]
-        public void ToggleAutoFate(string command, string args)
+        public void OpenSettings(string command, string args)
         {
             ui.IsVisible = !ui.IsVisible;
+        }
+
+        [Command("/checkfood")]
+        [HelpMessage("Manually check for food")]
+        public void ManuallyCheckFood(string command, string args)
+        {
+            CheckWhoNeedsToEat();
         }
 
         private float _start;

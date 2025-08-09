@@ -31,7 +31,7 @@ namespace FoodCheck
             }
             ImGui.Text("Post messages in this channel:");
             ImGui.SetNextItemWidth(400);
-            DropDown("#DD",
+            DropDown(" ",
             () => Plugin.PluginConfig.ChatType.ToString(),
             s => Plugin.PluginConfig.ChatType = Enum.Parse<XivChatType>(s),
             s => s == Plugin.PluginConfig.ChatType.ToString(),
