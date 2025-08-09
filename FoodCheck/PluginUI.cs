@@ -1,6 +1,6 @@
 ﻿using Veda;
-using ImGuiNET;
 using Dalamud.Game.Text;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.Linq;
 using Dalamud.Interface.Utility.Raii;
@@ -31,7 +31,7 @@ namespace FoodCheck
             }
             ImGui.Text("Post messages in this channel:");
             ImGui.SetNextItemWidth(400);
-            DropDown(" ",
+            DropDown("#DD",
             () => Plugin.PluginConfig.ChatType.ToString(),
             s => Plugin.PluginConfig.ChatType = Enum.Parse<XivChatType>(s),
             s => s == Plugin.PluginConfig.ChatType.ToString(),
