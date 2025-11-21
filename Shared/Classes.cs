@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Dalamud.Game.Text;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,5 +17,14 @@ namespace Veda
         public const ushort Warn = 31;
         public const ushort Info = 37;
         public const ushort Twitch = 541;
+    }
+    public class PendingMessage
+    {
+        internal ulong ReceiverId { get; set; }
+        internal ulong ContentId { get; set; } // 0 if unknown
+        internal XivChatType Type { get; set; }
+        internal int Timestamp { get; set; }
+        internal SeString Sender { get; set; }
+        internal SeString Content { get; set; }
     }
 }
