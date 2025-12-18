@@ -29,8 +29,8 @@
     "Punchline": "Automatically ride on other people's mounts!",
     "Description": "When a party member gets on a mount that supports more than 1 person and is close enough, you will automatically get on.\n\nThis plugin is in testing and will have one or more issues, laid out below:\n\n- You may need to right click on the driver once each time you start the game before the plugin will automount their mount. A fix is being investigated.\n\nPlease report issues/bugs and post suggestions on the Github website by clicking the globe icon.",
     "InternalName": "AutoPillion",
-    "AssemblyVersion": "1.0.0.3",
-    "Changelog": "- Updated for patch 7.3",
+    "AssemblyVersion": "1.0.0.4",
+    "Changelog": "- Updated for patch 7.4",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
@@ -38,10 +38,10 @@
       "pillion",
       "aida"
     ],
-    "DalamudApiLevel": 13,
+    "DalamudApiLevel": 14,
     "IsHide": "False",
     "IsTestingExclusive": "False",
-    "LastUpdated": 1754702626,
+    "LastUpdated": 1766041084,
     "DownloadCount": 69420,
     "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/AutoPillion.png",
     "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/AutoPillion.zip?raw=true",

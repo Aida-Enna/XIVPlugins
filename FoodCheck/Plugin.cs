@@ -28,7 +28,6 @@ namespace FoodCheck
         [PluginService] public static IPartyList PartyList { get; set; }
         [PluginService] public static IPluginLog PluginLog { get; set; }
         [PluginService] public static IGameInteropProvider Hook { get; set; }
-
         [PluginService] public static IGameInteropProvider GameInterop { get; set; }
 
         public static Configuration PluginConfig { get; set; }
