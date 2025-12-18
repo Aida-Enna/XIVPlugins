@@ -54,8 +54,8 @@
     "Description": "See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.",
     "Punchline": "Someone in our group wouldn't eat their food. I got tired of telling them to. Now the plugin does.",
     "InternalName": "FoodCheck",
-    "AssemblyVersion": "1.0.1.1",
-    "Changelog": "- Updated for patch 7.3",
+    "AssemblyVersion": "1.0.1.2",
+    "Changelog": "- Updated for patch 7.4",
     "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
     "ApplicableVersion": "any",
     "Tags": [
@@ -64,10 +64,10 @@
       "raid",
       "aida"
     ],
-    "DalamudApiLevel": 13,
+    "DalamudApiLevel": 14,
     "IsHide": "False",
     "IsTestingExclusive": "False",
-    "LastUpdated": 1754734076,
+    "LastUpdated": 1766041728,
     "DownloadCount": 69420,
     "IconUrl": "https://raw.githubusercontent.com/Aida-Enna/XIVPlugins/main/Plogon/Resources/Icons/FoodCheck.png",
     "DownloadLinkInstall": "https://github.com/Aida-Enna/XIVPlugins/blob/main/Plogon/FoodCheck.zip?raw=true",
