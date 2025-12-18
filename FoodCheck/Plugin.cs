@@ -1,27 +1,13 @@
-﻿using Dalamud.Data;
-using Dalamud.Game;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Keys;
-using Dalamud.Game.ClientState.Party;
-using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
+﻿using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Hooking;
-using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
-using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.Game.Group;
-using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using FFXIVClientStructs.FFXIV.Common.Lua;
 using Lumina.Excel.Sheets;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -167,6 +153,7 @@ namespace FoodCheck
             string PlayersWhoNeedToEat = "";
             foreach (var partyMember in PartyList)
             {
+                if (partyMember == null) { continue; }
                 //Chat.Print("Found party member " + partyMember.Name);
                 //Chat.Print("Fed? " + partyMember.Statuses.FirstOrDefault(status => status.GameData.Name == "Well Fed"));
                 //Check for food
@@ -207,7 +194,7 @@ namespace FoodCheck
                     }
                 }
             }
-            if (PlayersWhoNeedToEat != "")
+            if (PlayersWhoNeedToEat != "" && PlayersWhoNeedToEat.Length > 3)
             {
                 string FinalMessage = PluginConfig.CustomizableMessage.Replace("<names>", PlayersWhoNeedToEat.Remove(PlayersWhoNeedToEat.Length - 2, 2));
                 if (PluginConfig.PostToParty)
