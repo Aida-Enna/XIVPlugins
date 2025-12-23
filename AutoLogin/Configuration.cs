@@ -1,123 +1,176 @@
-﻿using Dalamud.Configuration;
-using Dalamud.Bindings.ImGui;
-using System;
-using System.Linq;
-using Lumina.Excel.Sheets;
-using Veda;
+﻿using Dalamud.Bindings.ImGui;
+using Dalamud.Configuration;
 using Dalamud.Plugin;
+using Lumina.Excel.Sheets;
+using System.Linq;
+using Veda;
 
-namespace AutoLogin {
-    public class Configuration : IPluginConfiguration {
-
+namespace AutoLogin
+{
+    public class Configuration : IPluginConfiguration
+    {
         public int Version { get; set; }
         private bool ShowSupport;
+
         public void Initialize(IDalamudPluginInterface pluginInterface)
         {
             Plugin.PluginInterface = pluginInterface;
         }
 
-        public void Save() {
+        public void Save()
+        {
             Plugin.PluginInterface.SavePluginConfig(this);
         }
 
         public uint DataCenter;
         public uint World;
         public uint CharacterSlot;
+        public bool RelogAfterDisconnect = true;
+        public bool SendNotif;
+        public string WebhookURL;
+        public string WebhookMessage = "[AutoLogin] Your game has lost connection!";
+        public uint PreviouslyLoggedInDataCenter;
+        public uint PreviouslyLoggedInWorld;
+        public uint PreviouslyLoggedInCharacter;
+        public bool SeenReconnectionExplanation2 = false;
 
-        public bool DrawConfigUI() {
-            var drawConfig = true;
-            const ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
+        //public bool DrawConfigUI()
+        //{
+        //    var drawConfig = true;
+        //    const ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
 
-            var dcSheet = Plugin.Data.Excel.GetSheet<WorldDCGroupType>();
-            if (dcSheet == null) return false;
-            var worldSheet = Plugin.Data.Excel.GetSheet<World>();
-            if (worldSheet == null) return false;
+        //    var dcSheet = Plugin.Data.Excel.GetSheet<WorldDCGroupType>();
+        //    if (dcSheet == null) return false;
+        //    var worldSheet = Plugin.Data.Excel.GetSheet<World>();
+        //    if (worldSheet == null) return false;
 
-            var currentDc = dcSheet.GetRow(DataCenter);
-            if (currentDc.Region == 0) {
-                DataCenter = 0;
-                //return true;
-            }
+        //    var currentDc = dcSheet.GetRow(DataCenter);
+        //    if (currentDc.Region == 0)
+        //    {
+        //        DataCenter = 0;
+        //        //return true;
+        //    }
 
-            if (ImGui.Begin("AutoLogin Config", ref drawConfig, windowFlags)) {
+        //    if (ImGui.Begin("AutoLogin Config", ref drawConfig, windowFlags))
+        //    {
+        //        if (ImGui.BeginCombo("Data Center", DataCenter == 0 ? "Not Selected" : currentDc.Name.ToString()))
+        //        {
+        //            foreach (var dc in dcSheet.Where(w => w.Region > 0 && w.Name.ToString().Trim().Length > 0))
+        //            {
+        //                if (ImGui.Selectable(dc.Name.ToString(), dc.RowId == DataCenter))
+        //                {
+        //                    DataCenter = dc.RowId;
+        //                    Save();
+        //                }
+        //            }
+        //            ImGui.EndCombo();
+        //        }
 
-                if (ImGui.BeginCombo("Data Center", DataCenter == 0 ? "Not Selected" : currentDc.Name.ToString())) {
-                    foreach (var dc  in dcSheet.Where(w => w.Region > 0 && w.Name.ToString().Trim().Length > 0)) {
-                        if (ImGui.Selectable(dc.Name.ToString(), dc.RowId == DataCenter)) {
-                            DataCenter = dc.RowId;
-                            Save();
-                        }
-                    }
-                    ImGui.EndCombo();
-                }
+        //        if (currentDc.Region != 0)
+        //        {
+        //            var currentWorld = worldSheet.GetRow(World);
+        //            if (/*currentWorld.RowId == 0 || */World != 0 && currentWorld.DataCenter.RowId != DataCenter)
+        //            {
+        //                World = 0;
+        //                return true;
+        //            }
 
-                if (currentDc.Region != 0) {
+        //            if (ImGui.BeginCombo("World", World == 0 ? "Not Selected" : currentWorld.Name.ToString()))
+        //            {
+        //                foreach (var w in worldSheet.Where(w => w.DataCenter.RowId == DataCenter && w.IsPublic))
+        //                {
+        //                    if (ImGui.Selectable(w.Name.ToString(), w.RowId == World))
+        //                    {
+        //                        World = w.RowId;
+        //                        Save();
+        //                    }
+        //                }
+        //                ImGui.EndCombo();
+        //            }
 
-                    var currentWorld = worldSheet.GetRow(World);
-                    if (/*currentWorld.RowId == 0 || */World != 0 && currentWorld.DataCenter.RowId != DataCenter) {
-                        World = 0;
-                        return true;
-                    }
+        //            if (currentWorld.IsPublic)
+        //            {
+        //                if (ImGui.BeginCombo("Character Slot", $"Slot #{CharacterSlot + 1}"))
+        //                {
+        //                    for (uint i = 0; i < 8; i++)
+        //                    {
+        //                        if (ImGui.Selectable($"Slot #{i + 1}", CharacterSlot == i))
+        //                        {
+        //                            CharacterSlot = i;
+        //                            Save();
+        //                        }
+        //                    }
+        //                    ImGui.EndCombo();
+        //                }
+        //            }
+        //        }
+        //        if (ImGui.Checkbox("Relogin to the above after being disconnected", ref RelogAfterDisconnect))
+        //        {
+        //            Save();
+        //        }
+        //        if (ImGui.Checkbox("Send discord notification when disconnected", ref SendNotif))
+        //        {
+        //            Save();
+        //        }
+        //        if (SendNotif)
+        //        {
+        //            ImGui.SetNextItemWidth(400);
+        //            ImGui.InputText("Text to send", ref WebhookMessage, 400);
+        //            ImGui.SetNextItemWidth(400);
+        //            ImGui.InputText("Webhook URL", ref WebhookURL, 200);
+        //            if (string.IsNullOrWhiteSpace(WebhookMessage))
+        //            {
+        //                ImGui.TextColored(new System.Numerics.Vector4(1.0f, 0.0f, 0.0f, 1.0f), "Text to send invalid!");
+        //            }
+        //            if (!WebhookURL.StartsWith("https://discord.com/api/webhooks/"))
+        //            {
+        //                ImGui.TextColored(new System.Numerics.Vector4(1.0f, 0.0f, 0.0f, 1.0f), "Webhook invalid. Correct format:\nhttps://discord.com/api/webhooks/1234556789/abcdefghijklmno");
+        //            }
+        //            if (ImGui.Button("Save webhook message/URL"))
+        //            {
+        //                Save();
+        //            }
+        //            ImGui.SameLine();
+        //            if (ImGui.Button("Send test payload"))
+        //            {
+        //                Functions.SendDiscordWebhookAsync(WebhookURL, WebhookMessage);
+        //            }
+        //        }
+        //        ImGui.Spacing();
+        //        if (ImGui.Button("Want to help support my work?"))
+        //        {
+        //            ShowSupport = !ShowSupport;
+        //        }
+        //        if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Click me!"); }
+        //        if (ShowSupport)
+        //        {
+        //            ImGui.Text("Here are the current ways you can support the work I do.\nEvery bit helps, thank you! Have a great day!");
+        //            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.19f, 0.52f, 0.27f, 1));
+        //            if (ImGui.Button("Donate via Paypal"))
+        //            {
+        //                Functions.OpenWebsite("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QXF8EL4737HWJ");
+        //            }
+        //            ImGui.PopStyleColor();
+        //            ImGui.SameLine();
+        //            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.95f, 0.39f, 0.32f, 1));
+        //            if (ImGui.Button("Become a Patron"))
+        //            {
+        //                Functions.OpenWebsite("https://www.patreon.com/bePatron?u=5597973");
+        //            }
+        //            ImGui.PopStyleColor();
+        //            ImGui.SameLine();
+        //            ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.25f, 0.67f, 0.87f, 1));
+        //            if (ImGui.Button("Support me on Ko-Fi"))
+        //            {
+        //                Functions.OpenWebsite("https://ko-fi.com/Y8Y114PMT");
+        //            }
+        //            ImGui.PopStyleColor();
+        //        }
+        //    }
 
-                    if (ImGui.BeginCombo("World", World == 0 ? "Not Selected" : currentWorld.Name.ToString())) {
-                        foreach (var w in worldSheet.Where(w => w.DataCenter.RowId == DataCenter && w.IsPublic)) {
-                            if (ImGui.Selectable(w.Name.ToString(), w.RowId == World)) {
-                                World = w.RowId;
-                                Save();
-                            }
-                        }
-                        ImGui.EndCombo();
-                    }
+        //    ImGui.End();
 
-                    if (currentWorld.IsPublic) {
-                        if (ImGui.BeginCombo("Character Slot", $"Slot #{CharacterSlot+1}")) {
-                            for (uint i = 0; i < 8; i++) {
-                                if (ImGui.Selectable($"Slot #{i+1}", CharacterSlot == i)) {
-                                    CharacterSlot = i;
-                                    Save();
-                                }
-                            }
-                            ImGui.EndCombo();
-                        }
-                    }
-
-                }
-                ImGui.Spacing();
-                if (ImGui.Button("Want to help support my work?"))
-                {
-                    ShowSupport = !ShowSupport;
-                }
-                if (ImGui.IsItemHovered()) { ImGui.SetTooltip("Click me!"); }
-                if (ShowSupport)
-                {
-                    ImGui.Text("Here are the current ways you can support the work I do.\nEvery bit helps, thank you! Have a great day!");
-                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.19f, 0.52f, 0.27f, 1));
-                    if (ImGui.Button("Donate via Paypal"))
-                    {
-                        Functions.OpenWebsite("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QXF8EL4737HWJ");
-                    }
-                    ImGui.PopStyleColor();
-                    ImGui.SameLine();
-                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.95f, 0.39f, 0.32f, 1));
-                    if (ImGui.Button("Become a Patron"))
-                    {
-                        Functions.OpenWebsite("https://www.patreon.com/bePatron?u=5597973");
-                    }
-                    ImGui.PopStyleColor();
-                    ImGui.SameLine();
-                    ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.25f, 0.67f, 0.87f, 1));
-                    if (ImGui.Button("Support me on Ko-Fi"))
-                    {
-                        Functions.OpenWebsite("https://ko-fi.com/Y8Y114PMT");
-                    }
-                    ImGui.PopStyleColor();
-                }
-
-            }
-
-            ImGui.End();
-
-            return drawConfig;
-        }
+        //    return drawConfig;
+        //}
     }
 }
