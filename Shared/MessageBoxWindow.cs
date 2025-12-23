@@ -6,14 +6,11 @@ namespace Veda.Windows
 {
     public class MessageBoxWindow : Window, IDisposable
     {
-        public string MessageBoxText = "N/A";
+        public static string MessageBoxText = "Text";
 
-        // We give this window a constant ID using ###.
-        // This allows for labels to be dynamic, like "{FPS Counter}fps###XYZ counter window",
-        // and the window ID will always be "###XYZ counter window" for ImGui
-        public MessageBoxWindow() : base("###MessageBoxWindow")
+        public MessageBoxWindow() : base("Auto Login New Feature Notification/Explanation###MessageBoxWindow")
         {
-            Flags = ImGuiWindowFlags.AlwaysAutoResize;
+            Flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
             SizeCondition = ImGuiCond.Always;
         }
 
@@ -28,7 +25,8 @@ namespace Veda.Windows
         {
             ImGui.SetWindowFocus();
             ImGui.Text(MessageBoxText);
-            if (ImGui.Button("OK"))
+            ImGui.Indent((ImGui.CalcTextSize(MessageBoxText).X - ImGui.CalcTextSize("Click to close").X) / 2);
+            if (ImGui.Button("Click to close"))
             {
                 Toggle();
             }

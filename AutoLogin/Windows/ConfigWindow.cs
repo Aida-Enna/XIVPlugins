@@ -122,6 +122,7 @@ namespace AutoLogin.Windows
                 {
                     Functions.SendDiscordWebhookAsync(Plugin.PluginConfig.WebhookURL, Plugin.PluginConfig.WebhookMessage);
                 }
+                ImGui.Text("Do not share this webhook URL with other people,\nit will allow them to send messages to your server.");
             }
             ImGui.Spacing();
             if (ImGui.Button("Want to help support my work?"))
@@ -155,76 +156,76 @@ namespace AutoLogin.Windows
                 ImGui.PopStyleColor();
             }
 
-            if (ImGui.Button("Show Debug")) { ShowDebug = !ShowDebug; }
-            if (ShowDebug)
-            {
-                if (ImGui.Button("-> Clear Queue"))
-                {
-                    Plugin.actionQueue.Clear();
-                }
+            //if (ImGui.Button("Show Debug")) { ShowDebug = !ShowDebug; }
+            //if (ShowDebug)
+            //{
+            //    if (ImGui.Button("-> Clear Queue"))
+            //    {
+            //        Plugin.actionQueue.Clear();
+            //    }
 
-                if (ImGui.Button("-> Test Step: Open Data Centre Menu")) Plugin.actionQueue.Enqueue(Plugin.OpenDataCenterMenu);
-                if (ImGui.Button($"-> Test Step: Select Data Center [{Plugin.PluginConfig.DataCenter}]")) Plugin.actionQueue.Enqueue(Plugin.SelectDataCentre);
+            //    if (ImGui.Button("-> Test Step: Open Data Centre Menu")) Plugin.actionQueue.Enqueue(Plugin.OpenDataCenterMenu);
+            //    if (ImGui.Button($"-> Test Step: Select Data Center [{Plugin.PluginConfig.DataCenter}]")) Plugin.actionQueue.Enqueue(Plugin.SelectDataCentre);
 
-                if (ImGui.Button($"-> Test Step: SELECT WORLD [{Plugin.PluginConfig.World}]"))
-                {
-                    Plugin.actionQueue.Clear();
-                    Plugin.actionQueue.Enqueue(Plugin.SelectWorld);
-                }
+            //    if (ImGui.Button($"-> Test Step: SELECT WORLD [{Plugin.PluginConfig.World}]"))
+            //    {
+            //        Plugin.actionQueue.Clear();
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectWorld);
+            //    }
 
-                if (ImGui.Button($"-> Test Step: SELECT CHARACTER [{Plugin.PluginConfig.CharacterSlot}]"))
-                {
-                    Plugin.actionQueue.Clear();
-                    Plugin.actionQueue.Enqueue(Plugin.SelectCharacter);
-                }
+            //    if (ImGui.Button($"-> Test Step: SELECT CHARACTER [{Plugin.PluginConfig.CharacterSlot}]"))
+            //    {
+            //        Plugin.actionQueue.Clear();
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectCharacter);
+            //    }
 
-                if (ImGui.Button("-> Test Step: SELECT YES"))
-                {
-                    Plugin.actionQueue.Clear();
-                    Plugin.actionQueue.Enqueue(Plugin.SelectYes);
-                }
+            //    if (ImGui.Button("-> Test Step: SELECT YES"))
+            //    {
+            //        Plugin.actionQueue.Clear();
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectYes);
+            //    }
 
-                if (ImGui.Button("-> Logout"))
-                {
-                    Plugin.actionQueue.Clear();
-                    Plugin.actionQueue.Enqueue(Plugin.Logout);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectYes);
-                    Plugin.actionQueue.Enqueue(Plugin.Delay5s);
-                }
+            //    if (ImGui.Button("-> Logout"))
+            //    {
+            //        Plugin.actionQueue.Clear();
+            //        Plugin.actionQueue.Enqueue(Plugin.Logout);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectYes);
+            //        Plugin.actionQueue.Enqueue(Plugin.Delay5s);
+            //    }
 
-                if (ImGui.Button("-> Swap Character"))
-                {
-                    uint? tempDc = 9;
-                    uint? tempWorld = 87;
-                    uint? tempCharacter = 0;
+            //    if (ImGui.Button("-> Swap Character"))
+            //    {
+            //        uint? tempDc = 9;
+            //        uint? tempWorld = 87;
+            //        uint? tempCharacter = 0;
 
-                    Plugin.actionQueue.Enqueue(Plugin.Logout);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectYes);
-                    Plugin.actionQueue.Enqueue(Plugin.OpenDataCenterMenu);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectDataCentre);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectWorld);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectCharacter);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectYes);
-                    Plugin.actionQueue.Enqueue(Plugin.Delay5s);
-                    Plugin.actionQueue.Enqueue(Plugin.ClearTemp);
-                }
+            //        Plugin.actionQueue.Enqueue(Plugin.Logout);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectYes);
+            //        Plugin.actionQueue.Enqueue(Plugin.OpenDataCenterMenu);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectDataCentre);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectWorld);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectCharacter);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectYes);
+            //        Plugin.actionQueue.Enqueue(Plugin.Delay5s);
+            //        Plugin.actionQueue.Enqueue(Plugin.ClearTemp);
+            //    }
 
-                if (ImGui.Button("-> Full Run"))
-                {
-                    Plugin.actionQueue.Clear();
-                    Plugin.actionQueue.Enqueue(Plugin.OpenDataCenterMenu);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectDataCentre);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectWorld);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectCharacter);
-                    Plugin.actionQueue.Enqueue(Plugin.SelectYes);
-                }
+            //    if (ImGui.Button("-> Full Run"))
+            //    {
+            //        Plugin.actionQueue.Clear();
+            //        Plugin.actionQueue.Enqueue(Plugin.OpenDataCenterMenu);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectDataCentre);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectWorld);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectCharacter);
+            //        Plugin.actionQueue.Enqueue(Plugin.SelectYes);
+            //    }
 
-                ImGui.Text("Current Queue:");
-                foreach (var l in Plugin.actionQueue.ToList())
-                {
-                    ImGui.Text($"{l.Method.Name}");
-                }
-            }
+            //    ImGui.Text("Current Queue:");
+            //    foreach (var l in Plugin.actionQueue.ToList())
+            //    {
+            //        ImGui.Text($"{l.Method.Name}");
+            //    }
+            //}
         }
     }
 }

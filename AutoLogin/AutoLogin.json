@@ -2,8 +2,8 @@
   "Name": "Auto Login",
   "Author": "Aida Enna",
   "ApplicableVersion": "any",
-  "Punchline": "Automatically logs you into a specified character when the game first opens.",
-  "Description": "Automatically logs you into a specified character when the game first opens.",
+  "Punchline": "Automatically logs you into a specified character when the game first opens, and optionally reconnects you to the game (and notifies you) when you get disconnected.",
+  "Description": "Automatically logs you into a specified character when the game first opens, and optionally reconnects you to the game (and notifies you) when you get disconnected.",
   "RepoUrl": "https://github.com/Aida-Enna/XIVPlugins",
   "Tags": [
     "auto",

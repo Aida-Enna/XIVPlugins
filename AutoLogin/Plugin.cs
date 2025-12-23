@@ -99,6 +99,14 @@ namespace AutoLogin
             );
 
             this.LobbyErrorHandlerHook.Enable();
+
+            if (!PluginConfig.SeenReconnectionExplanation)
+            {
+                MessageBoxWindow.MessageBoxText = "The Auto Login plugin now supports automatically reconnecting once it detects that you have been suddenly disconnected from\nthe game due to a network error (such a DDoS or server side issues). You can also (separately) have it send a Discord webhook\nmessage when it detects you've been disconnected.\n\nThis reconnection behavior is enabled by default and can be disabled/configured in the settings menu. This window is a one-time\nnotification to explain this behavior and will be removed in a future update.\n\nEnjoy!";
+                MessageBoxWindow.Toggle();
+                PluginConfig.SeenReconnectionExplanation = true;
+                Plugin.PluginConfig.Save();
+            }
         }
 
         [Command("/autologin")]
