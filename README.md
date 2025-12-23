@@ -6,7 +6,7 @@ These are plugins which were abandoned by their creators/maintainers that I've f
 
 ## Auto Login
 
-Automatically logs into the specified character (selected via the configuration menu) when FFXIV first starts.
+Automatically logs you into a specified character when the game first opens, and optionally reconnects you to the game (and notifies you) when you get disconnected.
 
 ## Auto Pillion
 
