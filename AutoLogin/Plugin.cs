@@ -169,8 +169,9 @@ namespace AutoLogin
         {
             //Sudden disconnect code: 90002 | Type 2
             //Sudden disconnect code 2?: 90001 | Type 2
+            //Rare disconnect code: 2002
             PluginLog.Debug("Logged out! Code: " + code + " | Type: " + type);
-            if (type == 2 && (code == 90002 || code == 90001))
+            if (type == 2 && (code == 90002 || code == 90001 || code == 2002))
             {
                 PluginLog.Debug("We've been disconnected from the server!");
                 if (PluginConfig.SendNotif)
