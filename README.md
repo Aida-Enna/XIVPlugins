@@ -6,7 +6,7 @@ These are plugins which were abandoned by their creators/maintainers that I've f
 
 ## Auto Login
 
-Automatically logs into the specified character (selected via the configuration menu) when FFXIV first starts.
+Automatically logs you into a specified character when the game first opens, and optionally reconnects you to the game (and notifies you) when you get disconnected.
 
 ## Auto Pillion
 
@@ -23,23 +23,3 @@ A fork of the original macro chain, this re-adds support for running a macro ins
 ## Portrait Fixer
 
 When you click "Update Gear Set", this plugin will automatically update and save your portait to match your new glam.
-
-# Deprecated Plugins
-
-## Loot Master
-
-Adds various commands to need, greed, or pass on all loot.
-
-NOTE: Deprecated, [use this instead](https://github.com/PunishXIV/LazyLoot).
-
-## Fate Auto Sync
-
-Automatically synchronizes the level of your character (and optionally auto-enables tank stance!) whenever you join a FATE in Final Fantasy XIV.
-
-NOTE: Deprecated, [use this instead](https://github.com/PunishXIV/PandorasBox).
-
-## Potato Famine 2
-
-Changes lalafells (or everyone or specific people) into another race of your choosing.
-
-NOTE: Deprecated, [use this instead](https://github.com/kelvin124124/OopsAllLalafellsSRE).
