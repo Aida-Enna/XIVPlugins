@@ -205,7 +205,9 @@ namespace AutoLogin
             //PluginLog.Debug($"LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
             if (v4 > 0)
             {
-                if (v4_16 == 0x332C) // Auth failed
+                // 0x332C Auth failed
+                // 0x3390 Maintenance
+                if (v4_16 == 0x332C || v4_16 == 0x3390)
                 {
                     //PluginLog.Debug($"Skip Auth Error");
                 }
