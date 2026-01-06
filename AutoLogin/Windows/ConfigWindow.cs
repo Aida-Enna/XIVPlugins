@@ -5,6 +5,7 @@ using Lumina.Excel.Sheets;
 using System;
 using System.Linq;
 using Veda;
+using Veda.Windows;
 
 namespace AutoLogin.Windows
 {

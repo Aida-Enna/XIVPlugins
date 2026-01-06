@@ -11,11 +11,13 @@ using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Veda;
@@ -68,17 +70,20 @@ namespace AutoLogin
         private ConfigWindow ConfigWindow { get; init; }
         private MessageBoxWindow MessageBoxWindow { get; init; }
 
+        private EmergencyExitWindow EmergencyExitWindow { get; init; }
+
         public Plugin(IDalamudPluginInterface pluginInterface, IToastGui ToastGui, ICommandManager commands)
         {
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
 
             ConfigWindow = new ConfigWindow(this);
-
             MessageBoxWindow = new MessageBoxWindow();
+            EmergencyExitWindow = new EmergencyExitWindow();
 
             WindowSystem.AddWindow(ConfigWindow);
             WindowSystem.AddWindow(MessageBoxWindow);
+            WindowSystem.AddWindow(EmergencyExitWindow);
 
             PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
             pluginInterface.UiBuilder.OpenConfigUi += ConfigWindow.Toggle;
@@ -91,6 +96,7 @@ namespace AutoLogin
             ToastyGoodness = ToastGui;
             ToastyGoodness.ErrorToast += OnToastShown;
             ClientState.Logout += Logout;
+            ClientState.Login += Login;
 
             if (ClientState.IsLoggedIn)
             {
@@ -114,6 +120,11 @@ namespace AutoLogin
                 PluginConfig.SeenReconnectionExplanation = true;
                 Plugin.PluginConfig.Save();
             }
+        }
+
+        private void Login()
+        {
+            if (EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
         }
 
         [Command("/autologin")]
@@ -232,6 +243,7 @@ namespace AutoLogin
                 }
                 else
                 {
+                    if (!EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
                     Marshal.WriteInt64(p3 + 8, 16000 /*0x3E80*/); // server connection lost
                     v4 = ((t1 & 0xF) > 0) ? (uint)Marshal.ReadInt32(p3 + 8) : 0;
                     v4_16 = (UInt16)(v4);
@@ -556,6 +568,37 @@ namespace AutoLogin
 
             Commands.RemoveHandler("/autologin");
             Commands.RemoveHandler("/swapcharacter");
+        }
+    }
+
+    public unsafe class EmergencyExitWindow : Window, IDisposable
+    {
+
+        string EEWindowText = "If you get stuck in an endless loop of errors,\nyou can close the game by clicking below.\nPlease report this on the github repo.";
+
+        public EmergencyExitWindow() : base("Emergency Exit###EEWindow")
+        {
+            Flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
+            SizeCondition = ImGuiCond.Always;
+            Position = new((Device.Instance()->Width / 2) + 500, Device.Instance()->Height / 2);
+        }
+
+        public void Dispose()
+        { }
+
+        public override void PreDraw()
+        {
+        }
+
+        public override void Draw()
+        {
+            ImGui.SetWindowFocus();
+            ImGui.Text(EEWindowText);
+            ImGui.Indent((ImGui.CalcTextSize(EEWindowText).X - ImGui.CalcTextSize("Exit Game").X) / 2);
+            if (ImGui.Button("Exit Game"))
+            {
+                Environment.Exit(0);
+            }
         }
     }
 }
