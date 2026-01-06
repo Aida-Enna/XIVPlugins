@@ -20,6 +20,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Veda;
 using Veda.Windows;
+using static FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.VertexShader;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 using World = Lumina.Excel.Sheets.World;
 
@@ -90,6 +91,12 @@ namespace AutoLogin
             ToastyGoodness = ToastGui;
             ToastyGoodness.ErrorToast += OnToastShown;
             ClientState.Logout += Logout;
+
+            if (ClientState.IsLoggedIn)
+            {
+                //We're already logged in when the plugin was loaded, so obviously we're logged in already
+                hasDoneLogin = true;
+            }
 
             //Thank you NoKillPlugin
             this.LobbyErrorHandler = SigScanner.ScanText("40 53 48 83 EC 30 48 8B D9 49 8B C8 E8 ?? ?? ?? ?? 8B D0");
@@ -205,16 +212,27 @@ namespace AutoLogin
             //PluginLog.Debug($"LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
             if (v4 > 0)
             {
-                // 0x332C Auth failed
-                // 0x3390 Maintenance
-                if (v4_16 == 0x332C || v4_16 == 0x3390)
+                if (PluginConfig.DebugMode)
                 {
+                    NotifObject.Content = "Code: " + v4_16; //Convert this to hex to get the codes below
+                    PluginConfig.LastErrorCode = v4_16;
+                    NotifObject.Title = "";
+                    NotifObject.Type = NotificationType.Error;
+                    NotifObject.InitialDuration = TimeSpan.FromSeconds(15);
+                    NotificationManager.AddNotification(NotifObject).Minimized = false;
+                }
+                // 0x332C / 13100 Auth failed
+                // 0x3390 / 13200 Maintenance
+                // 0x32C9 / 13001 Server token expired?
+                // 0x3E80 / 16000 Server connection lost
+                if (v4_16 == 13100 /*0x332C*/ || v4_16 == 13200 /*0x3390*/ || v4_16 == 13200 /*0x32C9*/)
+                {
+                    //Do nothing, let the game close
                     //PluginLog.Debug($"Skip Auth Error");
                 }
                 else
                 {
-                    Marshal.WriteInt64(p3 + 8, 0x3E80); // server connection lost
-                    // 0x3390: maintenance
+                    Marshal.WriteInt64(p3 + 8, 16000 /*0x3E80*/); // server connection lost
                     v4 = ((t1 & 0xF) > 0) ? (uint)Marshal.ReadInt32(p3 + 8) : 0;
                     v4_16 = (UInt16)(v4);
                 }

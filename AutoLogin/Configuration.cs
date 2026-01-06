@@ -30,5 +30,7 @@ namespace AutoLogin
         public string WebhookURL = "";
         public string WebhookMessage = "[AutoLogin] Your game has lost connection!";
         public bool SeenReconnectionExplanation = false;
+        public bool DebugMode = false;
+        public uint LastErrorCode = 0;
     }
 }
