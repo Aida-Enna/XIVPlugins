@@ -576,11 +576,11 @@ namespace AutoLogin
 
         string EEWindowText = "If you get stuck in an endless loop of errors,\nyou can close the game by clicking below.\nPlease report this on the github repo.";
 
-        public EmergencyExitWindow() : base("Emergency Exit###EEWindow")
+        public EmergencyExitWindow() : base("Auto Login Emergency Exit###EEWindow")
         {
             Flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
             SizeCondition = ImGuiCond.Always;
-            Position = new((Device.Instance()->Width / 2) + 500, Device.Instance()->Height / 2);
+            Position = new((Device.Instance()->Width / 2) + (Device.Instance()->Width / 10), Device.Instance()->Height / 2);
         }
 
         public void Dispose()

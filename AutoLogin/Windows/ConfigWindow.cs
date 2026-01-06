@@ -14,7 +14,7 @@ namespace AutoLogin.Windows
         // We give this window a constant ID using ###.
         // This allows for labels to be dynamic, like "{FPS Counter}fps###XYZ counter window",
         // and the window ID will always be "###XYZ counter window" for ImGui
-        public ConfigWindow(Plugin plugin) : base("AutoLogin Config###ALConfig")
+        public ConfigWindow(Plugin plugin) : base("Auto Login Config###ALConfig")
         {
             Flags = ImGuiWindowFlags.AlwaysAutoResize;
 
