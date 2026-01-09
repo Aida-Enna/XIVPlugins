@@ -1,7 +1,5 @@
 ﻿using AutoLogin.Windows;
-using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Keys;
-using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
 using Dalamud.Interface.ImGuiNotification;
@@ -11,18 +9,15 @@ using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Veda;
 using Veda.Windows;
-using static FFXIVClientStructs.FFXIV.Client.Graphics.Kernel.VertexShader;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 using World = Lumina.Excel.Sheets.World;
 
@@ -187,7 +182,7 @@ namespace AutoLogin
         {
             //Sudden disconnect code: 90002 | Type 2
             //Sudden disconnect code 2?: 90001 | Type 2
-            //Rare disconnect code: 2002
+            //Rare disconnect code: 2002 (Lobby error code?)
             PluginLog.Debug("Logged out! Code: " + code + " | Type: " + type);
             if (type == 2 && (code == 90002 || code == 90001 || code == 2002))
             {
@@ -196,7 +191,14 @@ namespace AutoLogin
                 {
                     if (PluginConfig.WebhookURL.StartsWith("https://discord.com/api/webhooks/") && string.IsNullOrWhiteSpace(PluginConfig.WebhookMessage) == false)
                     {
-                        Functions.SendDiscordWebhookAsync(PluginConfig.WebhookURL, PluginConfig.WebhookMessage);
+                        try
+                        {
+                            Functions.SendDiscordWebhookAsync(PluginConfig.WebhookURL, PluginConfig.WebhookMessage);
+                        }
+                        catch (Exception ex)
+                        {
+                            PluginLog.Error("Failed to send discord webhook: " + ex.Message);
+                        }
                     }
                 }
                 //Reset the login so it logins in again after we click the error
@@ -220,12 +222,18 @@ namespace AutoLogin
             var t1 = Marshal.ReadByte(p3);
             var v4 = ((t1 & 0xF) > 0) ? (uint)Marshal.ReadInt32(p3 + 8) : 0;
             UInt16 v4_16 = (UInt16)(v4);
-            PluginLog.Debug($"LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
+            //PluginLog.Debug($"LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
+            var AddonTest = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
+            if (AddonTest != null && AddonTest->IsVisible)
+            {
+                Plugin.PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
+            }
+            PluginLog.Debug("[AutoLogin] Internal Code: " + v4_16 + " | " + "Code shown to player: " + PluginConfig.CurrentError);
             if (v4 > 0)
             {
                 if (PluginConfig.DebugMode)
                 {
-                    NotifObject.Content = "Code: " + v4_16; //Convert this to hex to get the codes below
+                    NotifObject.Content = "Code: " + v4_16;
                     PluginConfig.LastErrorCode = v4_16;
                     NotifObject.Title = "";
                     NotifObject.Type = NotificationType.Error;
@@ -233,12 +241,10 @@ namespace AutoLogin
                     NotificationManager.AddNotification(NotifObject).Minimized = false;
                 }
                 if (!EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
-                // Hex / Decimal / Game
-                // 0x32C9 / 13001 / 5006 Session token expired?
-                // 0x332C / 13100 / ???? Auth failed
-                // 0x3390 / 13200 / ???? Maintenance
-                // 0x3E80 / 16000 / ???? Server connection lost
-                if (v4_16 == 13001 /*0x32C9 / 5006 */ || v4_16 == 13100 /*0x332C*/ || v4_16 == 13200 /*0x3390*/)
+
+                if (/*v4_16 == ErrorCode.SessionTokenExpired ||*/
+                    v4_16 == ErrorCode.AuthFailed ||
+                    v4_16 == ErrorCode.Maintenance)
                 {
                     //Do nothing, let the game close
                 }
@@ -248,27 +254,31 @@ namespace AutoLogin
                     Marshal.WriteInt64(p3 + 8, 16000 /*0x3E80*/); // server connection lost
                     v4 = ((t1 & 0xF) > 0) ? (uint)Marshal.ReadInt32(p3 + 8) : 0;
                     v4_16 = (UInt16)(v4);
-                }
             }
-            PluginLog.Debug($"After LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
+        }
+            //PluginLog.Debug($"After LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
             return this.LobbyErrorHandlerHook.Original(a1, a2, a3);
         }
 
         private void OnFrameworkUpdate(IFramework framework)
         {
+            var DisconnectionErrorPpopupAddon = (AtkUnitBase*)GameGui.GetAddonByName("Dialogue", 1).Address;
+            if (DisconnectionErrorPpopupAddon != null && DisconnectionErrorPpopupAddon->IsVisible == false)
+            {
+                PluginConfig.CurrentError = DisconnectionErrorPpopupAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
+            }
             if (ReloggingFromDisconnect)
             {
-                var AddonTest = (AtkUnitBase*)GameGui.GetAddonByName("Dialogue", 1).Address;
-                if (AddonTest == null || AddonTest->IsVisible == false)
+                if (DisconnectionErrorPpopupAddon == null || DisconnectionErrorPpopupAddon->IsVisible == false)
                 {
                     ReloggingFromDisconnect = false;
                     //Do nothing
                 }
                 else
                 {
-                    PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine,"");
+                    PluginConfig.CurrentError = DisconnectionErrorPpopupAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
                     PluginLog.Debug("Found Dialogue addon (Disconnection message hopefully!) - Trying to hit OK!");
-                    AddonTest->GetComponentButtonById(4)->ClickAddonButton(AddonTest);
+                    DisconnectionErrorPpopupAddon->GetComponentButtonById(4)->ClickAddonButton(DisconnectionErrorPpopupAddon);
                     PluginLog.Debug("Hit OK!");
                 }
             }
@@ -326,6 +336,7 @@ namespace AutoLogin
         }
 
         #region Auto-Login subroutines
+
         private void OnLogin()
         {
             if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
@@ -386,6 +397,7 @@ namespace AutoLogin
                 return;
             }
         }
+
         public static bool OpenDataCenterMenu()
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu").Address;
@@ -495,7 +507,9 @@ namespace AutoLogin
             tempCharacter = null;
             return true;
         }
+
         #endregion Auto-Login subroutines
+
         public static void GenerateCallback(AtkUnitBase* unitBase, params object[] values)
         {
             if (unitBase == null) throw new Exception("Null UnitBase");
@@ -574,8 +588,36 @@ namespace AutoLogin
             EmergencyExitWindow.Dispose();
             MessageBoxWindow.Dispose();
 
+            this.LobbyErrorHandlerHook.Disable();
+            this.LobbyErrorHandlerHook.Dispose();
+
             Commands.RemoveHandler("/autologin");
             Commands.RemoveHandler("/swapcharacter");
         }
+    }
+
+    public class ErrorCode
+    {
+        /// <summary>
+        /// Internal: 13001 | Game code: 2002 | Lobby connection error
+        /// </summary>
+        public const ushort LobbyConnectionError = 13001;
+        /// <summary>
+        /// Internal: ????? | Game code: 5006 | Session token expired?
+        /// </summary>
+        public const ushort SessionTokenExpired = 0;
+        /// <summary>
+        /// Internal: 16000 | Game code: 90002 | Server connection lost
+        /// </summary>
+        public const ushort E90002 = 16000;
+        /// <summary>
+        /// Internal: 13100 | Game code: 5003 | Authorization failed
+        /// </summary>
+        public const ushort AuthFailed = 13100;
+        /// <summary>
+        /// Internal: 13200 | Game code: ???? | Maintenance
+        /// </summary>
+        public const ushort Maintenance = 13200;
+
     }
 }
