@@ -69,8 +69,7 @@ namespace AutoLogin
         public readonly WindowSystem WindowSystem = new("AutoLogin");
         private ConfigWindow ConfigWindow { get; init; }
         private MessageBoxWindow MessageBoxWindow { get; init; }
-
-        private EmergencyExitWindow EmergencyExitWindow { get; init; }
+        public EmergencyExitWindow EmergencyExitWindow { get; init; }
 
         public Plugin(IDalamudPluginInterface pluginInterface, IToastGui ToastGui, ICommandManager commands)
         {
@@ -79,13 +78,14 @@ namespace AutoLogin
 
             ConfigWindow = new ConfigWindow(this);
             MessageBoxWindow = new MessageBoxWindow();
-            EmergencyExitWindow = new EmergencyExitWindow();
+            EmergencyExitWindow = new EmergencyExitWindow(this);
 
             WindowSystem.AddWindow(ConfigWindow);
             WindowSystem.AddWindow(MessageBoxWindow);
             WindowSystem.AddWindow(EmergencyExitWindow);
 
-            PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
+            pluginInterface.UiBuilder.Draw += WindowSystem.Draw;
+            pluginInterface.UiBuilder.OpenMainUi += EmergencyExitWindow.Toggle;
             pluginInterface.UiBuilder.OpenConfigUi += ConfigWindow.Toggle;
 
             NotifObject.Title = "Auto Login";
@@ -213,14 +213,14 @@ namespace AutoLogin
             }
         }
 
-        //Shamelessly ripped from Bluefissure's NoKill plugin (https://github.com/Bluefissure/NoKillPlugin/)
+        //Originally shamelessly ripped from Bluefissure's NoKill plugin (https://github.com/Bluefissure/NoKillPlugin/)
         private char LobbyErrorHandlerDetour(Int64 a1, Int64 a2, Int64 a3)
         {
             IntPtr p3 = new IntPtr(a3);
             var t1 = Marshal.ReadByte(p3);
             var v4 = ((t1 & 0xF) > 0) ? (uint)Marshal.ReadInt32(p3 + 8) : 0;
             UInt16 v4_16 = (UInt16)(v4);
-            //PluginLog.Debug($"LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
+            PluginLog.Debug($"LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
             if (v4 > 0)
             {
                 if (PluginConfig.DebugMode)
@@ -232,27 +232,100 @@ namespace AutoLogin
                     NotifObject.InitialDuration = TimeSpan.FromSeconds(15);
                     NotificationManager.AddNotification(NotifObject).Minimized = false;
                 }
-                // 0x332C / 13100 Auth failed
-                // 0x3390 / 13200 Maintenance
-                // 0x32C9 / 13001 Server token expired?
-                // 0x3E80 / 16000 Server connection lost
-                if (v4_16 == 13100 /*0x332C*/ || v4_16 == 13200 /*0x3390*/ || v4_16 == 13200 /*0x32C9*/)
+                if (!EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
+                // Hex / Decimal / Game
+                // 0x32C9 / 13001 / 5006 Session token expired?
+                // 0x332C / 13100 / ???? Auth failed
+                // 0x3390 / 13200 / ???? Maintenance
+                // 0x3E80 / 16000 / ???? Server connection lost
+                if (v4_16 == 13001 /*0x32C9 / 5006 */ || v4_16 == 13100 /*0x332C*/ || v4_16 == 13200 /*0x3390*/)
                 {
                     //Do nothing, let the game close
-                    //PluginLog.Debug($"Skip Auth Error");
                 }
                 else
                 {
-                    if (!EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
+                    //Rewrite the error code to be server connection lost, so we can keep the game open
                     Marshal.WriteInt64(p3 + 8, 16000 /*0x3E80*/); // server connection lost
                     v4 = ((t1 & 0xF) > 0) ? (uint)Marshal.ReadInt32(p3 + 8) : 0;
                     v4_16 = (UInt16)(v4);
                 }
             }
-            //PluginLog.Debug($"After LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
+            PluginLog.Debug($"After LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
             return this.LobbyErrorHandlerHook.Original(a1, a2, a3);
         }
 
+        private void OnFrameworkUpdate(IFramework framework)
+        {
+            if (ReloggingFromDisconnect)
+            {
+                var AddonTest = (AtkUnitBase*)GameGui.GetAddonByName("Dialogue", 1).Address;
+                if (AddonTest == null || AddonTest->IsVisible == false)
+                {
+                    ReloggingFromDisconnect = false;
+                    //Do nothing
+                }
+                else
+                {
+                    PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine,"");
+                    PluginLog.Debug("Found Dialogue addon (Disconnection message hopefully!) - Trying to hit OK!");
+                    AddonTest->GetComponentButtonById(4)->ClickAddonButton(AddonTest);
+                    PluginLog.Debug("Hit OK!");
+                }
+            }
+            if (!hasDoneLogin && PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
+            {
+                var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu").Address;
+                if (addon == null || addon->IsVisible == false)
+                    return;
+
+                OnLogin();
+            }
+            if (actionQueue.Count == 0)
+            {
+                if (sw.IsRunning) sw.Stop();
+                return;
+            }
+            if (!sw.IsRunning) sw.Restart();
+
+            if (KeyState[VirtualKey.SPACE])
+            {
+                NotifObject.Content = "AutoLogin cancelled.";
+                NotifObject.Type = NotificationType.Warning;
+                NotificationManager.AddNotification(NotifObject);
+                actionQueue.Clear();
+            }
+
+            if (Delay > 0)
+            {
+                Delay -= 1;
+                return;
+            }
+
+            if (sw.ElapsedMilliseconds > 30000)
+            {
+                actionQueue.Clear();
+                return;
+            }
+
+            try
+            {
+                var hasNext = actionQueue.TryPeek(out var next);
+                if (hasNext)
+                {
+                    if (next())
+                    {
+                        actionQueue.Dequeue();
+                        sw.Reset();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error($"Failed: {ex.Message}");
+            }
+        }
+
+        #region Auto-Login subroutines
         private void OnLogin()
         {
             if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
@@ -313,77 +386,6 @@ namespace AutoLogin
                 return;
             }
         }
-
-        private void OnFrameworkUpdate(IFramework framework)
-        {
-            if (ReloggingFromDisconnect)
-            {
-                var AddonTest = (AtkUnitBase*)GameGui.GetAddonByName("Dialogue", 1).Address;
-                if (AddonTest == null || AddonTest->IsVisible == false)
-                {
-                    ReloggingFromDisconnect = false;
-                    //Do nothing
-                }
-                else
-                {
-                    PluginLog.Debug("Found Dialogue addon (Disconnection message hopefully!) - Trying to hit OK!");
-                    AddonTest->GetComponentButtonById(4)->ClickAddonButton(AddonTest);
-                    PluginLog.Debug("Hit OK!");
-                }
-            }
-            if (!hasDoneLogin && PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
-            {
-                var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu").Address;
-                if (addon == null || addon->IsVisible == false)
-                    return;
-
-                OnLogin();
-            }
-            if (actionQueue.Count == 0)
-            {
-                if (sw.IsRunning) sw.Stop();
-                return;
-            }
-            if (!sw.IsRunning) sw.Restart();
-
-            if (KeyState[VirtualKey.SPACE])
-            {
-                NotifObject.Content = "AutoLogin cancelled.";
-                NotifObject.Type = NotificationType.Warning;
-                NotificationManager.AddNotification(NotifObject);
-                actionQueue.Clear();
-            }
-
-            if (Delay > 0)
-            {
-                Delay -= 1;
-                return;
-            }
-
-            if (sw.ElapsedMilliseconds > 30000)
-            {
-                actionQueue.Clear();
-                return;
-            }
-
-            try
-            {
-                var hasNext = actionQueue.TryPeek(out var next);
-                if (hasNext)
-                {
-                    if (next())
-                    {
-                        actionQueue.Dequeue();
-                        sw.Reset();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                PluginLog.Error($"Failed: {ex.Message}");
-            }
-        }
-
         public static bool OpenDataCenterMenu()
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu").Address;
@@ -493,7 +495,7 @@ namespace AutoLogin
             tempCharacter = null;
             return true;
         }
-
+        #endregion Auto-Login subroutines
         public static void GenerateCallback(AtkUnitBase* unitBase, params object[] values)
         {
             if (unitBase == null) throw new Exception("Null UnitBase");
@@ -561,44 +563,19 @@ namespace AutoLogin
             PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= ConfigWindow.Toggle;
 
+            Framework.Update -= OnFrameworkUpdate;
+            ToastyGoodness.ErrorToast -= OnToastShown;
+            ClientState.Logout -= Logout;
+            ClientState.Login -= Login;
+
             WindowSystem.RemoveAllWindows();
 
             ConfigWindow.Dispose();
+            EmergencyExitWindow.Dispose();
             MessageBoxWindow.Dispose();
 
             Commands.RemoveHandler("/autologin");
             Commands.RemoveHandler("/swapcharacter");
-        }
-    }
-
-    public unsafe class EmergencyExitWindow : Window, IDisposable
-    {
-
-        string EEWindowText = "If you get stuck in an endless loop of errors,\nyou can close the game by clicking below.\nPlease report this on the github repo.";
-
-        public EmergencyExitWindow() : base("Auto Login Emergency Exit###EEWindow")
-        {
-            Flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
-            SizeCondition = ImGuiCond.Always;
-            Position = new((Device.Instance()->Width / 2) + (Device.Instance()->Width / 10), Device.Instance()->Height / 2);
-        }
-
-        public void Dispose()
-        { }
-
-        public override void PreDraw()
-        {
-        }
-
-        public override void Draw()
-        {
-            ImGui.SetWindowFocus();
-            ImGui.Text(EEWindowText);
-            ImGui.Indent((ImGui.CalcTextSize(EEWindowText).X - ImGui.CalcTextSize("Exit Game").X) / 2);
-            if (ImGui.Button("Exit Game"))
-            {
-                Environment.Exit(0);
-            }
         }
     }
 }

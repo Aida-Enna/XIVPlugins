@@ -1,6 +1,8 @@
 ﻿using Dalamud.Bindings.ImGui;
 using Dalamud.Configuration;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.Sheets;
 using System;
 using System.Linq;
@@ -26,7 +28,7 @@ namespace AutoLogin.Windows
 
         private bool ShowSupport;
 
-        public override void Draw()
+        public override unsafe void Draw()
         {
             const ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
 
@@ -162,8 +164,17 @@ namespace AutoLogin.Windows
             }
             if (Plugin.PluginConfig.DebugMode)
             {
+                ImGui.TextColored(new System.Numerics.Vector4(1.0f, 0.0f, 0.0f, 1.0f), "You should only touch this stuff if you know what you're doing,\notherwise you may crash your game!");
                 ImGui.Text("Last login error code: " + Plugin.PluginConfig.LastErrorCode);
                 ImGui.Separator();
+                if (ImGui.Button("Test Shit"))
+                {
+                    var AddonTest = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
+                    if (AddonTest != null && AddonTest->IsVisible)
+                    {
+                        Plugin.PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
+                    }
+                }
                 if (ImGui.Button("-> Clear Queue"))
                 {
                     Plugin.actionQueue.Clear();
