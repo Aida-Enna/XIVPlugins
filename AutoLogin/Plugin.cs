@@ -1,4 +1,6 @@
 ﻿using AutoLogin.Windows;
+using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Hooking;
@@ -41,6 +43,7 @@ namespace AutoLogin
         [PluginService] public static IGameInteropProvider Hook { get; set; }
         [PluginService] public static ISigScanner SigScanner { get; set; }
         [PluginService] public static IClientState ClientState { get; set; }
+        [PluginService] public static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
 
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
@@ -66,7 +69,7 @@ namespace AutoLogin
         private MessageBoxWindow MessageBoxWindow { get; init; }
         public EmergencyExitWindow EmergencyExitWindow { get; init; }
 
-        public Plugin(IDalamudPluginInterface pluginInterface, IToastGui ToastGui, ICommandManager commands)
+        public Plugin(IDalamudPluginInterface pluginInterface, IToastGui ToastGui, ICommandManager commands, IAddonLifecycle addonlifecycle)
         {
             PluginConfig = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             PluginConfig.Initialize(PluginInterface);
@@ -114,6 +117,29 @@ namespace AutoLogin
                 MessageBoxWindow.Toggle();
                 PluginConfig.SeenReconnectionExplanation = true;
                 Plugin.PluginConfig.Save();
+            }
+
+            AddonLifecycle.RegisterListener(AddonEvent.PostShow, ["Dialogue"], DialoguePostDraw);
+            PluginConfig.CurrentError = "none";
+        }
+
+        private void DialoguePostDraw(AddonEvent type, AddonArgs args)
+        {
+            var DialogueAddon = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
+            if (DialogueAddon != null && DialogueAddon->IsVisible)
+            {
+                EmergencyExitWindow.IsOpen = true;
+                Plugin.PluginConfig.CurrentError = DialogueAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
+                PluginLog.Debug("CurrentError is " + Plugin.PluginConfig.CurrentError);
+                // short X;
+                // short Y;
+                // short Width;
+                // short Height;
+                // DialogueAddon->GetPosition(&X, &Y);
+                // DialogueAddon->GetSize(&Width, &Height, true);
+                //EmergencyExitWindow.StartingPositionX = (int)X + Width;
+                // EmergencyExitWindow.StartingPositionY = (int)Y;
+                // PluginLog.Debug("X: " + (int)X + " | Y: " + (int)Y);
             }
         }
 
@@ -223,14 +249,15 @@ namespace AutoLogin
             var v4 = ((t1 & 0xF) > 0) ? (uint)Marshal.ReadInt32(p3 + 8) : 0;
             UInt16 v4_16 = (UInt16)(v4);
             //PluginLog.Debug($"LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
-            var AddonTest = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
-            if (AddonTest != null && AddonTest->IsVisible)
-            {
-                Plugin.PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
-            }
-            PluginLog.Debug("[AutoLogin] Internal Code: " + v4_16 + " | " + "Code shown to player: " + PluginConfig.CurrentError);
+            //var AddonTest = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
+            //if (AddonTest != null && AddonTest->IsVisible)
+            //{
+            //    Plugin.PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
+            //}
+            PluginLog.Debug("Internal Code: " + v4_16 + " | Code shown to player: " + PluginConfig.CurrentError);
             if (v4 > 0)
             {
+                ulong CurrentError = Convert.ToUInt64(PluginConfig.CurrentError.Trim());
                 if (PluginConfig.DebugMode)
                 {
                     NotifObject.Content = "Code: " + v4_16;
@@ -240,11 +267,17 @@ namespace AutoLogin
                     NotifObject.InitialDuration = TimeSpan.FromSeconds(15);
                     NotificationManager.AddNotification(NotifObject).Minimized = false;
                 }
-                if (!EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
+                //if (!EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
 
-                if (/*v4_16 == ErrorCode.SessionTokenExpired ||*/
-                    v4_16 == ErrorCode.AuthFailed ||
-                    v4_16 == ErrorCode.Maintenance)
+                //if (/*v4_16 == ErrorCode.SessionTokenExpired.InternalCode ||*/
+                //    v4_16 == ErrorCode.AuthFailed.InternalCode ||
+                //    v4_16 == ErrorCode.Maintenance.InternalCode)
+                //{
+                //Switching to game code because internal codes don't differentiate between SessionToken Expired and lobby error (13001), just that it needs to close
+                //But we want to differentiate
+                if (CurrentError == ErrorCode.SessionTokenExpired.GameCode ||
+                    CurrentError == ErrorCode.AuthFailed.GameCode ||
+                    CurrentError == ErrorCode.Maintenance.GameCode)
                 {
                     //Do nothing, let the game close
                 }
@@ -254,21 +287,21 @@ namespace AutoLogin
                     Marshal.WriteInt64(p3 + 8, 16000 /*0x3E80*/); // server connection lost
                     v4 = ((t1 & 0xF) > 0) ? (uint)Marshal.ReadInt32(p3 + 8) : 0;
                     v4_16 = (UInt16)(v4);
+                }
             }
-        }
             //PluginLog.Debug($"After LobbyErrorHandler a1:{a1} a2:{a2} a3:{a3} t1:{t1} v4:{v4_16}");
             return this.LobbyErrorHandlerHook.Original(a1, a2, a3);
         }
 
         private void OnFrameworkUpdate(IFramework framework)
         {
-            var DisconnectionErrorPpopupAddon = (AtkUnitBase*)GameGui.GetAddonByName("Dialogue", 1).Address;
-            if (DisconnectionErrorPpopupAddon != null && DisconnectionErrorPpopupAddon->IsVisible == false)
-            {
-                PluginConfig.CurrentError = DisconnectionErrorPpopupAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
-            }
+            //if (DisconnectionErrorPpopupAddon != null && DisconnectionErrorPpopupAddon->IsVisible == false)
+            //{
+            //    PluginConfig.CurrentError = DisconnectionErrorPpopupAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
+            //}
             if (ReloggingFromDisconnect)
             {
+                var DisconnectionErrorPpopupAddon = (AtkUnitBase*)GameGui.GetAddonByName("Dialogue", 1).Address;
                 if (DisconnectionErrorPpopupAddon == null || DisconnectionErrorPpopupAddon->IsVisible == false)
                 {
                     ReloggingFromDisconnect = false;
@@ -276,7 +309,7 @@ namespace AutoLogin
                 }
                 else
                 {
-                    PluginConfig.CurrentError = DisconnectionErrorPpopupAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
+                    //PluginConfig.CurrentError = DisconnectionErrorPpopupAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
                     PluginLog.Debug("Found Dialogue addon (Disconnection message hopefully!) - Trying to hit OK!");
                     DisconnectionErrorPpopupAddon->GetComponentButtonById(4)->ClickAddonButton(DisconnectionErrorPpopupAddon);
                     PluginLog.Debug("Hit OK!");
@@ -593,31 +626,8 @@ namespace AutoLogin
 
             Commands.RemoveHandler("/autologin");
             Commands.RemoveHandler("/swapcharacter");
+
+            AddonLifecycle.UnregisterListener(AddonEvent.PostShow, ["Dialogue"], DialoguePostDraw);
         }
-    }
-
-    public class ErrorCode
-    {
-        /// <summary>
-        /// Internal: 13001 | Game code: 2002 | Lobby connection error
-        /// </summary>
-        public const ushort LobbyConnectionError = 13001;
-        /// <summary>
-        /// Internal: ????? | Game code: 5006 | Session token expired?
-        /// </summary>
-        public const ushort SessionTokenExpired = 0;
-        /// <summary>
-        /// Internal: 16000 | Game code: 90002 | Server connection lost
-        /// </summary>
-        public const ushort E90002 = 16000;
-        /// <summary>
-        /// Internal: 13100 | Game code: 5003 | Authorization failed
-        /// </summary>
-        public const ushort AuthFailed = 13100;
-        /// <summary>
-        /// Internal: 13200 | Game code: ???? | Maintenance
-        /// </summary>
-        public const ushort Maintenance = 13200;
-
     }
 }

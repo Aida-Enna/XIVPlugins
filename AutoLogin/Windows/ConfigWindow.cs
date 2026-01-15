@@ -167,14 +167,14 @@ namespace AutoLogin.Windows
                 ImGui.TextColored(new System.Numerics.Vector4(1.0f, 0.0f, 0.0f, 1.0f), "You should only touch this stuff if you know what you're doing,\notherwise you may crash your game!");
                 ImGui.Text("Last login error code: " + Plugin.PluginConfig.LastErrorCode);
                 ImGui.Separator();
-                if (ImGui.Button("Test Shit"))
-                {
-                    var AddonTest = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
-                    if (AddonTest != null && AddonTest->IsVisible)
-                    {
-                        Plugin.PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
-                    }
-                }
+                //if (ImGui.Button("Test Shit"))
+                //{
+                //    var AddonTest = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
+                //    if (AddonTest != null && AddonTest->IsVisible)
+                //    {
+                //        Plugin.PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
+                //    }
+                //}
                 if (ImGui.Button("-> Clear Queue"))
                 {
                     Plugin.actionQueue.Clear();

@@ -20,7 +20,7 @@ namespace AutoLogin
         public bool SeenReconnectionExplanation = false;
         public bool DebugMode = false;
         public uint LastErrorCode = 0;
-        public string CurrentError = "";
+        public string CurrentError = "none";
 
         public void Initialize(IDalamudPluginInterface pluginInterface)
         {

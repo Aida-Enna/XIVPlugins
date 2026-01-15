@@ -2,7 +2,9 @@
 using Dalamud.Configuration;
 using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Kernel;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
 
 namespace AutoLogin.Windows
@@ -11,6 +13,8 @@ namespace AutoLogin.Windows
     {
         private string EECodeExplanation = "";
         private string ExitText = "If you get stuck in an endless loop of errors,\nyou can close the game by clicking below.";
+        public int StartingPositionX = 0;
+        public int StartingPositionY = 0;
 
         public EmergencyExitWindow(Plugin plugin) : base("Auto Login Emergency Exit###EEWindow")
         {
@@ -24,26 +28,47 @@ namespace AutoLogin.Windows
         public override void PreDraw()
         {
             PositionCondition = ImGuiCond.Appearing;
-            Position = new((Device.Instance()->Width / 2) + (Device.Instance()->Width / 10), Device.Instance()->Height / 2);
+            //Position = new((Device.Instance()->Width / 2) + (Device.Instance()->Width / 10), Device.Instance()->Height / 2);
+            var DialogueAddon = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
+            if (DialogueAddon != null && DialogueAddon->IsVisible)
+            {
+                short X;
+                short Y;
+                short Width;
+                short Height;
+                DialogueAddon->GetPosition(&X, &Y);
+                DialogueAddon->GetSize(&Width, &Height, true);
+                StartingPositionX = (int)X + Width;
+                StartingPositionY = (int)Y;
+            }
+            else
+            {
+                StartingPositionX = (int)((Device.Instance()->Width / 2) + (Device.Instance()->Width / 10));
+                StartingPositionY = (int)(Device.Instance()->Height / 2);
+            }
+            Position = new System.Numerics.Vector2(StartingPositionX, StartingPositionY);
         }
 
         public override void Draw()
         {
             ImGui.SetWindowFocus();
-            switch (Convert.ToUInt16(Plugin.PluginConfig.CurrentError))
+            if (Plugin.PluginConfig.CurrentError != "none")
             {
-                case ErrorCode.LobbyConnectionError:
-                    EECodeExplanation = "Error 2002:\nThe lobby server gave an error.\nAuto-reconnection possible.\n";
-                    break;
-                case ErrorCode.SessionTokenExpired:
-                    EECodeExplanation = "Error 5006:\nYour session token has expired.You will need to close the game and login again.\n";
-                    break;
-                case ErrorCode.E90002:
-                    EECodeExplanation = "Error 90002:\nYou have been disconnected from the server.\nAuto-reconnection possible.\n";
-                    break;
+                if (Convert.ToUInt16(Plugin.PluginConfig.CurrentError) == ErrorCode.LobbyConnectionError.GameCode)
+                {
+                    EECodeExplanation = ErrorCode.LobbyConnectionError.LongDescription;
+                }
+                else if (Convert.ToUInt16(Plugin.PluginConfig.CurrentError) == ErrorCode.SessionTokenExpired.GameCode)
+                {
+                    EECodeExplanation = ErrorCode.SessionTokenExpired.LongDescription;
+                }
+                else if (Convert.ToUInt16(Plugin.PluginConfig.CurrentError) == ErrorCode.E90002.GameCode)
+                {
+                    EECodeExplanation = ErrorCode.E90002.LongDescription;
+                }
+                ImGuiHelpers.CenteredText(EECodeExplanation);
+                ImGui.Separator();
             }
-            ImGuiHelpers.CenteredText(EECodeExplanation);
-            ImGui.Separator();
             ImGuiHelpers.CenteredText(ExitText);
             ImGui.Indent((ImGui.CalcTextSize(EECodeExplanation + ExitText).X - ImGui.CalcTextSize("Exit Game").X) / 2);
             if (ImGui.Button("Exit Game"))
