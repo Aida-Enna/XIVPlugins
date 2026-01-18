@@ -130,7 +130,7 @@ namespace AutoLogin
             {
                 EmergencyExitWindow.IsOpen = true;
                 Plugin.PluginConfig.CurrentError = DialogueAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
-                PluginLog.Debug("CurrentError is " + Plugin.PluginConfig.CurrentError);
+                if (PluginConfig.DebugMode) { PluginLog.Debug("CurrentError is " + Plugin.PluginConfig.CurrentError); }
                 // short X;
                 // short Y;
                 // short Width;
@@ -209,10 +209,10 @@ namespace AutoLogin
             //Sudden disconnect code: 90002 | Type 2
             //Sudden disconnect code 2?: 90001 | Type 2
             //Rare disconnect code: 2002 (Lobby error code?)
-            PluginLog.Debug("Logged out! Code: " + code + " | Type: " + type);
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Logged out! Code: " + code + " | Type: " + type); }
             if (type == 2 && (code == 90002 || code == 90001 || code == 2002))
             {
-                PluginLog.Debug("We've been disconnected from the server!");
+                if (PluginConfig.DebugMode) { PluginLog.Debug("We've been disconnected from the server!"); }
                 if (PluginConfig.SendNotif)
                 {
                     if (PluginConfig.WebhookURL.StartsWith("https://discord.com/api/webhooks/") && string.IsNullOrWhiteSpace(PluginConfig.WebhookMessage) == false)
@@ -254,7 +254,7 @@ namespace AutoLogin
             //{
             //    Plugin.PluginConfig.CurrentError = AddonTest->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
             //}
-            PluginLog.Debug("Internal Code: " + v4_16 + " | Code shown to player: " + PluginConfig.CurrentError);
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Internal Code: " + v4_16 + " | Code shown to player: " + PluginConfig.CurrentError); }
             if (v4 > 0)
             {
                 ulong CurrentError = Convert.ToUInt64(PluginConfig.CurrentError.Trim());
@@ -310,9 +310,9 @@ namespace AutoLogin
                 else
                 {
                     //PluginConfig.CurrentError = DisconnectionErrorPpopupAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
-                    PluginLog.Debug("Found Dialogue addon (Disconnection message hopefully!) - Trying to hit OK!");
+                    if (PluginConfig.DebugMode) { PluginLog.Debug("Found Dialogue addon (Disconnection message hopefully!) - Trying to hit OK!"); }
                     DisconnectionErrorPpopupAddon->GetComponentButtonById(4)->ClickAddonButton(DisconnectionErrorPpopupAddon);
-                    PluginLog.Debug("Hit OK!");
+                    if (PluginConfig.DebugMode) { PluginLog.Debug("Hit OK!"); }
                 }
             }
             if (!hasDoneLogin && PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
@@ -435,11 +435,11 @@ namespace AutoLogin
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu").Address;
             if (addon == null || addon->IsVisible == false) return false;
-            PluginLog.Debug("Found Title Screen");
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Found Title Screen"); }
             GenerateCallback(addon, 5);
             var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMap").Address;
             if (nextAddon == null) return false;
-            PluginLog.Debug("Found TitleDCWorldMap");
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Found TitleDCWorldMap"); }
             return true;
         }
 
@@ -447,7 +447,7 @@ namespace AutoLogin
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMap", 1).Address;
             if (addon == null) return false;
-            PluginLog.Debug("Found TitleDCWorldMap");
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Found TitleDCWorldMap"); }
             var dcMenu = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMap").Address;
             if (dcMenu != null) dcMenu->Hide(true, true, 0);
             var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg").Address;
@@ -466,7 +466,7 @@ namespace AutoLogin
             if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("_CharaSelectWorldServer", 1).Address;
             if (addon == null) return false;
-            PluginLog.Debug("Found World Server");
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Found World Server"); }
             var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder.StringArrays[1];
             if (stringArray == null) return false;
 
@@ -483,7 +483,7 @@ namespace AutoLogin
                 if (s.Trim().Length == 0) continue;
                 checkedWorldCount++;
                 if (s != world.Value.Name.ToString()) continue;
-                PluginLog.Debug("Found world [" + world.Value.ToString() + "] at integer i[" + i + "]");
+                if (PluginConfig.DebugMode) { PluginLog.Debug("Found world [" + world.Value.ToString() + "] at integer i[" + i + "]"); }
                 GenerateCallback(addon, 24, 0, i);
                 return true;
             }
@@ -497,7 +497,7 @@ namespace AutoLogin
             // Select Character
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("_CharaSelectListMenu", 1).Address;
             if (addon == null) return false;
-            PluginLog.Debug("Found _CharaSelectListMenu");
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Found _CharaSelectListMenu"); }
             GenerateCallback(addon, 29, 0, tempCharacter ?? PluginConfig.CharacterSlot);
             var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("SelectYesno", 1).Address;
             return nextAddon != null;

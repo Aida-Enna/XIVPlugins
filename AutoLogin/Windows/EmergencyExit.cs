@@ -54,15 +54,16 @@ namespace AutoLogin.Windows
             ImGui.SetWindowFocus();
             if (Plugin.PluginConfig.CurrentError != "none")
             {
-                if (Convert.ToUInt16(Plugin.PluginConfig.CurrentError) == ErrorCode.LobbyConnectionError.GameCode)
+                ulong CurrentError = Convert.ToUInt64(Plugin.PluginConfig.CurrentError);
+                if (CurrentError == ErrorCode.LobbyConnectionError.GameCode)
                 {
                     EECodeExplanation = ErrorCode.LobbyConnectionError.LongDescription;
                 }
-                else if (Convert.ToUInt16(Plugin.PluginConfig.CurrentError) == ErrorCode.SessionTokenExpired.GameCode)
+                else if (CurrentError == ErrorCode.SessionTokenExpired.GameCode)
                 {
                     EECodeExplanation = ErrorCode.SessionTokenExpired.LongDescription;
                 }
-                else if (Convert.ToUInt16(Plugin.PluginConfig.CurrentError) == ErrorCode.E90002.GameCode)
+                else if (CurrentError == ErrorCode.E90002.GameCode || CurrentError == ErrorCode.E90002.InternalCode)
                 {
                     EECodeExplanation = ErrorCode.E90002.LongDescription;
                 }
