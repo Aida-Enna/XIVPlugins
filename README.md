@@ -12,10 +12,6 @@ Automatically logs you into a specified character when the game first opens, and
 
 When a party member gets on a mount that supports more than 1 person and is close enough, you will automatically get on.
 
-## Food Check
-
-See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.
-
 ## Macro Chain Redux
 
 A fork of the original macro chain, this re-adds support for running a macro inside of a macro.
@@ -23,3 +19,11 @@ A fork of the original macro chain, this re-adds support for running a macro ins
 ## Portrait Fixer
 
 When you click "Update Gear Set", this plugin will automatically update and save your portait to match your new glam.
+
+# Deprecated plugins
+
+## Food Check
+
+See who is missing food buff at countdown start and optionally post to party/echo chat with a customizable message.
+
+This is now a main repo plugin - You will need to delete the custom repo version (using the trash can icon) and then make sure testing builds is enabled (/xlsettings -> Experimental tab -> Receive plugin testing builds), and it should show up.
