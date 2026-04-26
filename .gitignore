@@ -36,6 +36,8 @@ obj/
 /TextFormatter
 /DLLs
 /Shared/Functions.cs
+/.claude/
+/CLAUDE.md
 /EmptyPlugin
 /AutoPillion/AutoFillFunctions.cs
 /Maily

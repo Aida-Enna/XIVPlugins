@@ -30,74 +30,115 @@ namespace AutoLogin.Windows
 
         public override unsafe void Draw()
         {
-            const ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
-
             var dcSheet = Plugin.Data.Excel.GetSheet<WorldDCGroupType>();
-            //if (dcSheet == null) return false;
             var worldSheet = Plugin.Data.Excel.GetSheet<World>();
-            //if (worldSheet == null) return false;
 
             var currentDc = dcSheet.GetRow(Plugin.PluginConfig.DataCenter);
             if (currentDc.Region == 0)
-            {
                 Plugin.PluginConfig.DataCenter = 0;
-                //return true;
-            }
 
-            if (ImGui.BeginCombo("Data Center", Plugin.PluginConfig.DataCenter == 0 ? "Not Selected" : currentDc.Name.ToString()))
+            // Behavior selector
+            var behaviorOptions = new[] { "Remember last logged-in character", "Use manual preselection" };
+            var behaviorIndex = Plugin.PluginConfig.RememberLastCharacter ? 0 : 1;
+            if (ImGui.BeginCombo("Behavior", behaviorOptions[behaviorIndex]))
             {
-                foreach (var dc in dcSheet.Where(w => w.Region > 0 && w.Name.ToString().Trim().Length > 0))
+                for (var i = 0; i < behaviorOptions.Length; i++)
                 {
-                    if (ImGui.Selectable(dc.Name.ToString(), dc.RowId == Plugin.PluginConfig.DataCenter))
+                    if (ImGui.Selectable(behaviorOptions[i], behaviorIndex == i))
                     {
-                        Plugin.PluginConfig.DataCenter = dc.RowId;
+                        Plugin.PluginConfig.RememberLastCharacter = (i == 0);
                         Plugin.PluginConfig.Save();
                     }
                 }
                 ImGui.EndCombo();
             }
 
-            if (currentDc.Region != 0)
-            {
-                var currentWorld = worldSheet.GetRow(Plugin.PluginConfig.World);
-                if (/*currentWorld.RowId == 0 || */Plugin.PluginConfig.World != 0 && currentWorld.DataCenter.RowId != Plugin.PluginConfig.DataCenter)
-                {
-                    Plugin.PluginConfig.World = 0;
-                }
+            ImGui.Spacing();
 
-                if (ImGui.BeginCombo("World", Plugin.PluginConfig.World == 0 ? "Not Selected" : currentWorld.Name.ToString()))
+            if (Plugin.PluginConfig.RememberLastCharacter)
+            {
+                if (Plugin.PluginConfig.LastCharContentId == 0)
                 {
-                    foreach (var w in worldSheet.Where(w => w.DataCenter.RowId == Plugin.PluginConfig.DataCenter && w.IsPublic))
+                    ImGui.TextColored(new System.Numerics.Vector4(1.0f, 0.8f, 0.0f, 1.0f),
+                        "No character saved yet - log in once to populate.");
+                }
+                else
+                {
+                    var lastWorld = worldSheet?.GetRow(Plugin.PluginConfig.LastCharWorld);
+                    var worldName = (lastWorld.HasValue && lastWorld.Value.IsPublic)
+                        ? lastWorld.Value.Name.ToString()
+                        : $"World #{Plugin.PluginConfig.LastCharWorld}";
+                    var charName = string.IsNullOrEmpty(Plugin.PluginConfig.LastCharName)
+                        ? "(unknown)"
+                        : Plugin.PluginConfig.LastCharName;
+                    ImGui.TextColored(new System.Numerics.Vector4(0.4f, 1.0f, 0.4f, 1.0f),
+                        $"Last character: {charName} @ {worldName}");
+                    if (ImGui.Button("Clear saved character"))
                     {
-                        if (ImGui.Selectable(w.Name.ToString(), w.RowId == Plugin.PluginConfig.World))
+                        Plugin.PluginConfig.LastCharContentId = 0;
+                        Plugin.PluginConfig.LastCharWorld = 0;
+                        Plugin.PluginConfig.LastCharDataCenter = 0;
+                        Plugin.PluginConfig.LastCharName = "";
+                        Plugin.PluginConfig.Save();
+                    }
+                }
+            }
+            else
+            {
+                if (ImGui.BeginCombo("Data Center", Plugin.PluginConfig.DataCenter == 0 ? "Not Selected" : currentDc.Name.ToString()))
+                {
+                    foreach (var dc in dcSheet.Where(w => w.Region > 0 && w.Name.ToString().Trim().Length > 0))
+                    {
+                        if (ImGui.Selectable(dc.Name.ToString(), dc.RowId == Plugin.PluginConfig.DataCenter))
                         {
-                            Plugin.PluginConfig.World = w.RowId;
+                            Plugin.PluginConfig.DataCenter = dc.RowId;
                             Plugin.PluginConfig.Save();
                         }
                     }
                     ImGui.EndCombo();
                 }
 
-                if (currentWorld.IsPublic)
+                if (currentDc.Region != 0)
                 {
-                    if (ImGui.BeginCombo("Character Slot", $"Slot #{Plugin.PluginConfig.CharacterSlot + 1}"))
+                    var currentWorld = worldSheet.GetRow(Plugin.PluginConfig.World);
+                    if (Plugin.PluginConfig.World != 0 && currentWorld.DataCenter.RowId != Plugin.PluginConfig.DataCenter)
+                        Plugin.PluginConfig.World = 0;
+
+                    if (ImGui.BeginCombo("World", Plugin.PluginConfig.World == 0 ? "Not Selected" : currentWorld.Name.ToString()))
                     {
-                        for (uint i = 0; i < 8; i++)
+                        foreach (var w in worldSheet.Where(w => w.DataCenter.RowId == Plugin.PluginConfig.DataCenter && w.IsPublic))
                         {
-                            if (ImGui.Selectable($"Slot #{i + 1}", Plugin.PluginConfig.CharacterSlot == i))
+                            if (ImGui.Selectable(w.Name.ToString(), w.RowId == Plugin.PluginConfig.World))
                             {
-                                Plugin.PluginConfig.CharacterSlot = i;
+                                Plugin.PluginConfig.World = w.RowId;
                                 Plugin.PluginConfig.Save();
                             }
                         }
                         ImGui.EndCombo();
                     }
+
+                    if (currentWorld.IsPublic)
+                    {
+                        if (ImGui.BeginCombo("Character Slot", $"Slot #{Plugin.PluginConfig.CharacterSlot + 1}"))
+                        {
+                            for (uint i = 0; i < 8; i++)
+                            {
+                                if (ImGui.Selectable($"Slot #{i + 1}", Plugin.PluginConfig.CharacterSlot == i))
+                                {
+                                    Plugin.PluginConfig.CharacterSlot = i;
+                                    Plugin.PluginConfig.Save();
+                                }
+                            }
+                            ImGui.EndCombo();
+                        }
+                    }
                 }
             }
-            if (ImGui.Checkbox("Relogin to the above after being disconnected", ref Plugin.PluginConfig.RelogAfterDisconnect))
-            {
+
+            ImGui.Spacing();
+
+            if (ImGui.Checkbox("Relogin after being disconnected", ref Plugin.PluginConfig.RelogAfterDisconnect))
                 Plugin.PluginConfig.Save();
-            }
             if (ImGui.Checkbox("Send discord notification when disconnected", ref Plugin.PluginConfig.SendNotif))
             {
                 Plugin.PluginConfig.Save();
