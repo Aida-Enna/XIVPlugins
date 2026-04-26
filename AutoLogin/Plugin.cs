@@ -154,7 +154,7 @@ namespace AutoLogin
                 var player = ClientState.LocalPlayer;
                 if (contentId != 0 && player != null)
                 {
-                    var worldId = player.HomeWorld.RowId;
+                    var worldId = player.CurrentWorld.RowId;
                     var worldRow = Data.Excel.GetSheet<World>()?.GetRow(worldId);
                     var dcId = worldRow?.DataCenter.RowId ?? 0;
                     if (dcId != 0)
@@ -162,6 +162,7 @@ namespace AutoLogin
                         PluginConfig.LastCharContentId = contentId;
                         PluginConfig.LastCharWorld = worldId;
                         PluginConfig.LastCharDataCenter = dcId;
+                        PluginConfig.LastCharName = player.Name.TextValue;
                         PluginConfig.Save();
                         if (PluginConfig.DebugMode)
                             PluginLog.Debug($"[RememberLastChar] Saved DC={dcId} World={worldId} ContentId={contentId}");

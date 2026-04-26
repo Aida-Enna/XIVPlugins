@@ -117,8 +117,11 @@ namespace AutoLogin.Windows
                         var worldName = (lastWorld.HasValue && lastWorld.Value.IsPublic)
                             ? lastWorld.Value.Name.ToString()
                             : $"World #{Plugin.PluginConfig.LastCharWorld}";
+                        var charName = string.IsNullOrEmpty(Plugin.PluginConfig.LastCharName)
+                            ? "(unknown)"
+                            : Plugin.PluginConfig.LastCharName;
                         ImGui.TextColored(new System.Numerics.Vector4(0.4f, 1.0f, 0.4f, 1.0f),
-                            $"Last character: {worldName}");
+                            $"Last character: {charName} @ {worldName}");
                         if (ImGui.Button("Clear saved character"))
                         {
                             Plugin.PluginConfig.LastCharContentId = 0;
