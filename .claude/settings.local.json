@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:dalamud.dev)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

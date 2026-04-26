@@ -98,6 +98,38 @@ namespace AutoLogin.Windows
             {
                 Plugin.PluginConfig.Save();
             }
+            if (Plugin.PluginConfig.RelogAfterDisconnect)
+            {
+                ImGui.Indent();
+                if (ImGui.Checkbox("Reconnect to last logged-in character instead", ref Plugin.PluginConfig.RememberLastCharacter))
+                    Plugin.PluginConfig.Save();
+
+                if (Plugin.PluginConfig.RememberLastCharacter)
+                {
+                    if (Plugin.PluginConfig.LastCharContentId == 0)
+                    {
+                        ImGui.TextColored(new System.Numerics.Vector4(1.0f, 0.8f, 0.0f, 1.0f),
+                            "No character saved yet - log in once to populate.");
+                    }
+                    else
+                    {
+                        var lastWorld = Plugin.Data.Excel.GetSheet<World>()?.GetRow(Plugin.PluginConfig.LastCharWorld);
+                        var worldName = (lastWorld.HasValue && lastWorld.Value.IsPublic)
+                            ? lastWorld.Value.Name.ToString()
+                            : $"World #{Plugin.PluginConfig.LastCharWorld}";
+                        ImGui.TextColored(new System.Numerics.Vector4(0.4f, 1.0f, 0.4f, 1.0f),
+                            $"Last character: {worldName}");
+                        if (ImGui.Button("Clear saved character"))
+                        {
+                            Plugin.PluginConfig.LastCharContentId = 0;
+                            Plugin.PluginConfig.LastCharWorld = 0;
+                            Plugin.PluginConfig.LastCharDataCenter = 0;
+                            Plugin.PluginConfig.Save();
+                        }
+                    }
+                }
+                ImGui.Unindent();
+            }
             if (ImGui.Checkbox("Send discord notification when disconnected", ref Plugin.PluginConfig.SendNotif))
             {
                 Plugin.PluginConfig.Save();
