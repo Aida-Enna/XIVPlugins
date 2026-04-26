@@ -178,6 +178,22 @@ namespace AutoLogin
             ConfigWindow.Toggle();
         }
 
+        [Command("/clearlogin")]
+        [HelpMessage("Clear the saved last-login character (useful when switching service accounts)")]
+        public void ClearLogin(string command, string args)
+        {
+            PluginConfig.LastCharContentId = 0;
+            PluginConfig.LastCharWorld = 0;
+            PluginConfig.LastCharDataCenter = 0;
+            PluginConfig.LastCharName = "";
+            PluginConfig.Save();
+            Chat.Print(new Dalamud.Game.Text.XivChatEntry
+            {
+                Message = "AutoLogin: Saved character cleared.",
+                Type = Dalamud.Game.Text.XivChatType.SystemMessage,
+            });
+        }
+
         [Command("/swapcharacter")]
         [HelpMessage("Swap character\nUsage: /swapcharacter WorldName CharacterIndex")]
         public void SwapCharacter(string command, string arguments)
@@ -698,6 +714,7 @@ namespace AutoLogin
             this.LobbyErrorHandlerHook.Dispose();
 
             Commands.RemoveHandler("/autologin");
+            Commands.RemoveHandler("/clearlogin");
             Commands.RemoveHandler("/swapcharacter");
 
             AddonLifecycle.UnregisterListener(AddonEvent.PostShow, ["Dialogue"], DialoguePostDraw);
