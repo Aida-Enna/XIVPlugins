@@ -396,7 +396,6 @@ namespace AutoLogin
         private void OnLogin()
         {
             bool useLastChar = PluginConfig.RememberLastCharacter
-                               && ReloggingFromDisconnect
                                && PluginConfig.LastCharContentId != 0
                                && PluginConfig.LastCharDataCenter != 0
                                && PluginConfig.LastCharWorld != 0;
