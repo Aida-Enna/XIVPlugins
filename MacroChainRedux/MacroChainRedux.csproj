@@ -2,12 +2,12 @@
     <PropertyGroup>
         <TargetFramework>net10.0-windows7.0</TargetFramework>
 		<OutputPath>..\Build\MacroChainRedux\</OutputPath>
-        <Version>2.1.1.4</Version>
+        <Version>2.1.1.5</Version>
     </PropertyGroup>
     <ItemGroup>
       <Content Include="MacroChainRedux.json" />
     </ItemGroup>
     <ItemGroup>
-      <PackageReference Update="DalamudPackager" Version="14.0.0" />
+      <PackageReference Update="DalamudPackager" Version="15.0.0" />
     </ItemGroup>
 </Project>

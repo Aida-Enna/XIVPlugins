@@ -359,28 +359,28 @@ namespace PortraitFixer
                     switch (v)
                     {
                         case uint uintValue:
-                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.UInt;
+                            atkValues[i].Type = AtkValueType.UInt;
                             atkValues[i].UInt = uintValue;
                             break;
 
                         case int intValue:
-                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Int;
+                            atkValues[i].Type = AtkValueType.Int;
                             atkValues[i].Int = intValue;
                             break;
 
                         case float floatValue:
-                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Float;
+                            atkValues[i].Type = AtkValueType.Float;
                             atkValues[i].Float = floatValue;
                             break;
 
                         case bool boolValue:
-                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Bool;
+                            atkValues[i].Type = AtkValueType.Bool;
                             atkValues[i].Byte = (byte)(boolValue ? 1 : 0);
                             break;
 
                         case string stringValue:
                             {
-                                atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String;
+                                atkValues[i].Type = AtkValueType.String;
                                 var stringBytes = Encoding.UTF8.GetBytes(stringValue);
                                 var stringAlloc = Marshal.AllocHGlobal(stringBytes.Length + 1);
                                 Marshal.Copy(stringBytes, 0, stringAlloc, stringBytes.Length);
@@ -399,7 +399,7 @@ namespace PortraitFixer
             {
                 for (var i = 0; i < values.Length; i++)
                 {
-                    if (atkValues[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
+                    if (atkValues[i].Type == AtkValueType.String)
                     {
                         Marshal.FreeHGlobal(new IntPtr(atkValues[i].String));
                     }
