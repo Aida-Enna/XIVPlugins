@@ -34,8 +34,8 @@ namespace AutoLogin.Windows
             {
                 short X;
                 short Y;
-                short Width;
-                short Height;
+                ushort Width;
+                ushort Height;
                 DialogueAddon->GetPosition(&X, &Y);
                 DialogueAddon->GetSize(&Width, &Height, true);
                 StartingPositionX = (int)X + Width;
@@ -52,7 +52,7 @@ namespace AutoLogin.Windows
         public override void Draw()
         {
             ImGui.SetWindowFocus();
-            if (Plugin.PluginConfig.CurrentError != "none")
+            if (!string.IsNullOrWhiteSpace(Plugin.PluginConfig.CurrentError) && Plugin.PluginConfig.CurrentError != "none")
             {
                 ulong CurrentError = Convert.ToUInt64(Plugin.PluginConfig.CurrentError);
                 if (CurrentError == ErrorCode.LobbyConnectionError.GameCode)
@@ -66,6 +66,14 @@ namespace AutoLogin.Windows
                 else if (CurrentError == ErrorCode.E90002.GameCode || CurrentError == ErrorCode.E90002.InternalCode)
                 {
                     EECodeExplanation = ErrorCode.E90002.LongDescription;
+                }
+                else if (CurrentError == ErrorCode.Maintenance.GameCode)
+                {
+                    EECodeExplanation = ErrorCode.Maintenance.LongDescription;
+                }
+                else
+                {
+                    EECodeExplanation = "Unknown error " + CurrentError + Environment.NewLine + Environment.NewLine + "If you encounter this error more than once, please create an issue on the github so we can add it to the database.";
                 }
                 ImGuiHelpers.CenteredText(EECodeExplanation);
                 ImGui.Separator();

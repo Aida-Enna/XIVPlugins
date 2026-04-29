@@ -38,7 +38,7 @@ namespace AutoLogin.Windows
             //if (worldSheet == null) return false;
 
             var currentDc = dcSheet.GetRow(Plugin.PluginConfig.DataCenter);
-            if (currentDc.Region == 0)
+            if (currentDc.Region.RowId == 0)
             {
                 Plugin.PluginConfig.DataCenter = 0;
                 //return true;
@@ -46,7 +46,7 @@ namespace AutoLogin.Windows
 
             if (ImGui.BeginCombo("Data Center", Plugin.PluginConfig.DataCenter == 0 ? "Not Selected" : currentDc.Name.ToString()))
             {
-                foreach (var dc in dcSheet.Where(w => w.Region > 0 && w.Name.ToString().Trim().Length > 0))
+                foreach (var dc in dcSheet.Where(w => w.Region.RowId > 0 && w.Name.ToString().Trim().Length > 0))
                 {
                     if (ImGui.Selectable(dc.Name.ToString(), dc.RowId == Plugin.PluginConfig.DataCenter))
                     {
@@ -57,7 +57,7 @@ namespace AutoLogin.Windows
                 ImGui.EndCombo();
             }
 
-            if (currentDc.Region != 0)
+            if (currentDc.Region.RowId != 0)
             {
                 var currentWorld = worldSheet.GetRow(Plugin.PluginConfig.World);
                 if (/*currentWorld.RowId == 0 || */Plugin.PluginConfig.World != 0 && currentWorld.DataCenter.RowId != Plugin.PluginConfig.DataCenter)
