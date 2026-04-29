@@ -1,0 +1,27 @@
+﻿{
+  "Author": "Aida Enna",
+  "Name": "Maily",
+  "InternalName": "Maily",
+  "AssemblyVersion": "1.0.0.2",
+  "ApplicableVersion": "any",
+  "Description": "Does... something, I'm sure?",
+  "Punchline": "It's a pretty cool plugin, I think?",
+  "RepoUrl": "hhttps://github.com/Aida-Enna/Maily",
+  "Tags": [
+  "maily",
+	"alts",
+	"letter",
+	"Mog",
+	"mail",
+  "aida"
+  ],
+  "CategoryTags": null,
+  "DalamudApiLevel": 11,
+  "LoadPriority": 0,
+  "LastUpdate": 0,
+  "DownloadLinkInstall": null,
+  "DownloadLinkUpdate": null,
+  "DownloadLinkTesting": null,
+  "ImageUrls": null,
+  "IconUrl": ""
+}

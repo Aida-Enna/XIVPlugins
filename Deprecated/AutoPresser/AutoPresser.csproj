@@ -1,0 +1,23 @@
+<Project Sdk="Dalamud.NET.Sdk/13.0.0">
+  <PropertyGroup>
+    <Version>1.0.1.2</Version>
+	<TargetFramework>net9.0</TargetFramework>
+	<OutputPath>..\Build\AutoPresser\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\Attributes.cs" Link="Shared\Attributes.cs" />
+    <Compile Include="..\Shared\Classes.cs" Link="Shared\Classes.cs" />
+    <Compile Include="..\Shared\Functions.cs" Link="Shared\Functions.cs" />
+    <Compile Include="..\Shared\PluginCommandManager.cs" Link="Shared\PluginCommandManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="AutoPresser.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="DalamudPackager" Version="14.0.0" />
+  </ItemGroup>
+
+</Project>
