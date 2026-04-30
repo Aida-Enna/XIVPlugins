@@ -26,6 +26,7 @@ namespace AutoPillion
         [PluginService] public static IGameGui GameGui { get; set; }
         [PluginService] public static IChatGui Chat { get; set; }
         [PluginService] public static IClientState ClientState { get; set; }
+        [PluginService] public static IObjectTable ObjectTable { get; set; }
         [PluginService] public static IPartyList PartyList { get; set; }
         [PluginService] public static ITargetManager TargetManager { get; set; }
 
@@ -70,16 +71,17 @@ namespace AutoPillion
             try
             {
                 if (!ClientState.IsLoggedIn) { return; }
+                if (ObjectTable.LocalPlayer == null) { return; }
                 var CurrentCharacterPtr = (Character*)null;
                 try
                 {
-                    CurrentCharacterPtr = (Character*)ClientState.LocalPlayer.Address;
+                    CurrentCharacterPtr = (Character*)ObjectTable.LocalPlayer.Address;
                 }
                 catch (Exception f)
                 {
                     return;
                 }
-                if (CurrentCharacterPtr->IsMounted() || !ClientState.LocalPlayer.IsTargetable)
+                if (CurrentCharacterPtr->IsMounted() || !ObjectTable.LocalPlayer.IsTargetable)
                 {
                     if (AutoPillionCooldownTimer.IsRunning) AutoPillionCooldownTimer.Stop();
                     return;
@@ -98,7 +100,7 @@ namespace AutoPillion
                     foreach (var partyMember in PartyList)
                     {
                         //Chat.Print("Party member " + count + ": " + partyMember.Name);
-                        if (partyMember.Name == ClientState.LocalPlayer.Name) { continue; }
+                        if (partyMember.Name == ObjectTable.LocalPlayer.Name) { continue; }
                         try
                         {
                             if (partyMember.GameObject.YalmDistanceX > 3 || partyMember.GameObject.YalmDistanceZ > 3) { continue; }
@@ -170,28 +172,28 @@ namespace AutoPillion
                     switch (v)
                     {
                         case uint uintValue:
-                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.UInt;
+                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType.UInt;
                             atkValues[i].UInt = uintValue;
                             break;
 
                         case int intValue:
-                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Int;
+                            atkValues[i].Type = AtkValueType.Int;
                             atkValues[i].Int = intValue;
                             break;
 
                         case float floatValue:
-                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Float;
+                            atkValues[i].Type = AtkValueType.Float;
                             atkValues[i].Float = floatValue;
                             break;
 
                         case bool boolValue:
-                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Bool;
+                            atkValues[i].Type = AtkValueType.Bool;
                             atkValues[i].Byte = (byte)(boolValue ? 1 : 0);
                             break;
 
                         case string stringValue:
                             {
-                                atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String;
+                                atkValues[i].Type = AtkValueType.String;
                                 var stringBytes = Encoding.UTF8.GetBytes(stringValue);
                                 var stringAlloc = Marshal.AllocHGlobal(stringBytes.Length + 1);
                                 Marshal.Copy(stringBytes, 0, stringAlloc, stringBytes.Length);
@@ -210,7 +212,7 @@ namespace AutoPillion
             {
                 for (var i = 0; i < values.Length; i++)
                 {
-                    if (atkValues[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
+                    if (atkValues[i].Type == AtkValueType.String)
                     {
                         Marshal.FreeHGlobal(new IntPtr(atkValues[i].String));
                     }

@@ -1,8 +1,8 @@
-﻿<Project Sdk="Dalamud.NET.Sdk/13.0.0">
+<Project Sdk="Dalamud.NET.Sdk/13.0.0">
   <PropertyGroup>
-    <Version>1.0.1.1</Version>
-	<TargetFramework>net10.0</TargetFramework>
-	<OutputPath>..\Build\FoodCheck\</OutputPath>
+    <Version>1.0.1.2</Version>
+	<TargetFramework>net9.0</TargetFramework>
+	<OutputPath>..\Build\AutoPresser\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="FoodCheck.json" />
+    <Content Include="AutoPresser.json" />
   </ItemGroup>
 
   <ItemGroup>

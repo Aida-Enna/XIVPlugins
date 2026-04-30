@@ -15,11 +15,11 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Veda;
 
-namespace PortraitFixer
+namespace AutoPresser
 {
     public class Plugin : IDalamudPlugin
     {
-        public unsafe string Name => "PortraitFixer";
+        public unsafe string Name => "AutoPresser";
 
         [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
         [PluginService] public static IFramework Framework { get; set; }
@@ -28,7 +28,6 @@ namespace PortraitFixer
         [PluginService] public static IChatGui Chat { get; set; }
         [PluginService] public static IPluginLog PluginLog { get; set; }
         [PluginService] public static ICondition Condition { get; set; }
-        [PluginService] public static IGameInteropProvider HookProvider { get; private set; } = null!;
 
         private PluginCommandManager<Plugin> commandManager;
         private PluginUI ui;
@@ -39,18 +38,14 @@ namespace PortraitFixer
         private readonly Stopwatch sw = new();
         private static uint Delay = 0;
 
-        private Hook<RaptureGearsetDelegate> onUpdateGearsetHook;
-
-        private unsafe delegate void RaptureGearsetDelegate(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff);
-
         public static bool HideWindows = true;
 
         public unsafe Plugin(IDalamudPluginInterface pluginInterface, IChatGui chat, ICommandManager commands, IFramework framework, ISigScanner sigScanner)
         {
-            PluginInterface = pluginInterface;
-            Chat = chat;
-            Framework = framework;
-            SigScanner = sigScanner;
+            //PluginInterface = pluginInterface;
+            //Chat = chat;
+            //Framework = framework;
+            //SigScanner = sigScanner;
 
             // Get or create a configuration object
             PluginConfig = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
@@ -69,82 +64,12 @@ namespace PortraitFixer
 
             Framework.Update += OnFrameworkUpdate;
 
-            onUpdateGearsetHook = HookProvider.HookFromAddress<RaptureGearsetDelegate>(new nint(RaptureGearsetModule.MemberFunctionPointers.UpdateGearset), OnUpdateGearset);
-            onUpdateGearsetHook.Enable();
+
         }
 
         public static void Print(string Message, ushort ColorType = 0)
         {
-            Chat.Print(Functions.BuildSeString("Portrait Fixer", Message, ColorType));
-        }
-
-        private unsafe void OnUpdateGearset(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff)
-        {
-            onUpdateGearsetHook?.Original(RaptureShellModule, GearsetStuff);
-            if (Condition[ConditionFlag.InCombat] || Condition[ConditionFlag.BoundByDuty] || Condition[ConditionFlag.BoundByDuty56] || Condition[ConditionFlag.BoundByDuty95])
-            {
-                Print("You cannot save your portrait at this time. Please wait until you are out of combat/the duty and try saving again with /pfixsave.",ColorType.Error);
-                return;
-            }
-            if (PluginConfig.AutoUpdatePortraitFromGearsetUpdate)
-            {
-                if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortraitFromGearsetUpdate)
-                {
-                    SavePortrait("Gearset updated");
-                }
-                else
-                {
-                    SavePortrait("", true);
-                }
-            }
-        }
-
-        [Command("/pfixsave")]
-        [HelpMessage("Updates the portrait for the currently selected gearset/equipment")]
-        public unsafe void PortraitFixSave(string command, string args)
-        {
-            var addon = (AtkUnitBase*)GameGui.GetAddonByName("Character").Address;
-            if (addon == null || addon->IsVisible == false)
-            {
-                Print("You can only use this command while the character menu is open.", ColorType.Error);
-                return;
-            }
-            if (Condition[ConditionFlag.InCombat] || Condition[ConditionFlag.BoundByDuty] || Condition[ConditionFlag.BoundByDuty56] || Condition[ConditionFlag.BoundByDuty95])
-            {
-                Print("You cannot save your portrait at this time. Please wait until you are out of combat/the duty and try saving again.", ColorType.Error);
-                return;
-            }
-            SavePortrait();
-        }
-
-        [Command("/pfixconfig")]
-        [HelpMessage("Show the Portrait Fixer settings")]
-        public void ToggleConfig(string command, string args)
-        {
-            ui.IsVisible = !ui.IsVisible;
-        }
-
-        public static void SavePortrait(string ExtraInfo = "", bool Silent = false)
-        {
-            actionQueue.Enqueue(OpenGearSetMenu);
-            actionQueue.Enqueue(RightClickOnGearSet);
-            actionQueue.Enqueue(OpenPortraitMenu);
-            actionQueue.Enqueue(CheckForPortraitEditor);
-            actionQueue.Enqueue(VariableDelay(50));
-            actionQueue.Enqueue(PressSaveOnPortraitMenu);
-            //actionQueue.Enqueue(VariableDelay(60));
-            actionQueue.Enqueue(ClosePortraitMenu);
-            if (!Silent)
-            {
-                if (ExtraInfo == "")
-                {
-                    Print("Portrait saved!", ColorType.Success);
-                }
-                else
-                {
-                    Print(ExtraInfo + " - portrait saved!", ColorType.Success);
-                }
-            }
+            Chat.Print(Functions.BuildSeString("AutoPresser", Message, ColorType));
         }
 
         public static Func<bool> VariableDelay(uint frameDelay)
@@ -359,28 +284,28 @@ namespace PortraitFixer
                     switch (v)
                     {
                         case uint uintValue:
-                            atkValues[i].Type = AtkValueType.UInt;
+                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.UInt;
                             atkValues[i].UInt = uintValue;
                             break;
 
                         case int intValue:
-                            atkValues[i].Type = AtkValueType.Int;
+                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Int;
                             atkValues[i].Int = intValue;
                             break;
 
                         case float floatValue:
-                            atkValues[i].Type = AtkValueType.Float;
+                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Float;
                             atkValues[i].Float = floatValue;
                             break;
 
                         case bool boolValue:
-                            atkValues[i].Type = AtkValueType.Bool;
+                            atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.Bool;
                             atkValues[i].Byte = (byte)(boolValue ? 1 : 0);
                             break;
 
                         case string stringValue:
                             {
-                                atkValues[i].Type = AtkValueType.String;
+                                atkValues[i].Type = FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String;
                                 var stringBytes = Encoding.UTF8.GetBytes(stringValue);
                                 var stringAlloc = Marshal.AllocHGlobal(stringBytes.Length + 1);
                                 Marshal.Copy(stringBytes, 0, stringAlloc, stringBytes.Length);
@@ -399,7 +324,7 @@ namespace PortraitFixer
             {
                 for (var i = 0; i < values.Length; i++)
                 {
-                    if (atkValues[i].Type == AtkValueType.String)
+                    if (atkValues[i].Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
                     {
                         Marshal.FreeHGlobal(new IntPtr(atkValues[i].String));
                     }

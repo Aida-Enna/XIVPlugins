@@ -19,9 +19,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Veda;
 using Veda.Windows;
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
+using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
 using World = Lumina.Excel.Sheets.World;
 
 namespace AutoLogin
@@ -112,15 +113,15 @@ namespace AutoLogin
 
             this.LobbyErrorHandlerHook.Enable();
 
-            if (!PluginConfig.SeenReconnectionExplanation)
-            {
-                MessageBoxWindow.MessageBoxText = "The Auto Login plugin now supports automatically reconnecting once it detects that you have been suddenly disconnected from\nthe game due to a network error (such a DDoS or server side issues). You can also (separately) have it send a Discord webhook\nmessage when it detects you've been disconnected.\n\nThis reconnection behavior is enabled by default and can be disabled/configured in the settings menu. This window is a one-time\nnotification to explain this behavior and will be removed in a future update.\n\nEnjoy!";
-                MessageBoxWindow.Toggle();
-                PluginConfig.SeenReconnectionExplanation = true;
-                Plugin.PluginConfig.Save();
-            }
+            //if (!PluginConfig.SeenReconnectionExplanation)
+            //{
+            //    MessageBoxWindow.MessageBoxText = "The Auto Login plugin now supports automatically reconnecting once it detects that you have been suddenly disconnected from\nthe game due to a network error (such a DDoS or server side issues). You can also (separately) have it send a Discord webhook\nmessage when it detects you've been disconnected.\n\nThis reconnection behavior is enabled by default and can be disabled/configured in the settings menu. This window is a one-time\nnotification to explain this behavior and will be removed in a future update.\n\nEnjoy!";
+            //    MessageBoxWindow.Toggle();
+            //    PluginConfig.SeenReconnectionExplanation = true;
+            //    Plugin.PluginConfig.Save();
+            //}
 
-            AddonLifecycle.RegisterListener(AddonEvent.PostShow, ["Dialogue"], DialoguePostDraw);
+            AddonLifecycle.RegisterListener(AddonEvent.PostSetup, ["Dialogue"], DialoguePostDraw);
             PluginConfig.CurrentError = "none";
         }
 
@@ -129,18 +130,11 @@ namespace AutoLogin
             var DialogueAddon = (AtkUnitBase*)Plugin.GameGui.GetAddonByName("Dialogue", 1).Address;
             if (DialogueAddon != null && DialogueAddon->IsVisible)
             {
+                //Thread.Sleep(1000); //Try to sleep to let the UI element load first?
                 EmergencyExitWindow.IsOpen = true;
+                // Maybe try iterating through and doing a do/while unti the node loads? ugh
                 Plugin.PluginConfig.CurrentError = DialogueAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
                 if (PluginConfig.DebugMode) { PluginLog.Debug("CurrentError is " + Plugin.PluginConfig.CurrentError); }
-                // short X;
-                // short Y;
-                // short Width;
-                // short Height;
-                // DialogueAddon->GetPosition(&X, &Y);
-                // DialogueAddon->GetSize(&Width, &Height, true);
-                //EmergencyExitWindow.StartingPositionX = (int)X + Width;
-                // EmergencyExitWindow.StartingPositionY = (int)Y;
-                // PluginLog.Debug("X: " + (int)X + " | Y: " + (int)Y);
             }
         }
 
@@ -296,7 +290,14 @@ namespace AutoLogin
             if (PluginConfig.DebugMode) { PluginLog.Debug("Internal Code: " + v4_16 + " | Code shown to player: " + PluginConfig.CurrentError); }
             if (v4 > 0)
             {
-                ulong CurrentError = Convert.ToUInt64(PluginConfig.CurrentError.Trim());
+                ulong CurrentError = 90002;
+                try
+                {
+                    CurrentError = Convert.ToUInt64(PluginConfig.CurrentError.Trim());
+                }
+                catch
+                {
+                }
                 if (PluginConfig.DebugMode)
                 {
                     NotifObject.Content = "Code: " + v4_16;
@@ -567,7 +568,7 @@ namespace AutoLogin
             for (var i = 0; i < 16; i++)
             {
                 var n = stringArray->StringArray[i];
-                if (n == null) continue;
+                if (n.Value == null) continue;
                 var s = MemoryHelper.ReadStringNullTerminated(new IntPtr(n));
                 if (s.Trim().Length == 0) continue;
                 checkedWorldCount++;
@@ -717,7 +718,7 @@ namespace AutoLogin
             Commands.RemoveHandler("/clearlogin");
             Commands.RemoveHandler("/swapcharacter");
 
-            AddonLifecycle.UnregisterListener(AddonEvent.PostShow, ["Dialogue"], DialoguePostDraw);
+            AddonLifecycle.UnregisterListener(AddonEvent.PostSetup, ["Dialogue"], DialoguePostDraw);
         }
     }
 }

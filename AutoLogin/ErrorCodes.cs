@@ -51,14 +51,25 @@ namespace AutoLogin
 
         };
         /// <summary>
-        /// Internal: 13200 | Game code: ???? | Maintenance
+        /// Internal: 13200 | Game code: 1015 | Maintenance
         /// </summary>
         public static readonly ErrorCodeEntry Maintenance = new ErrorCodeEntry
         {
-            GameCode = 0,
+            GameCode = 1015,
             InternalCode = 13200,
-            LongDescription = "Error ????:\nThe game is currently in Maintance.\nPlease close the game and wait for it to end.",
+            LongDescription = "Error 1015:\nThe game is currently in Maintenance.\nPlease close the game and wait for it to end.",
             ShortDescription = "Maintenance"
+
+        };
+        /// <summary>
+        /// Internal: 13200 | Game code: 1015 | Maintenance
+        /// </summary>
+        public static readonly ErrorCodeEntry NoActiveSubscription = new ErrorCodeEntry
+        {
+            GameCode = 3109,
+            InternalCode = 13209,
+            LongDescription = "Error 3109:\nYou do not currently have a subscription.\nPlease close the game and renew your sub.",
+            ShortDescription = "Not subscribed"
 
         };
 

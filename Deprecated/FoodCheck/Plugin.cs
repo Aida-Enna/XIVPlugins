@@ -245,7 +245,7 @@ namespace FoodCheck
         /// <returns>True if high-end, false otherwise.</returns>
         public static bool PlayerIsInHighEndDuty()
         {
-            return TerritoryIsHighEndDuty(Plugin.ClientState.TerritoryType);
+            return TerritoryIsHighEndDuty((ushort)Plugin.ClientState.TerritoryType);
         }
 
         #region IDisposable Support
