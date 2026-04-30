@@ -11,6 +11,7 @@ using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
 using System.Collections.Generic;
@@ -140,6 +141,28 @@ namespace AutoLogin
         private void Login()
         {
             if (EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
+
+            if (PluginConfig.RememberLastCharacter)
+            {
+                var contentId = ClientState.LocalContentId;
+                var player = ClientState.LocalPlayer;
+                if (contentId != 0 && player != null)
+                {
+                    var worldId = player.CurrentWorld.RowId;
+                    var worldRow = Data.Excel.GetSheet<World>()?.GetRow(worldId);
+                    var dcId = worldRow?.DataCenter.RowId ?? 0;
+                    if (dcId != 0)
+                    {
+                        PluginConfig.LastCharContentId = contentId;
+                        PluginConfig.LastCharWorld = worldId;
+                        PluginConfig.LastCharDataCenter = dcId;
+                        PluginConfig.LastCharName = player.Name.TextValue;
+                        PluginConfig.Save();
+                        if (PluginConfig.DebugMode)
+                            PluginLog.Debug($"[RememberLastChar] Saved DC={dcId} World={worldId} ContentId={contentId}");
+                    }
+                }
+            }
         }
 
         [Command("/autologin")]
@@ -147,6 +170,22 @@ namespace AutoLogin
         public void ToggleConfig(string command, string args)
         {
             ConfigWindow.Toggle();
+        }
+
+        [Command("/clearlogin")]
+        [HelpMessage("Clear the saved last-login character (useful when switching service accounts)")]
+        public void ClearLogin(string command, string args)
+        {
+            PluginConfig.LastCharContentId = 0;
+            PluginConfig.LastCharWorld = 0;
+            PluginConfig.LastCharDataCenter = 0;
+            PluginConfig.LastCharName = "";
+            PluginConfig.Save();
+            Chat.Print(new Dalamud.Game.Text.XivChatEntry
+            {
+                Message = "AutoLogin: Saved character cleared.",
+                Type = Dalamud.Game.Text.XivChatType.SystemMessage,
+            });
         }
 
         [Command("/swapcharacter")]
@@ -373,26 +412,76 @@ namespace AutoLogin
 
         private void OnLogin()
         {
-            if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
+            bool useLastChar = PluginConfig.RememberLastCharacter
+                               && PluginConfig.LastCharContentId != 0
+                               && PluginConfig.LastCharDataCenter != 0
+                               && PluginConfig.LastCharWorld != 0;
+
+            bool canLogin = (PluginConfig.DataCenter != 0 && PluginConfig.World != 0) || useLastChar;
+            if (!canLogin) return;
+
+            hasDoneLogin = true;
+
+            if (useLastChar)
             {
-                hasDoneLogin = true;
-                if (ReloggingFromDisconnect)
-                {
-                    NotifObject.Content = "logging in again - Hold SPACE to cancel.";
-                }
-                else
-                {
-                    NotifObject.Content = "Auto logging in - Hold SPACE to cancel.";
-                }
-                NotifObject.Type = NotificationType.Info;
-                NotificationManager.AddNotification(NotifObject);
-                actionQueue.Enqueue(OpenDataCenterMenu);
-                actionQueue.Enqueue(SelectDataCentre);
-                actionQueue.Enqueue(SelectWorld);
-                actionQueue.Enqueue(VariableDelay(10));
-                actionQueue.Enqueue(SelectCharacter);
-                actionQueue.Enqueue(SelectYes);
+                NotifObject.Content = "Reconnecting to last character - Hold SPACE to cancel.";
+                tempDc = PluginConfig.LastCharDataCenter;
+                tempWorld = PluginConfig.LastCharWorld;
             }
+            else
+            {
+                NotifObject.Content = ReloggingFromDisconnect
+                    ? "logging in again - Hold SPACE to cancel."
+                    : "Auto logging in - Hold SPACE to cancel.";
+            }
+
+            NotifObject.Type = NotificationType.Info;
+            NotificationManager.AddNotification(NotifObject);
+
+            actionQueue.Enqueue(OpenDataCenterMenu);
+            actionQueue.Enqueue(SelectDataCentre);
+            actionQueue.Enqueue(SelectWorld);
+            actionQueue.Enqueue(VariableDelay(10));
+            actionQueue.Enqueue(useLastChar ? SelectCharacterByContentId : SelectCharacter);
+            actionQueue.Enqueue(SelectYes);
+            if (useLastChar) actionQueue.Enqueue(ClearTemp);
+        }
+
+        private static uint? TryResolveLastCharSlot()
+        {
+            if (PluginConfig.LastCharContentId == 0) return null;
+
+            var agentLobby = AgentLobby.Instance();
+            if (agentLobby == null) return null;
+
+            var entries = agentLobby->LobbyData.CharaSelectEntries;
+            for (var i = 0; i < entries.LongCount; i++)
+            {
+                var entry = entries[i].Value;
+                if (entry == null) continue;
+                if (entry->ContentId == PluginConfig.LastCharContentId)
+                {
+                    if (PluginConfig.DebugMode)
+                        PluginLog.Debug($"[RememberLastChar] Found slot {entry->Index} for ContentId {PluginConfig.LastCharContentId}");
+                    return entry->Index;
+                }
+            }
+
+            if (PluginConfig.DebugMode)
+                PluginLog.Debug($"[RememberLastChar] ContentId {PluginConfig.LastCharContentId} not in lobby entries, falling back.");
+            return null;
+        }
+
+        public static bool SelectCharacterByContentId()
+        {
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("_CharaSelectListMenu", 1).Address;
+            if (addon == null) return false;
+
+            var slot = TryResolveLastCharSlot() ?? PluginConfig.CharacterSlot;
+            GenerateCallback(addon, 29, 0, (uint)slot);
+
+            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("SelectYesno", 1).Address;
+            return nextAddon != null;
         }
 
         private Func<bool> VariableDelay(uint frameDelay)
@@ -626,6 +715,7 @@ namespace AutoLogin
             this.LobbyErrorHandlerHook.Dispose();
 
             Commands.RemoveHandler("/autologin");
+            Commands.RemoveHandler("/clearlogin");
             Commands.RemoveHandler("/swapcharacter");
 
             AddonLifecycle.UnregisterListener(AddonEvent.PostSetup, ["Dialogue"], DialoguePostDraw);

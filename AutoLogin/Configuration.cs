@@ -13,6 +13,11 @@ namespace AutoLogin
         public uint DataCenter;
         public uint World;
         public uint CharacterSlot;
+        public bool RememberLastCharacter = false;
+        public ulong LastCharContentId = 0;
+        public uint LastCharWorld = 0;
+        public uint LastCharDataCenter = 0;
+        public string LastCharName = "";
         public bool RelogAfterDisconnect = true;
         public bool SendNotif;
         public string WebhookURL = "";
