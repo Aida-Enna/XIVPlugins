@@ -447,8 +447,6 @@ namespace AutoLogin
             var gameWindow = GameWindow.Instance();
             var argumentsSpan = gameWindow != null ? gameWindow->ArgumentsSpan : default;
 
-            if (argumentsSpan.IsEmpty) return false;
-
             for (var i = 0; i < argumentsSpan.Length; i++)
             {
                 if (argumentsSpan[i].AsReadOnlySeString() != "DEV.TestSID=0") continue;
