@@ -19,6 +19,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using Veda;
 using Veda.Windows;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
@@ -376,6 +377,16 @@ namespace AutoLogin
             if (PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
             {
                 hasDoneLogin = true;
+
+                NotifObject.Type = NotificationType.Info;
+
+                if (IsFakeStart())
+                {
+                    NotifObject.Content = "Fake start detected - Cancelling auto logging";
+                    NotificationManager.AddNotification(NotifObject);
+                    return;
+                }
+
                 if (ReloggingFromDisconnect)
                 {
                     NotifObject.Content = "logging in again - Hold SPACE to cancel.";
@@ -384,7 +395,6 @@ namespace AutoLogin
                 {
                     NotifObject.Content = "Auto logging in - Hold SPACE to cancel.";
                 }
-                NotifObject.Type = NotificationType.Info;
                 NotificationManager.AddNotification(NotifObject);
                 actionQueue.Enqueue(OpenDataCenterMenu);
                 actionQueue.Enqueue(SelectDataCentre);
@@ -430,6 +440,21 @@ namespace AutoLogin
                 actionQueue.Clear();
                 return;
             }
+        }
+
+        private static bool IsFakeStart()
+        {
+            var gameWindow = GameWindow.Instance();
+            var argumentsSpan = gameWindow != null ? gameWindow->ArgumentsSpan : default;
+
+            for (var i = 0; i < argumentsSpan.Length; i++)
+            {
+                if (argumentsSpan[i].AsReadOnlySeString() != "DEV.TestSID=0") continue;
+
+                return true;
+            }
+
+            return false;
         }
 
         public static bool OpenDataCenterMenu()
