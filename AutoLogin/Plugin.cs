@@ -1,4 +1,4 @@
-﻿using AutoLogin.Windows;
+using AutoLogin.Windows;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.ClientState.Keys;
@@ -12,8 +12,6 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using FFXIVClientStructs.FFXIV.Client.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -61,8 +59,6 @@ namespace AutoLogin
         private static uint? tempDc = null;
         private static uint? tempWorld = null;
         private static uint? tempCharacter = null;
-        private static long lastWorldMenuLog;
-        private static long lastWorldVerificationLog;
 
         internal IntPtr LobbyErrorHandler;
 
@@ -74,8 +70,6 @@ namespace AutoLogin
         private ConfigWindow ConfigWindow { get; init; }
         private MessageBoxWindow MessageBoxWindow { get; init; }
         public EmergencyExitWindow EmergencyExitWindow { get; init; }
-
-        private static bool characterCallbackSent = false;
 
         public Plugin(IDalamudPluginInterface pluginInterface, IToastGui ToastGui, ICommandManager commands, IAddonLifecycle addonlifecycle)
         {
@@ -146,8 +140,6 @@ namespace AutoLogin
 
         private void Login()
         {
-            hasDoneLogin = true;
-
             if (EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
         }
 
@@ -192,16 +184,6 @@ namespace AutoLogin
             tempDc = world.Value.Unknown0;
             tempWorld = world.Value.RowId;
             tempCharacter = characterIndex;
-
-            if (PluginConfig.DebugMode)
-            {
-                PluginLog.Debug(
-                    $"SwapCharacter: {world.Value.Name} " +
-                    $"WorldId={tempWorld}, " +
-                    $"LogicalDC={tempDc}, " +
-                    $"RegionalDC={world.Value.Unknown0}");
-            }
-            characterCallbackSent = false;
             actionQueue.Clear();
             actionQueue.Enqueue(VariableDelay(5));
             actionQueue.Enqueue(Logout);
@@ -335,14 +317,13 @@ namespace AutoLogin
                     if (PluginConfig.DebugMode) { PluginLog.Debug("Hit OK!"); }
                 }
             }
-            if (!hasDoneLogin && PluginConfig.DataCenter != 0 && PluginConfig.World != 0 && actionQueue.Count == 0)
+            if (!hasDoneLogin && PluginConfig.DataCenter != 0 && PluginConfig.World != 0)
             {
                 var addon = (AtkUnitBase*)GameGui.GetAddonByName("_TitleMenu").Address;
+                if (addon == null || addon->IsVisible == false)
+                    return;
 
-                if (addon != null && addon->IsVisible)
-                {
-                    OnLogin();
-                }
+                OnLogin();
             }
             if (actionQueue.Count == 0)
             {
@@ -367,21 +348,7 @@ namespace AutoLogin
 
             if (sw.ElapsedMilliseconds > 30000)
             {
-                string actionName = "Unknown";
-
-                if (actionQueue.TryPeek(out var pending))
-                    actionName = pending.Method.Name;
-
-                PluginLog.Warning(
-                    $"AutoLogin timeout! Stuck at action: {actionName}. " +
-                    $"Requested World={tempWorld ?? PluginConfig.World}, " +
-                    $"DC={tempDc ?? PluginConfig.DataCenter}");
-
                 actionQueue.Clear();
-                ClearTemp();
-                Delay = 0;
-                sw.Reset();
-
                 return;
             }
 
@@ -399,11 +366,7 @@ namespace AutoLogin
             }
             catch (Exception ex)
             {
-                PluginLog.Error($"AutoLogin action failed: {ex}");
-                actionQueue.Clear();
-                ClearTemp();
-                Delay = 0;
-                sw.Reset();
+                PluginLog.Error($"Failed: {ex.Message}");
             }
         }
 
@@ -433,7 +396,6 @@ namespace AutoLogin
                     NotifObject.Content = "Auto logging in - Hold SPACE to cancel.";
                 }
                 NotificationManager.AddNotification(NotifObject);
-                characterCallbackSent = false;
                 actionQueue.Enqueue(OpenDataCenterMenu);
                 actionQueue.Enqueue(SelectDataCentre);
                 actionQueue.Enqueue(SelectWorld);
@@ -523,164 +485,48 @@ namespace AutoLogin
 
         public static bool SelectWorld()
         {
-            var requestedWorldId = tempWorld ?? PluginConfig.World;
-
-            var world = Data.Excel.GetSheet<World>()?.GetRow(requestedWorldId);
-
-            bool logNow = PluginConfig.DebugMode &&
-                Environment.TickCount64 - lastWorldMenuLog >= 2000;
-
-            if (logNow)
-                lastWorldMenuLog = Environment.TickCount64;
-
-            if (world is not { IsPublic: true })
-            {
-                if (logNow)
-                    PluginLog.Warning($"SelectWorld: World ID {requestedWorldId} is invalid.");
-
-                return false;
-            }
-
-            var worldName = world.Value.Name.ToString();
-
-            // Restore the original addon lookup.
+            // Select World
+            var dcMenu = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMap").Address;
+            if (dcMenu != null) dcMenu->Hide(true, true, 0);
+            var dcMenuBG = (AtkUnitBase*)GameGui.GetAddonByName("TitleDCWorldMapBg").Address;
+            if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("_CharaSelectWorldServer", 1).Address;
+            if (addon == null) return false;
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Found World Server"); }
+            var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder.StringArrays[1];
+            if (stringArray == null) return false;
 
-            if (addon == null)
-            {
-                if (logNow)
-                    PluginLog.Warning("SelectWorld: _CharaSelectWorldServer does not exist.");
+            var world = Data.Excel.GetSheet<World>()?.GetRow(tempWorld ?? PluginConfig.World);
+            if (world is not { IsPublic: true }) return false;
 
-                return false;
-            }
+            var checkedWorldCount = 0;
 
-            // Restore the original UI string-array lookup.
-            var framework = FFXIVClientStructs.FFXIV.Client.System.Framework
-                .Framework.Instance();
-
-            if (framework == null || framework->UIModule == null)
-                return false;
-
-            var rapture = framework->UIModule->GetRaptureAtkModule();
-
-            if (rapture == null)
-                return false;
-
-            var stringArray =
-                rapture->AtkModule.AtkArrayDataHolder.StringArrays[1];
-
-            if (stringArray == null)
-            {
-                if (logNow)
-                    PluginLog.Warning("SelectWorld: StringArrays[1] is null.");
-
-                return false;
-            }
-
-            var foundWorlds = new List<string>();
-
-            // Original world-selection behavior.
             for (var i = 0; i < 16; i++)
             {
                 var n = stringArray->StringArray[i];
-
-                if (n.Value == null)
-                    continue;
-
-                var name = MemoryHelper.ReadStringNullTerminated(
-                    new IntPtr(n)).Trim();
-
-                if (string.IsNullOrWhiteSpace(name))
-                    continue;
-
-                foundWorlds.Add($"[{i}] {name}");
-
-                if (!string.Equals(name, worldName, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                PluginLog.Debug($"SelectWorld: Found {worldName} at index {i}. " + "Sending callback 24.");
-
+                if (n.Value == null) continue;
+                var s = MemoryHelper.ReadStringNullTerminated(new IntPtr(n));
+                if (s.Trim().Length == 0) continue;
+                checkedWorldCount++;
+                if (s != world.Value.Name.ToString()) continue;
+                if (PluginConfig.DebugMode) { PluginLog.Debug("Found world [" + world.Value.ToString() + "] at integer i[" + i + "]"); }
                 GenerateCallback(addon, 24, 0, i);
-
                 return true;
             }
 
-            if (logNow)
-            {
-                PluginLog.Warning($"SelectWorld: Could not find {worldName} " + $"(ID {requestedWorldId}). " + $"String array contains: {string.Join(", ", foundWorlds)}");
-            }
-
+            if (checkedWorldCount > 0) actionQueue.Clear();
             return false;
         }
 
         public static bool SelectCharacter()
         {
-            var addon = (AtkUnitBase*)GameGui
-                .GetAddonByName("_CharaSelectListMenu", 1).Address;
-
-            var lobby = AgentLobby.Instance();
-
-            var requestedWorldId = tempWorld ?? PluginConfig.World;
-
-            bool logNow = PluginConfig.DebugMode &&
-                Environment.TickCount64 - lastWorldVerificationLog >= 2000;
-
-            if (logNow)
-            {
-                lastWorldVerificationLog = Environment.TickCount64;
-
-                PluginLog.Debug(
-                    $"SelectCharacter: " +
-                    $"MenuExists={addon != null}, " +
-                    $"MenuVisible={(addon != null && addon->IsVisible)}, " +
-                    $"RequestedWorld={requestedWorldId}, " +
-                    $"LobbyWorld={(lobby == null ? 0 : lobby->WorldId)}, " +
-                    $"LobbyDC={(lobby == null ? 0 : lobby->DataCenter)}, " +
-                    $"CallbackSent={characterCallbackSent}");
-            }
-
-            if (addon == null || !addon->IsVisible || lobby == null)
-                return false;
-
-            // Do not select a character on the wrong world.
-            if (lobby->WorldId != requestedWorldId)
-            {
-                if (logNow)
-                {
-                    PluginLog.Warning(
-                        $"SelectCharacter: Wrong world! " +
-                        $"Expected {requestedWorldId}, got {lobby->WorldId}");
-                }
-
-                return false;
-            }
-
-            // Fire the character-selection callback only once.
-            if (!characterCallbackSent)
-            {
-                if (PluginConfig.DebugMode)
-                {
-                    PluginLog.Debug(
-                        $"SelectCharacter: Selecting character slot " +
-                        $"{tempCharacter ?? PluginConfig.CharacterSlot}");
-                }
-
-                GenerateCallback(
-                    addon,
-                    29,
-                    0,
-                    tempCharacter ?? PluginConfig.CharacterSlot);
-
-                characterCallbackSent = true;
-            }
-
-            // Wait until the actual confirmation dialog is visible.
-            var nextAddon = (AtkUnitBase*)GameGui
-                .GetAddonByName("SelectYesno", 1).Address;
-
-            return nextAddon != null && nextAddon->IsVisible;
+            // Select Character
+            var addon = (AtkUnitBase*)GameGui.GetAddonByName("_CharaSelectListMenu", 1).Address;
+            if (addon == null) return false;
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Found _CharaSelectListMenu"); }
+            GenerateCallback(addon, 29, 0, tempCharacter ?? PluginConfig.CharacterSlot);
+            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("SelectYesno", 1).Address;
+            return nextAddon != null;
         }
 
         public static bool SelectYes()
@@ -718,7 +564,6 @@ namespace AutoLogin
             tempWorld = null;
             tempDc = null;
             tempCharacter = null;
-            characterCallbackSent = false;
             return true;
         }
 
