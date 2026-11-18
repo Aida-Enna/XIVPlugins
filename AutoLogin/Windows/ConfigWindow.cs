@@ -60,14 +60,15 @@ namespace AutoLogin.Windows
             if (currentDc.Region.RowId != 0)
             {
                 var currentWorld = worldSheet.GetRow(Plugin.PluginConfig.World);
-                if (/*currentWorld.RowId == 0 || */Plugin.PluginConfig.World != 0 && currentWorld.DataCenter.RowId != Plugin.PluginConfig.DataCenter)
+                if (Plugin.PluginConfig.World != 0 && currentWorld.Unknown0 != Plugin.PluginConfig.DataCenter)
                 {
                     Plugin.PluginConfig.World = 0;
+                    Plugin.PluginConfig.Save();
                 }
 
                 if (ImGui.BeginCombo("World", Plugin.PluginConfig.World == 0 ? "Not Selected" : currentWorld.Name.ToString()))
                 {
-                    foreach (var w in worldSheet.Where(w => w.DataCenter.RowId == Plugin.PluginConfig.DataCenter && w.IsPublic))
+                    foreach (var w in worldSheet.Where(w => w.Unknown0 == Plugin.PluginConfig.DataCenter && w.IsPublic))
                     {
                         if (ImGui.Selectable(w.Name.ToString(), w.RowId == Plugin.PluginConfig.World))
                         {

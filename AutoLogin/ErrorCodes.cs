@@ -20,6 +20,17 @@ namespace AutoLogin
         /// <summary>
         /// Internal: ????? | Game code: 5006 | Session token expired?
         /// </summary>
+        public static readonly ErrorCodeEntry Suspended = new ErrorCodeEntry
+        {
+            GameCode = 5003,
+            InternalCode = 1, //I don't know
+            LongDescription = "Error 5003:\nYou have been suspended from the service.\n",
+            ShortDescription = "Suspended"
+
+        };
+        /// <summary>
+        /// Internal: ????? | Game code: 5006 | Session token expired?
+        /// </summary>
         public static readonly ErrorCodeEntry SessionTokenExpired = new ErrorCodeEntry
         {
             GameCode = 5006,
