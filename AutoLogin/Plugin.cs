@@ -11,6 +11,7 @@ using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
 using System.Collections.Generic;
@@ -18,8 +19,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using FFXIVClientStructs.FFXIV.Client.System.Framework;
 using Veda;
 using Veda.Windows;
 using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.AtkValueType;
@@ -59,6 +58,10 @@ namespace AutoLogin
         private static uint? tempDc = null;
         private static uint? tempWorld = null;
         private static uint? tempCharacter = null;
+        private static long characterMenuReadyAt = 0;
+        private static long lastCharacterAttemptAt = 0;
+        private static long lastCharacterLogAt = 0;
+        private static int characterAttemptCount = 0;
 
         internal IntPtr LobbyErrorHandler;
 
@@ -184,6 +187,10 @@ namespace AutoLogin
             tempDc = world.Value.Unknown0;
             tempWorld = world.Value.RowId;
             tempCharacter = characterIndex;
+            characterMenuReadyAt = 0;
+            lastCharacterAttemptAt = 0;
+            lastCharacterLogAt = 0;
+            characterAttemptCount = 0;
             actionQueue.Clear();
             actionQueue.Enqueue(VariableDelay(5));
             actionQueue.Enqueue(Logout);
@@ -348,7 +355,22 @@ namespace AutoLogin
 
             if (sw.ElapsedMilliseconds > 30000)
             {
+                string actionName = actionQueue.TryPeek(out var current) ? current.Method.Name : "Unknown";
+
+                PluginLog.Warning(
+                    $"AutoLogin timed out at {actionName}. " +
+                    $"World={tempWorld ?? PluginConfig.World}, " +
+                    $"Slot={tempCharacter ?? PluginConfig.CharacterSlot}, " +
+                    $"CharacterAttempts={characterAttemptCount}");
+
                 actionQueue.Clear();
+                characterMenuReadyAt = 0;
+                lastCharacterAttemptAt = 0;
+                lastCharacterLogAt = 0;
+                characterAttemptCount = 0;
+                Delay = 0;
+                sw.Reset();
+
                 return;
             }
 
@@ -389,13 +411,27 @@ namespace AutoLogin
 
                 if (ReloggingFromDisconnect)
                 {
-                    NotifObject.Content = "logging in again - Hold SPACE to cancel.";
+                    NotifObject.Content = "Logging in again - Hold SPACE to cancel.";
                 }
                 else
                 {
-                    NotifObject.Content = "Auto logging in - Hold SPACE to cancel.";
+                    NotifObject.Title = "Auto Login in progress";
+                    NotifObject.Content = "Hold SPACE to cancel\n" +
+                        $"Data Center: {PluginConfig.DataCenter}\n" +
+                        $"World: {PluginConfig.World}\n" +
+                        $"Slot: {PluginConfig.CharacterSlot + 1}\n";
+                    if (PluginConfig.DebugMode)
+                    {
+                        NotifObject.Content += $"Internal Index: {PluginConfig.CharacterSlot}\n" +
+                        $"TempCharacter: {tempCharacter?.ToString() ?? "null"}";
+                    }
+                    NotifObject.Minimized = false;
                 }
                 NotificationManager.AddNotification(NotifObject);
+                characterMenuReadyAt = 0;
+                lastCharacterAttemptAt = 0;
+                lastCharacterLogAt = 0;
+                characterAttemptCount = 0;
                 actionQueue.Enqueue(OpenDataCenterMenu);
                 actionQueue.Enqueue(SelectDataCentre);
                 actionQueue.Enqueue(SelectWorld);
@@ -514,27 +550,108 @@ namespace AutoLogin
                 return true;
             }
 
-            if (checkedWorldCount > 0) actionQueue.Clear();
+            if (checkedWorldCount > 0 && PluginConfig.DebugMode)
+            {
+                PluginLog.Debug(
+                    $"SelectWorld: Requested world not found yet. " +
+                    $"Checked {checkedWorldCount} entries. Retrying...");
+            }
+
             return false;
         }
 
         public static bool SelectCharacter()
         {
-            // Select Character
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("_CharaSelectListMenu", 1).Address;
-            if (addon == null) return false;
-            if (PluginConfig.DebugMode) { PluginLog.Debug("Found _CharaSelectListMenu"); }
+
+            var confirm = (AtkUnitBase*)GameGui.GetAddonByName("SelectYesno", 1).Address;
+
+            long now = Environment.TickCount64;
+
+            bool menuReady = addon != null && addon->IsVisible && addon->IsReady;
+
+            bool confirmReady = confirm != null && confirm->IsVisible && confirm->IsReady;
+
+            // Diagnostic logging every 2 seconds.
+            if (PluginConfig.DebugMode && (lastCharacterLogAt == 0 || now - lastCharacterLogAt >= 2000))
+            {
+                lastCharacterLogAt = now;
+
+                PluginLog.Debug(
+                    $"SelectCharacter: " +
+                    $"MenuExists={addon != null}, " +
+                    $"MenuReady={menuReady}, " +
+                    $"ConfirmReady={confirmReady}, " +
+                    $"Slot={tempCharacter ?? PluginConfig.CharacterSlot}, " +
+                    $"Attempts={characterAttemptCount}");
+            }
+
+            // A confirmation dialog is visible after we've attempted
+            // character selection. Move to SelectYes.
+            if (characterAttemptCount > 0 && confirmReady)
+            {
+                if (PluginConfig.DebugMode) { PluginLog.Debug("SelectCharacter: Confirmation dialog appeared."); }
+                return true;
+            }
+
+            // Wait for the character-selection menu.
+            if (!menuReady)
+            {
+                characterMenuReadyAt = 0;
+                return false;
+            }
+
+            // Require the menu to remain ready for 750 milliseconds.
+            if (characterMenuReadyAt == 0) { characterMenuReadyAt = now; }
+
+            if (now - characterMenuReadyAt < 750) { return false; }
+
+            // If a previous attempt hasn't produced a confirmation,
+            // allow another attempt after 3 seconds.
+            if (lastCharacterAttemptAt != 0 && now - lastCharacterAttemptAt < 3000)
+            {
+                return false;
+            }
+
+            // Avoid sending callbacks indefinitely.
+            if (characterAttemptCount >= 3)
+            {
+                return false;
+            }
+            characterAttemptCount++;
+            lastCharacterAttemptAt = now;
+
+            if (PluginConfig.DebugMode)
+            {
+                PluginLog.Debug(
+                    $"SelectCharacter: Sending callback 29. " +
+                    $"Slot={tempCharacter ?? PluginConfig.CharacterSlot}, " +
+                    $"Attempt={characterAttemptCount}");
+            }
+
             GenerateCallback(addon, 29, 0, tempCharacter ?? PluginConfig.CharacterSlot);
-            var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("SelectYesno", 1).Address;
-            return nextAddon != null;
+
+            // The action is only complete when confirmation appears.
+            return false;
         }
 
         public static bool SelectYes()
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("SelectYesno", 1).Address;
-            if (addon == null) return false;
+
+            if (addon == null || !addon->IsVisible || !addon->IsReady)
+            {
+                return false;
+            }
+
+            if (PluginConfig.DebugMode)
+            {
+                PluginLog.Debug("SelectYes: Confirming character selection.");
+            }
+
             GenerateCallback(addon, 0);
             addon->Hide(true, false, 0);
+
             return true;
         }
 
@@ -564,6 +681,10 @@ namespace AutoLogin
             tempWorld = null;
             tempDc = null;
             tempCharacter = null;
+            characterMenuReadyAt = 0;
+            lastCharacterAttemptAt = 0;
+            lastCharacterLogAt = 0;
+            characterAttemptCount = 0;
             return true;
         }
 
