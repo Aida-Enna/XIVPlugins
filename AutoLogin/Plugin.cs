@@ -11,7 +11,9 @@ using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System;
 using System.Collections.Generic;
@@ -45,6 +47,7 @@ namespace AutoLogin
         [PluginService] public static ISigScanner SigScanner { get; set; }
         [PluginService] public static IClientState ClientState { get; set; }
         [PluginService] public static IAddonLifecycle AddonLifecycle { get; private set; } = null!;
+        [PluginService] public static IPlayerState PlayerState { get; private set; } = null!;
 
         public static Configuration PluginConfig { get; set; }
         private PluginCommandManager<Plugin> commandManager;
@@ -62,6 +65,11 @@ namespace AutoLogin
         private static long lastCharacterAttemptAt = 0;
         private static long lastCharacterLogAt = 0;
         private static int characterAttemptCount = 0;
+        private uint? selectedCharacterSlot;
+        private uint? selectedCharacterHomeWorld;
+        private long selectedCharacterCapturedAt;
+        private bool updateConfiguredCharacterPending;
+        private long updateConfiguredCharacterStarted;
 
         internal IntPtr LobbyErrorHandler;
 
@@ -73,6 +81,10 @@ namespace AutoLogin
         private ConfigWindow ConfigWindow { get; init; }
         private MessageBoxWindow MessageBoxWindow { get; init; }
         public EmergencyExitWindow EmergencyExitWindow { get; init; }
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate byte SendLoginRequestDelegate(AgentLobby* lobby, int characterEntryIdx);
+        private Hook<SendLoginRequestDelegate> loginRequestHook;
 
         public Plugin(IDalamudPluginInterface pluginInterface, IToastGui ToastGui, ICommandManager commands, IAddonLifecycle addonlifecycle)
         {
@@ -116,6 +128,32 @@ namespace AutoLogin
 
             this.LobbyErrorHandlerHook.Enable();
 
+            try
+            {
+                var address = (nint)AgentLobby.MemberFunctionPointers
+                    .SendLoginRequestPacket;
+
+                if (address != 0)
+                {
+                    loginRequestHook = Hook.HookFromAddress<SendLoginRequestDelegate>(address, SendLoginRequestDetour);
+
+                    loginRequestHook.Enable();
+
+                    if (PluginConfig.DebugMode)
+                    {
+                        PluginLog.Debug("Login request hook installed.");
+                    }
+                }
+                else
+                {
+                    PluginLog.Warning("Login request address unavailable.");
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error($"Failed to install login hook: {ex}");
+            }
+
             //if (!PluginConfig.SeenReconnectionExplanation)
             //{
             //    MessageBoxWindow.MessageBoxText = "The Auto Login plugin now supports automatically reconnecting once it detects that you have been suddenly disconnected from\nthe game due to a network error (such a DDoS or server side issues). You can also (separately) have it send a Discord webhook\nmessage when it detects you've been disconnected.\n\nThis reconnection behavior is enabled by default and can be disabled/configured in the settings menu. This window is a one-time\nnotification to explain this behavior and will be removed in a future update.\n\nEnjoy!";
@@ -127,6 +165,60 @@ namespace AutoLogin
             AddonLifecycle.RegisterListener(AddonEvent.PostSetup, ["Dialogue"], DialoguePostDraw);
             PluginConfig.CurrentError = "none";
         }
+
+
+        private byte SendLoginRequestDetour(AgentLobby* lobby, int characterEntryIdx)
+        {
+            try
+            {
+                if (PluginConfig.SaveLastCharacter &&
+                    !ClientState.IsLoggedIn &&
+                    lobby != null)
+                {
+                    var entries = lobby->LobbyData.CharaSelectEntries;
+
+                    if (characterEntryIdx >= 0 &&
+                        characterEntryIdx < entries.LongCount)
+                    {
+                        var entry = entries[characterEntryIdx].Value;
+
+                        if (entry != null &&
+                            characterEntryIdx >= 0 &&
+                            characterEntryIdx < 8 &&
+                            entry->HomeWorldId != 0)
+                        {
+                            // Use the character's position in the current world's list,
+                            // not its account-wide/server-side index.
+                            selectedCharacterSlot = (uint)characterEntryIdx;
+                            selectedCharacterHomeWorld = entry->HomeWorldId;
+                            selectedCharacterCapturedAt =
+                                Environment.TickCount64;
+
+                            if (PluginConfig.DebugMode)
+                            {
+                                PluginLog.Debug($"Login request intercepted. Slot: {characterEntryIdx}, InternalIndex: {entry->Index}, HomeWorld: {entry->HomeWorldId}");
+                            }
+                        }
+                        else if (PluginConfig.DebugMode)
+                        {
+                            PluginLog.Warning($"Login entry invalid. EntryIndex: {characterEntryIdx}, EntryExists: {entry != null}, Slot={(entry == null ? -1 : (int)entry->Index)}");
+                        }
+                    }
+                    else if (PluginConfig.DebugMode)
+                    {
+                        PluginLog.Warning("Login entry index out of range. Index: {characterEntryIdx}, Entries: {entries.LongCount}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PluginLog.Error($"Login request capture failed: {ex}");
+            }
+
+            // Always call the original game function.
+            return loginRequestHook.Original(lobby, characterEntryIdx);
+        }
+
 
         private void DialoguePostDraw(AddonEvent type, AddonArgs args)
         {
@@ -143,7 +235,21 @@ namespace AutoLogin
 
         private void Login()
         {
-            if (EmergencyExitWindow.IsOpen) { EmergencyExitWindow.Toggle(); }
+            hasDoneLogin = true;
+
+            if (PluginConfig.DebugMode)
+            {
+                PluginLog.Debug($"Login event. Enabled: {PluginConfig.SaveLastCharacter}, SlotCaptured: {selectedCharacterSlot.HasValue}");
+            }
+
+            if (EmergencyExitWindow.IsOpen)
+                EmergencyExitWindow.Toggle();
+
+            if (PluginConfig.SaveLastCharacter)
+            {
+                updateConfiguredCharacterPending = true;
+                updateConfiguredCharacterStarted = Environment.TickCount64;
+            }
         }
 
         [Command("/autologin")]
@@ -208,6 +314,11 @@ namespace AutoLogin
 
         private void Logout(int type, int code)
         {
+            selectedCharacterSlot = null;
+            selectedCharacterHomeWorld = null;
+            selectedCharacterCapturedAt = 0;
+            ResetSelectedCharacterCapture();
+            updateConfiguredCharacterPending = false;
             //Sudden disconnect code: 90002 | Type 2
             //Sudden disconnect code 2?: 90001 | Type 2
             //Rare disconnect code: 2002 (Lobby error code?)
@@ -308,6 +419,7 @@ namespace AutoLogin
             //{
             //    PluginConfig.CurrentError = DisconnectionErrorPpopupAddon->UldManager.NodeList[2]->GetAsAtkTextNode()->NodeText.ToString().Trim().Replace(Environment.NewLine, "");
             //}
+            UpdateConfiguredCharacter();
             if (ReloggingFromDisconnect)
             {
                 var DisconnectionErrorPpopupAddon = (AtkUnitBase*)GameGui.GetAddonByName("Dialogue", 1).Address;
@@ -357,11 +469,7 @@ namespace AutoLogin
             {
                 string actionName = actionQueue.TryPeek(out var current) ? current.Method.Name : "Unknown";
 
-                PluginLog.Warning(
-                    $"AutoLogin timed out at {actionName}. " +
-                    $"World={tempWorld ?? PluginConfig.World}, " +
-                    $"Slot={tempCharacter ?? PluginConfig.CharacterSlot}, " +
-                    $"CharacterAttempts={characterAttemptCount}");
+                PluginLog.Warning($"AutoLogin timed out at {actionName}. World: {tempWorld ?? PluginConfig.World}, Slot: {tempCharacter ?? PluginConfig.CharacterSlot}, CharacterAttempts: {characterAttemptCount}");
 
                 actionQueue.Clear();
                 characterMenuReadyAt = 0;
@@ -417,13 +525,12 @@ namespace AutoLogin
                 {
                     NotifObject.Title = "Auto Login in progress";
                     NotifObject.Content = "Hold SPACE to cancel\n" +
-                        $"Data Center: {PluginConfig.DataCenter}\n" +
-                        $"World: {PluginConfig.World}\n" +
-                        $"Slot: {PluginConfig.CharacterSlot + 1}\n";
+                                          $"Data Center: {PluginConfig.DataCenter}\n" +
+                                          $"World: {PluginConfig.World}\n" +
+                                          $"Slot: {PluginConfig.CharacterSlot + 1}\n";
                     if (PluginConfig.DebugMode)
                     {
-                        NotifObject.Content += $"Internal Index: {PluginConfig.CharacterSlot}\n" +
-                        $"TempCharacter: {tempCharacter?.ToString() ?? "null"}";
+                        NotifObject.Content += $"Internal Index: {PluginConfig.CharacterSlot}\nTempCharacter: {tempCharacter?.ToString() ?? "null"}";
                     }
                     NotifObject.Minimized = false;
                 }
@@ -528,10 +635,9 @@ namespace AutoLogin
             if (dcMenuBG != null) dcMenuBG->Hide(true, true, 0);
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("_CharaSelectWorldServer", 1).Address;
             if (addon == null) return false;
-            if (PluginConfig.DebugMode) { PluginLog.Debug("Found World Server"); }
             var stringArray = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance()->UIModule->GetRaptureAtkModule()->AtkModule.AtkArrayDataHolder.StringArrays[1];
             if (stringArray == null) return false;
-
+            if (PluginConfig.DebugMode) { PluginLog.Debug("Found World Server"); }
             var world = Data.Excel.GetSheet<World>()?.GetRow(tempWorld ?? PluginConfig.World);
             if (world is not { IsPublic: true }) return false;
 
@@ -552,9 +658,7 @@ namespace AutoLogin
 
             if (checkedWorldCount > 0 && PluginConfig.DebugMode)
             {
-                PluginLog.Debug(
-                    $"SelectWorld: Requested world not found yet. " +
-                    $"Checked {checkedWorldCount} entries. Retrying...");
+                PluginLog.Debug($"SelectWorld: Requested world not found yet. Checked {checkedWorldCount} entries. Retrying...");
             }
 
             return false;
@@ -577,13 +681,7 @@ namespace AutoLogin
             {
                 lastCharacterLogAt = now;
 
-                PluginLog.Debug(
-                    $"SelectCharacter: " +
-                    $"MenuExists={addon != null}, " +
-                    $"MenuReady={menuReady}, " +
-                    $"ConfirmReady={confirmReady}, " +
-                    $"Slot={tempCharacter ?? PluginConfig.CharacterSlot}, " +
-                    $"Attempts={characterAttemptCount}");
+                PluginLog.Debug($"SelectCharacter: MenuExists: {addon != null}, MenuReady: {menuReady}, ConfirmReady: {confirmReady}, Slot: {tempCharacter ?? PluginConfig.CharacterSlot}, Attempts: {characterAttemptCount}");
             }
 
             // A confirmation dialog is visible after we've attempted
@@ -623,10 +721,7 @@ namespace AutoLogin
 
             if (PluginConfig.DebugMode)
             {
-                PluginLog.Debug(
-                    $"SelectCharacter: Sending callback 29. " +
-                    $"Slot={tempCharacter ?? PluginConfig.CharacterSlot}, " +
-                    $"Attempt={characterAttemptCount}");
+                PluginLog.Debug($"SelectCharacter: Sending callback 29. Slot: {tempCharacter ?? PluginConfig.CharacterSlot}, Attempt: {characterAttemptCount}");
             }
 
             GenerateCallback(addon, 29, 0, tempCharacter ?? PluginConfig.CharacterSlot);
@@ -752,6 +847,84 @@ namespace AutoLogin
             }
         }
 
+        private void UpdateConfiguredCharacter()
+        {
+            if (!updateConfiguredCharacterPending)
+                return;
+
+            if (!PluginConfig.SaveLastCharacter)
+            {
+                updateConfiguredCharacterPending = false;
+                ResetSelectedCharacterCapture();
+                return;
+            }
+
+            long now = Environment.TickCount64;
+
+            if (now - updateConfiguredCharacterStarted > 20000)
+            {
+                PluginLog.Warning($"Could not update configuration. CapturedWorld: {selectedCharacterHomeWorld?.ToString() ?? "none"}, CapturedSlot: {selectedCharacterSlot?.ToString() ?? "none"}, LoggedInWorld: {(PlayerState.IsLoaded ? PlayerState.HomeWorld.RowId : 0)}.");
+
+                updateConfiguredCharacterPending = false;
+                ResetSelectedCharacterCapture();
+                return;
+            }
+
+            if (!PlayerState.IsLoaded)
+                return;
+
+            if (selectedCharacterSlot is not uint slot ||
+                selectedCharacterHomeWorld is not uint capturedWorld)
+                return;
+
+            // Use the actual logged-in character's home world.
+            uint worldId = PlayerState.HomeWorld.RowId;
+
+            // Prevent a captured request for another world from
+            // accidentally changing the configuration.
+            if (worldId == 0 || worldId != capturedWorld)
+                return;
+
+            var world = Data.Excel.GetSheet<World>()?.GetRow(worldId);
+
+            if (world is not { IsPublic: true })
+                return;
+
+            // Logical data center after FFXIV 7.58.
+            uint dcId = world.Value.Unknown0;
+
+            if (dcId == 0 || slot >= 8)
+                return;
+
+            updateConfiguredCharacterPending = false;
+            ResetSelectedCharacterCapture();
+
+            // Only save if something has changed.
+            if (PluginConfig.DataCenter == dcId &&
+                PluginConfig.World == worldId &&
+                PluginConfig.CharacterSlot == slot)
+                return;
+
+            PluginConfig.DataCenter = dcId;
+            PluginConfig.World = worldId;
+            PluginConfig.CharacterSlot = slot;
+
+            PluginConfig.Save();
+
+            if (PluginConfig.DebugMode)
+            {
+                PluginLog.Debug($"Configuration updated. DC: {dcId}, World: {worldId}, Slot: {slot}");
+            }
+        }
+
+        private void ResetSelectedCharacterCapture()
+        {
+            selectedCharacterSlot = null;
+            selectedCharacterHomeWorld = null;
+            selectedCharacterCapturedAt = 0;
+        }
+
+
         public void Dispose()
         {
             PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
@@ -761,6 +934,8 @@ namespace AutoLogin
             ToastyGoodness.ErrorToast -= OnToastShown;
             ClientState.Logout -= Logout;
             ClientState.Login -= Login;
+            loginRequestHook.Disable();
+            loginRequestHook.Dispose();
 
             WindowSystem.RemoveAllWindows();
 

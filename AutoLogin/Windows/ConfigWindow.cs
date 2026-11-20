@@ -44,6 +44,8 @@ namespace AutoLogin.Windows
                 //return true;
             }
 
+            ImGui.BeginDisabled(Plugin.PluginConfig.SaveLastCharacter);
+
             if (ImGui.BeginCombo("Data Center", Plugin.PluginConfig.DataCenter == 0 ? "Not Selected" : currentDc.Name.ToString()))
             {
                 foreach (var dc in dcSheet.Where(w => w.Region.RowId > 0 && w.Name.ToString().Trim().Length > 0))
@@ -93,6 +95,16 @@ namespace AutoLogin.Windows
                         ImGui.EndCombo();
                     }
                 }
+            }
+            ImGui.EndDisabled();
+
+            if (ImGui.Checkbox("Set the above to the last character logged in", ref Plugin.PluginConfig.SaveLastCharacter))
+            {
+                Plugin.PluginConfig.Save();
+            }
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip("After logging into a character, save the data center, world, and character slot settings,\nso that the plugin logs into that character next time.");
             }
             if (ImGui.Checkbox("Relogin to the above after being disconnected", ref Plugin.PluginConfig.RelogAfterDisconnect))
             {

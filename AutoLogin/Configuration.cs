@@ -17,10 +17,10 @@ namespace AutoLogin
         public bool SendNotif;
         public string WebhookURL = "";
         public string WebhookMessage = "[AutoLogin] Your game has lost connection!";
-        public bool SeenReconnectionExplanation = false;
         public bool DebugMode = false;
         public uint LastErrorCode = 0;
         public string CurrentError = "none";
+        public bool SaveLastCharacter = false;
 
         public void Initialize(IDalamudPluginInterface pluginInterface)
         {
