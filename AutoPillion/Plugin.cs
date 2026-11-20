@@ -109,9 +109,14 @@ namespace AutoPillion
                         {
                             continue;
                         }
+                        
+                        if (partyMember.GameObject == null) { continue; }
+
                         var characterPtr = (Character*)partyMember.GameObject.Address;
+
+                        if (characterPtr == null) { continue; }
+
                         if (characterPtr->IsNotMounted()) { continue; }
-                        if (characterPtr == null) continue;
                         if (PluginConfig.OnlyMountFriends)
                         {
                             if (!characterPtr->IsFriend) { continue; }
@@ -148,7 +153,17 @@ namespace AutoPillion
             var ContextMenu = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu").Address;
             //Chat.Print("Found ContextMenu");
             GenerateCallback(ContextMenu, 1);
-            GenerateCallback(ContextMenu, 0, Functions.GetAddonEntries("ContextMenu").IndexOf("Ride Pillion"), 0);
+            var ContextMenuEntries = Functions.GetAddonEntries("ContextMenu", GameGui);
+
+            if (ContextMenuEntries != null)
+            {
+                int RidePillion = ContextMenuEntries.IndexOf("Ride Pillion");
+
+                if (RidePillion != -1)
+                {
+                    GenerateCallback(ContextMenu, 0, RidePillion, 0);
+                }
+            }
             //var AddonContextSub = (AtkUnitBase*)GameGui.GetAddonByName("AddonContextSub");
             //if (AddonContextSub != null)
             //{
