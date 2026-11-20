@@ -5,6 +5,7 @@ using Dalamud.IoC;
 using Dalamud.Memory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using FFXIVClientStructs.FFXIV.Client.UI.Shell;
 using FFXIVClientStructs.FFXIV.Component.GUI;
@@ -263,18 +264,70 @@ namespace PortraitFixer
             if (addon == null) return false;
             PluginLog.Debug("Found ContextMenu");
             if (HideWindows) addon->Hide(true, true, 0);
-            GenerateCallback(addon, 0, 9, 0);
-            var ChangeGearSetNameAddon = (AtkUnitBase*)GameGui.GetAddonByName("InputString").Address;
-            if (ChangeGearSetNameAddon != null)
+            //GenerateCallback(addon, 0, 9, 0);
+            List<string> ContextMenuEntries = GetAddonEntries("ContextMenu");
+            if (ContextMenuEntries != null)
             {
-                PluginLog.Debug("Uh oh, rename opened instead!");
-                ChangeGearSetNameAddon->Close(false);
-                GenerateCallback(addon, 0, 8, 0);
+                int EditPortraitEntry = ContextMenuEntries.IndexOf("Edit Portrait");
+
+                if (EditPortraitEntry != -1)
+                {
+                    GenerateCallback(addon, 0, EditPortraitEntry, 0);
+                }
+                else
+                {
+                    Print("You do not appear to have portraits unlocked yet.", ColorType.Error);
+                }
             }
+            //var ChangeGearSetNameAddon = (AtkUnitBase*)GameGui.GetAddonByName("InputString").Address;
+            //if (ChangeGearSetNameAddon != null)
+            //{
+            //    PluginLog.Debug("Uh oh, rename opened instead!");
+            //    ChangeGearSetNameAddon->Close(false);
+            //    GenerateCallback(addon, 0, 8, 0);
+            //}
             //If we open the rename thing then close it and then try 0,9,0
 
             //actionQueue.Dequeue();
             return true;
+        }
+
+        public static unsafe List<string> GetAddonEntries(string Addon)
+        {
+            try
+            {
+                List<string> Entries = new List<string>();
+                var AddonBase = (AtkUnitBase*)Plugin.GameGui.GetAddonByName(Addon).Address;
+                var AddonPointer = Plugin.GameGui.GetAddonByName(Addon, 1);
+                if (AddonPointer != IntPtr.Zero)
+                {
+                    var addonComponentList = (AtkComponentList*)AddonPointer.Address;
+                    var addonComponentListBase = (AtkUnitBase*)AddonPointer.Address;
+                    AtkComponentList* listNode = addonComponentListBase->UldManager.NodeList[2]->GetAsAtkComponentList();
+
+                    for (ushort i = 0; i < Math.Min(listNode->UldManager.NodeListCount, (ushort)12); i++)
+                    {
+                        try
+                        {
+                            string EntryName = listNode->ItemRendererList[i].AtkComponentListItemRenderer->ButtonTextNode->NodeText.ToString();
+                            Entries.Add(EntryName);
+                        }
+                        catch
+                        {
+                            break;
+                        }
+                    }
+                    return Entries;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
         }
 
         public static unsafe bool CheckForPortraitEditor()
