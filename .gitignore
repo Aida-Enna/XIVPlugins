@@ -20,24 +20,17 @@
 [Rr]eleases/
 [Bb]uild/
 [Bb]uilds/
-AJC/
 x64/
 x86/
 obj/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
-/New Plugin Framework
-/RENAMEME
 /ChatGPT
 /TextFormatter
 /Deprecated/ChatGPT
-/AJC
 /TextFormatter
-/DLLs
 /Shared/Functions.cs
-/EmptyPlugin
-/AutoPillion/AutoFillFunctions.cs
 /Maily
 /AutoQueue
 /AutoPresser
