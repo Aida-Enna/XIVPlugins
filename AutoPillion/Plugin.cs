@@ -5,9 +5,12 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.Game.Fate;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Lumina.Excel.Sheets;
+using Lumina.Excel.Sheets.Experimental;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -21,7 +24,7 @@ namespace AutoPillion
         public string Name => "AutoPillion";
 
         [PluginService] public static IDalamudPluginInterface PluginInterface { get; set; }
-        [PluginService] public static IDataManager Data { get; set; }
+        [PluginService] public static IDataManager DataManager { get; set; }
         [PluginService] public static IFramework Framework { get; set; }
         [PluginService] public static IGameGui GameGui { get; set; }
         [PluginService] public static IChatGui Chat { get; set; }
@@ -29,6 +32,7 @@ namespace AutoPillion
         [PluginService] public static IObjectTable ObjectTable { get; set; }
         [PluginService] public static IPartyList PartyList { get; set; }
         [PluginService] public static ITargetManager TargetManager { get; set; }
+        [PluginService] public static IPluginLog PluginLog { get; set; }
 
         private PluginUI ui;
         private bool TryingToMount = false;
@@ -125,7 +129,7 @@ namespace AutoPillion
                         var mountContainer = characterPtr->Mount;
                         var mountObjectID = mountContainer.MountId;
                         if (mountObjectID == 0) continue;
-                        var mountRow = Data.GetExcelSheet<Mount>()?.GetRow(mountObjectID);
+                        var mountRow = DataManager.GetExcelSheet<Lumina.Excel.Sheets.Mount>()?.GetRow(mountObjectID);
                         if (mountRow.Value.ExtraSeats > 0)
                         {
                             //Chat.Print("Trying to mount");
@@ -145,33 +149,30 @@ namespace AutoPillion
             }
         }
 
-        public void TryToMount(IGameObject PartyMemberObject)
+        public bool TryToMount(IGameObject PartyMemberObject)
         {
             AutoPillionCooldownTimer.Restart();
             //Chat.Print("You can ride the mount " + partyMember.Name + " is on!");
             TargetManager.Target = PartyMemberObject;
-            var ContextMenu = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu").Address;
+            var ContextMenuAddon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu").Address;
             //Chat.Print("Found ContextMenu");
-            GenerateCallback(ContextMenu, 1);
-            var ContextMenuEntries = Functions.GetAddonEntries("ContextMenu", GameGui);
+            GenerateCallback(ContextMenuAddon, 1);
+            List<string> ContextMenuEntries = Functions.GetAddonEntries("ContextMenu", GameGui);
+            if (ContextMenuEntries == null) { return false; } //It didn't initalize yet?
 
-            if (ContextMenuEntries != null)
+            // Get the official translation for the user's game language.
+            int RidePillionIndex = Functions.GetLocalizedAddonEntry("Ride Pillion", ContextMenuEntries, DataManager);
+
+            // Nothing matched.
+            if (RidePillionIndex < 0)
             {
-                int RidePillion = ContextMenuEntries.IndexOf("Ride Pillion");
-
-                if (RidePillion != -1)
-                {
-                    GenerateCallback(ContextMenu, 0, RidePillion, 0);
-                }
+                PluginLog.Error("Couldn't find the \"Edit Portrait\" entry, this should not happen... Please report this bug on the github. Menu entries: " + string.Join(", ", ContextMenuEntries), ColorType.Error);
+                return false;
             }
-            //var AddonContextSub = (AtkUnitBase*)GameGui.GetAddonByName("AddonContextSub");
-            //if (AddonContextSub != null)
-            //{
-            //    Chat.Print("Found AddonContextSub");
-            //    GenerateCallback(AddonContextSub, 0, 3, 0);
-            //}
+
+            GenerateCallback(ContextMenuAddon, 0, RidePillionIndex, 0);
             TargetManager.Target = null;
-            return;
+            return true;
         }
 
         public static unsafe void GenerateCallback(AtkUnitBase* unitBase, params object[] values)
