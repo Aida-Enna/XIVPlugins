@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Veda;
+using static FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Delegates;
 
 namespace PortraitFixer
 {
@@ -30,7 +31,7 @@ namespace PortraitFixer
         [PluginService] public static IPluginLog PluginLog { get; set; }
         [PluginService] public static ICondition Condition { get; set; }
         [PluginService] public static IGameInteropProvider HookProvider { get; private set; } = null!;
-
+        [PluginService] public static IDataManager DataManager { get; private set; } = null!;
         private PluginCommandManager<Plugin> commandManager;
         private PluginUI ui;
         public static Configuration PluginConfig { get; set; }
@@ -272,18 +273,41 @@ namespace PortraitFixer
             }
             else
             {
-                int EditPortraitEntry = ContextMenuEntries.IndexOf("Edit Portrait");
+                // Get the official translation for the user's game language.
+                string EditPortraitText = Functions.GetLocalizedAddonText("Edit Portrait", DataManager);
 
-                if (EditPortraitEntry != -1)
+                // Search using the official translation first.
+                int EditPortraitEntry = -1;
+
+                if (!string.IsNullOrWhiteSpace(EditPortraitText))
                 {
-                    GenerateCallback(addon, 0, EditPortraitEntry, 0);
-                    return true;
+                    PluginLog.Debug("Looking for the string \"" + EditPortraitText + "\"");
+                    EditPortraitEntry = ContextMenuEntries.FindIndex(entry => string.Equals(entry?.Trim(), EditPortraitText.Trim(), StringComparison.OrdinalIgnoreCase));
                 }
-                else
+
+                // Fall back to English if the official lookup didn't match.
+                if (EditPortraitEntry < 0)
                 {
-                    Print("Couldn't find the Edit Portrait entry, this should not happen... Please report this bug on the github.", ColorType.Error);
+                    PluginLog.Debug("Translation failed: Looking for the English string \"Edit Portrait\"");
+                    EditPortraitEntry = ContextMenuEntries.FindIndex(entry => string.Equals(entry?.Trim(), "Edit Portrait", StringComparison.OrdinalIgnoreCase));
+                }
+
+                // Finally, try the unofficial Russian translation.
+                if (EditPortraitEntry < 0)
+                {
+                    PluginLog.Debug("Translation failed: Looking for the Russian string \"Редактировать портрет\"");
+                    EditPortraitEntry = ContextMenuEntries.FindIndex(entry => string.Equals(entry?.Trim(), "Редактировать портрет", StringComparison.OrdinalIgnoreCase));
+                }
+
+                // Nothing matched.
+                if (EditPortraitEntry < 0)
+                {
+                    Print("Couldn't find the \"Edit Portrait\" entry, this should not happen... Please report this bug on the github. Menu entries: " + string.Join(", ", ContextMenuEntries), ColorType.Error);
                     return false;
                 }
+
+                GenerateCallback(addon, 0, EditPortraitEntry, 0);
+                return true;
             }
         }
 
