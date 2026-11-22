@@ -43,7 +43,7 @@ namespace PortraitFixer
 
         private Hook<RaptureGearsetDelegate> onUpdateGearsetHook;
 
-        private unsafe delegate void RaptureGearsetDelegate(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff);
+        private unsafe delegate int RaptureGearsetDelegate(RaptureGearsetModule* gearsetModule, int gearsetIndex);
 
         public static bool HideWindows = true;
 
@@ -80,25 +80,36 @@ namespace PortraitFixer
             Chat.Print(Functions.BuildSeString("Portrait Fixer", Message, ColorType));
         }
 
-        private unsafe void OnUpdateGearset(RaptureShellModule* RaptureShellModule, RaptureGearsetModule* GearsetStuff)
+        private unsafe int OnUpdateGearset(RaptureGearsetModule* gearsetModule, int gearsetIndex)
         {
-            onUpdateGearsetHook?.Original(RaptureShellModule, GearsetStuff);
-            if (Condition[ConditionFlag.InCombat] || Condition[ConditionFlag.BoundByDuty] || Condition[ConditionFlag.BoundByDuty56] || Condition[ConditionFlag.BoundByDuty95])
+            // Execute the original game function first.
+            int result = onUpdateGearsetHook.Original(gearsetModule, gearsetIndex);
+            if (!PluginConfig.AutoUpdatePortraitFromGearsetUpdate) { return result; }
+            try
             {
-                Print("You cannot save your portrait at this time. Please wait until you are out of combat/the duty and try saving again with /pfixsave.",ColorType.Error);
-                return;
+                if (Condition[ConditionFlag.InCombat] || Condition[ConditionFlag.BoundByDuty] || Condition[ConditionFlag.BoundByDuty56] || Condition[ConditionFlag.BoundByDuty95])
+                {
+                    Print("You cannot save your portrait at this time. Please wait until you are out of combat/the duty and try saving again with /pfixsave.", ColorType.Error);
+                    return result;
+                }
+                if (PluginConfig.AutoUpdatePortraitFromGearsetUpdate)
+                {
+                    if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortraitFromGearsetUpdate)
+                    {
+                        SavePortrait("Gearset updated");
+                    }
+                    else
+                    {
+                        SavePortrait("", true);
+                    }
+                }
             }
-            if (PluginConfig.AutoUpdatePortraitFromGearsetUpdate)
+            catch (Exception ex)
             {
-                if (PluginConfig.ShowMessageInChatWhenAutoUpdatingPortraitFromGearsetUpdate)
-                {
-                    SavePortrait("Gearset updated");
-                }
-                else
-                {
-                    SavePortrait("", true);
-                }
+                PluginLog.Error($"Failed to handle gearset update: {ex}");
             }
+            // Always return the game's original result.
+            return result;
         }
 
         [Command("/pfixsave")]
@@ -227,7 +238,7 @@ namespace PortraitFixer
                 PluginLog.Debug("Found GearSetList");
                 return true;
             }
-            catch(Exception f)
+            catch (Exception f)
             {
                 Print("Error - " + f.ToString(), ColorType.Error);
                 return false;
@@ -264,51 +275,23 @@ namespace PortraitFixer
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("ContextMenu").Address;
             if (addon == null || !addon->IsReady) return false;
             PluginLog.Debug("Found ContextMenu");
-            if (HideWindows) addon->Hide(true, true, 0);
+            if (HideWindows) addon->Hide(true, false, 0);
             //GenerateCallback(addon, 0, 9, 0);
             List<string> ContextMenuEntries = Functions.GetAddonEntries("ContextMenu", GameGui);
-            if (ContextMenuEntries == null) //It didn't initalize yet?
+            if (ContextMenuEntries == null) { return false; } //It didn't initalize yet?
+
+            // Get the official translation for the user's game language.
+            int EditPortraitIndex = Functions.GetLocalizedAddonEntry("Edit Portrait", ContextMenuEntries, DataManager);
+
+            // Nothing matched.
+            if (EditPortraitIndex < 0)
             {
+                PluginLog.Error("Couldn't find the \"Edit Portrait\" entry, this should not happen... Please report this bug on the github. Menu entries: " + string.Join(", ", ContextMenuEntries), ColorType.Error);
                 return false;
             }
-            else
-            {
-                // Get the official translation for the user's game language.
-                string EditPortraitText = Functions.GetLocalizedAddonText("Edit Portrait", DataManager);
 
-                // Search using the official translation first.
-                int EditPortraitEntry = -1;
-
-                if (!string.IsNullOrWhiteSpace(EditPortraitText))
-                {
-                    PluginLog.Debug("Looking for the string \"" + EditPortraitText + "\"");
-                    EditPortraitEntry = ContextMenuEntries.FindIndex(entry => string.Equals(entry?.Trim(), EditPortraitText.Trim(), StringComparison.OrdinalIgnoreCase));
-                }
-
-                // Fall back to English if the official lookup didn't match.
-                if (EditPortraitEntry < 0)
-                {
-                    PluginLog.Debug("Translation failed: Looking for the English string \"Edit Portrait\"");
-                    EditPortraitEntry = ContextMenuEntries.FindIndex(entry => string.Equals(entry?.Trim(), "Edit Portrait", StringComparison.OrdinalIgnoreCase));
-                }
-
-                // Finally, try the unofficial Russian translation.
-                if (EditPortraitEntry < 0)
-                {
-                    PluginLog.Debug("Translation failed: Looking for the Russian string \"Редактировать портрет\"");
-                    EditPortraitEntry = ContextMenuEntries.FindIndex(entry => string.Equals(entry?.Trim(), "Редактировать портрет", StringComparison.OrdinalIgnoreCase));
-                }
-
-                // Nothing matched.
-                if (EditPortraitEntry < 0)
-                {
-                    Print("Couldn't find the \"Edit Portrait\" entry, this should not happen... Please report this bug on the github. Menu entries: " + string.Join(", ", ContextMenuEntries), ColorType.Error);
-                    return false;
-                }
-
-                GenerateCallback(addon, 0, EditPortraitEntry, 0);
-                return true;
-            }
+            GenerateCallback(addon, 0, EditPortraitIndex, 0);
+            return true;
         }
 
         public static unsafe bool CheckForPortraitEditor()
@@ -316,7 +299,7 @@ namespace PortraitFixer
             try
             {
                 var nextAddon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor").Address;
-                PluginLog.Debug("where plogon");
+                //PluginLog.Debug("where plogon");
                 if (nextAddon != null)
                 {
                     if (nextAddon->IsFullyLoaded())
@@ -327,13 +310,13 @@ namespace PortraitFixer
                     }
                     else
                     {
-                        PluginLog.Debug("Didn't find Portrait Editor :c");
+                        //PluginLog.Debug("Didn't find Portrait Editor :c");
                         return false;
                     }
                 }
                 else
                 {
-                    PluginLog.Debug("Didn't find Portrait Editor :c");
+                    //PluginLog.Debug("Didn't find Portrait Editor :c");
                     return false;
                 }
             }
@@ -344,7 +327,7 @@ namespace PortraitFixer
             }
         }
 
-        public unsafe static bool PressSaveOnPortraitMenu()
+        public static unsafe bool PressSaveOnPortraitMenu()
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor").Address;
             if (addon == null) return false;
@@ -355,8 +338,7 @@ namespace PortraitFixer
             return true;
         }
 
-
-        public unsafe static bool ClosePortraitMenu()
+        public static unsafe bool ClosePortraitMenu()
         {
             var addon = (AtkUnitBase*)GameGui.GetAddonByName("BannerEditor").Address;
             if (addon == null) return false;
